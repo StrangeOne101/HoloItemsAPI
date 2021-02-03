@@ -1,0 +1,11 @@
+name: HoloItems
+version: ${project.version}
+main: com.strangeone101.holoitems.HoloItemsPlugin
+api-version: 1.16
+authors: [StrangeOne101]
+description: Adds custom items
+commands:
+  primedtnt:
+    description: Give our custom item
+    usage: /holoitem
+    default: op
