@@ -45,12 +45,12 @@ public class RushiaShieldAbility extends ItemAbility {
 
     @Override
     public void tick() {
-        if (!getPlayer().isHandRaised()) { //isHandRaised is for when the shield is being raised. isBlocking only returns true
+        if (!getPlayer().isHandRaised() && !mobSpawned) { //isHandRaised is for when the shield is being raised. isBlocking only returns true
             remove();                      //when the shield is FULLY up.
+            return;
         }
 
         if (!getPlayer().isBlocking() && !mobSpawned) { //If the shield isn't fully up yet
-            //TODO Spawn smoke particles
             Location target = getPlayer().getEyeLocation().add(getPlayer().getEyeLocation().getDirection().clone().multiply(1.5));
             getPlayer().getWorld().spawnParticle(Particle.SMOKE_LARGE, target, 5, 0.6, 0.6, 0.6, 0);
             return;
@@ -67,7 +67,7 @@ public class RushiaShieldAbility extends ItemAbility {
             }
 
             mobString = mobString.contains(";") ? mobString.split(";", 2)[1] : ""; //Get the deepest mob
-            int count = mobString.split(";").length - 1;
+            int count = mobString.split(";").length;
             EntityType type = EntityType.valueOf(mobToUse);
 
             mob = (Mob) getPlayer().getWorld().spawnEntity(target, type);

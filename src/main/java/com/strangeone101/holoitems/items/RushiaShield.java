@@ -45,6 +45,7 @@ public class RushiaShield extends CustomItem {
         meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, "");
         meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, 0);
         meta.addItemFlags(ItemFlag.HIDE_DYE);
+        meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
         stack.setItemMeta(meta);
 
         return updateStack(stack, player); //Fix the lore for our added things
