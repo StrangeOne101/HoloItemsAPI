@@ -84,9 +84,9 @@ public class RushiaShieldAbility extends ItemAbility {
 
             //Get all mobs within 15 blocks and if they are targeting the player, make them target the new shield entity
             for (Entity entity : getPlayer().getWorld().getNearbyEntities(getPlayer().getLocation(), 15, 15, 15)) {
-                if (entity instanceof Creature) {
-                    if (((Creature) entity).getTarget() == getPlayer()) {
-                        ((Creature) entity).setTarget(mob);
+                if (entity instanceof Mob) {
+                    if (((Mob) entity).getTarget() == getPlayer()) {
+                        ((Mob) entity).setTarget(mob);
                     }
                 }
             }
