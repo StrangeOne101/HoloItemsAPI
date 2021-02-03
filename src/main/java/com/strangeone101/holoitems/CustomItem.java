@@ -1,5 +1,6 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

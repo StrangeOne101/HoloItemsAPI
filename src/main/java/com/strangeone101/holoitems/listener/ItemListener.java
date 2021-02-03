@@ -24,31 +24,21 @@ import org.bukkit.inventory.ItemStack;
 public class ItemListener implements Listener {
 
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.getItemInHand().isSimilar(HoloItemsPlugin.primedTnt)) {
-            event.setCancelled(true);
-
-            if (event.getPlayer().getGameMode() != GameMode.CREATIVE)
-                event.getPlayer().getInventory().setItem(event.getHand(), null);
-
-            TNTPrimed primtedTntEntity = (TNTPrimed) event.getPlayer().getWorld().spawnEntity(event.getBlock().getLocation(), EntityType.PRIMED_TNT);
-            primtedTntEntity.setSource(event.getPlayer());
-        }
-    }
-
-    @EventHandler
     public void onKill(EntityDeathEvent event) {
         if (event.getEntity().getKiller() != null && event.getEntity() instanceof Mob && !(event.getEntity() instanceof Boss)) { //If the entity WAS killed by a player
             Player killer = event.getEntity().getKiller();
 
+            //Cycle through the offhand and normal hand for
             for (EquipmentSlot slot : new EquipmentSlot[] {EquipmentSlot.OFF_HAND, EquipmentSlot.HAND}) {
                 ItemStack item = killer.getInventory().getItem(slot);
                 CustomItem customItem = CustomItemRegistry.getCustomItem(item);
 
                 if (customItem != null) {
-                    if (customItem == CustomItemRegistry.RUSHIA_SHIELD && !RushiaShieldAbility.getShieldMobs().contains(event.getEntity())) {
+                    if (customItem == CustomItemRegistry.RUSHIA_SHIELD && !RushiaShieldAbility.getShieldMobs().contains(event.getEntity())
+                            && !RushiaShield.EXCEPTIONS.contains(event.getEntity().getType())) {
                         ((RushiaShield)customItem).killMob((Mob) event.getEntity(), event.getEntity().getKiller(), item);
                         killer.getInventory().setItem(slot, item); //Update the itemstack because it's not updated when accessed through getItem(slot)
+                        return;
                     }
                 }
             }
@@ -82,6 +72,7 @@ public class ItemListener implements Listener {
     public void onCraft(CraftItemEvent event) {
         ItemStack stack = event.getCurrentItem();
         if (CustomItemRegistry.isCustomItem(event.getCurrentItem()) && event.getWhoClicked() instanceof Player) {
+            //Makes the output a fresh build of the item. Means it will be owned by that player
             event.setCurrentItem(CustomItemRegistry.getCustomItem(stack).buildStack((Player) event.getWhoClicked()));
         }
     }

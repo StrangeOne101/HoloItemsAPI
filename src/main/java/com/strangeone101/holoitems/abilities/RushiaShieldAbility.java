@@ -6,6 +6,8 @@ import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -17,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -63,11 +66,11 @@ public class RushiaShieldAbility extends ItemAbility {
                 return;
             }
 
-            mobString = mobString.contains(";") ? mobString.split(";", 2)[1] : "";
+            mobString = mobString.contains(";") ? mobString.split(";", 2)[1] : ""; //Get the deepest mob
             int count = mobString.split(";").length - 1;
             EntityType type = EntityType.valueOf(mobToUse);
 
-            mob = (Creature) getPlayer().getWorld().spawnEntity(target, type);
+            mob = (Mob) getPlayer().getWorld().spawnEntity(target, type);
             SHIELD_MOBS.add(mob);
             mobSpawned = true;
             if (GLOW_MODE) {
@@ -76,7 +79,8 @@ public class RushiaShieldAbility extends ItemAbility {
             }
             mob.setFallDistance(0);
             mob.getEquipment().clear(); //Make sure they have no equipment
-
+            if (mob.getHealth() > 25) mob.setHealth(25);
+            if (mob instanceof Ageable) ((Ageable) mob).setAdult(); //No baby zombies
 
             //Get all mobs within 15 blocks and if they are targeting the player, make them target the new shield entity
             for (Entity entity : getPlayer().getWorld().getNearbyEntities(getPlayer().getLocation(), 15, 15, 15)) {
@@ -93,8 +97,6 @@ public class RushiaShieldAbility extends ItemAbility {
             getStack().setItemMeta(meta);
 
             getItem().updateStack(getStack(), getPlayer());
-            //TODO SPAWN MOB, DONE
-            //TODO Update Mob data on item DONE
 
         } else {
             if (mob == null || mob.isDead() || !getPlayer().isBlocking()) {
@@ -109,7 +111,8 @@ public class RushiaShieldAbility extends ItemAbility {
             }
 
             Location target = getPlayer().getEyeLocation().add(getPlayer().getEyeLocation().getDirection().clone().multiply(1.5));
-            target.subtract(0, mob.getEyeHeight() / 2, 0);
+            target.subtract(0, mob.getEyeHeight() / 2, 0);  //This makes mobs always be "centered" on the Y axis, so they
+                                                                    //aren't above or bellow the target location because of their height
 
             mob.setFallDistance(0);
 
@@ -125,9 +128,7 @@ public class RushiaShieldAbility extends ItemAbility {
                 vector = new Vector(0, 0, 0);
             }
 
-            mob.setVelocity(vector);
-
-            //TODO Move mob. Test if it's dead. DONE
+            mob.setVelocity(vector); //Move the mob
         }
     }
 
@@ -136,13 +137,23 @@ public class RushiaShieldAbility extends ItemAbility {
         super.remove();
 
         if (mobSpawned) {
-            addCooldown(); //Only add the cooldown
+            applyCooldown(); //Only add the cooldown
 
             if (mob != null && !mob.isDead()) {
-                getPlayer().getWorld().spawnParticle(Particle.SMOKE_LARGE, mob.getLocation(), 5, 0.6, 0.6, 0.6, 0);
+                getPlayer().getWorld().spawnParticle(Particle.SMOKE_LARGE, mob.getLocation(), 12, 0.6, 0.6, 0.6, 0);
                 mob.remove();
                 SHIELD_MOBS.remove(mob);
             }
+
+            //Play a sound to let them know when the cooldown is up. Can be changed to a message
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (getPlayer() != null && getPlayer().isOnline()) { //They didn't log out in the time it takes to run
+                        getPlayer().playSound(getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 2);
+                    }
+                }
+            }.runTaskLater(HoloItemsPlugin.INSTANCE, getCooldownRemaining() / 50); //Convert to ticks
         }
     }
 

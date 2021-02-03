@@ -6,6 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -13,7 +14,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class RushiaShield extends CustomItem {
+
+    /** Exceptions for mobs that shouldn't be allowed to be captured due to their size. Boss mobs are already exempt*/
+    public static Set<EntityType> EXCEPTIONS = new HashSet<EntityType>(Arrays.asList(EntityType.GHAST, EntityType.ELDER_GUARDIAN, EntityType.GIANT));
 
     public RushiaShield() {
         super("rushia_shield", Material.SHIELD);

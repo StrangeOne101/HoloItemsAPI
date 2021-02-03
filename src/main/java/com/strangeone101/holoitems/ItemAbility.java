@@ -129,29 +129,51 @@ public abstract class ItemAbility {
 
     }
 
-    public void addCooldown() {
+    /**
+     * Applies the cooldown to the item, using {@link #getCooldownLength()} for the length
+     */
+    public void applyCooldown() {
         ItemMeta meta = stack.getItemMeta();
         meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, System.currentTimeMillis() + getCooldownLength());
         stack.setItemMeta(meta);
     }
 
+    /**
+     * Gets the player using the ability
+     * @return The player
+     */
     public Player getPlayer() {
         return player;
     }
 
+    /**
+     * Get the itemstack this started with. DO NOT RELY ON THIS.
+     * @return The itemstack
+     */
     public ItemStack getStack() {
         return stack;
     }
 
+    /**
+     * Get the inventory this item is in.
+     * @return
+     */
     public Inventory getInventory() {
         return inventory;
     }
 
+    /**
+     * Get the slot the item is in
+     * @return
+     */
     public int getSlot() {
         return slot;
     }
 
-    public static class CustomItemAbilityTask extends BukkitRunnable {
+    /**
+     * A runnable that ticks all abilities. Do not create.
+     */
+    protected static class CustomItemAbilityTask extends BukkitRunnable {
         @Override
         public void run() {
             tickAll();

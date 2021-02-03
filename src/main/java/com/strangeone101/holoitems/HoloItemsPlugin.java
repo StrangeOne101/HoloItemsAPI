@@ -1,5 +1,6 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.command.HoloItemsCommand;
 import com.strangeone101.holoitems.listener.AbilityListener;
 import com.strangeone101.holoitems.listener.ItemListener;
 import org.bukkit.Bukkit;
@@ -15,13 +16,6 @@ import java.util.List;
 
 public final class HoloItemsPlugin extends JavaPlugin {
 
-    public static final String PRIMTED_TNT_NAME = ChatColor.RED + "Primted TNT";
-    public static final String[] PRIMTED_TNT_LORE = {ChatColor.GRAY + "Place to place primed tnt"};
-
-
-    public static ItemStack primedTnt;
-    public static ItemStack rushiaShield;
-
     public static HoloItemsPlugin INSTANCE;
 
     public static List<NamespacedKey> recipes = new ArrayList<NamespacedKey>();
@@ -35,8 +29,7 @@ public final class HoloItemsPlugin extends JavaPlugin {
         INSTANCE = this;
         this.keys = new Keys();
 
-
-        getCommand("holoitems").setExecutor(new HoloItemsCommand());
+        getCommand("holoitem").setExecutor(new HoloItemsCommand());
 
         Bukkit.getPluginManager().registerEvents(new ItemListener(), this);
         Bukkit.getPluginManager().registerEvents(new AbilityListener(), this);
@@ -61,7 +54,7 @@ public final class HoloItemsPlugin extends JavaPlugin {
     }
 
     private void registerRecipes() {
-        rushiaShield = CustomItemRegistry.RUSHIA_SHIELD.buildStack(null);
+        ItemStack rushiaShield = CustomItemRegistry.RUSHIA_SHIELD.buildStack(null);
         ShapedRecipe rushiaShieldRecipe = new ShapedRecipe(new NamespacedKey(this, "rushia_shield"), rushiaShield);
         rushiaShieldRecipe.shape("WSW", "WWW", " W ");
         rushiaShieldRecipe.setIngredient('W', Material.WARPED_PLANKS);

@@ -5,7 +5,7 @@ api-version: 1.16
 authors: [StrangeOne101]
 description: Adds custom items
 commands:
-  primedtnt:
+  holoitem:
     description: Give our custom item
     usage: /holoitem
     default: op
