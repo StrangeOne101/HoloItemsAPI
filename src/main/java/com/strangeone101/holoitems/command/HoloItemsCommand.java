@@ -1,12 +1,15 @@
 package com.strangeone101.holoitems.command;
 
+import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
+import com.strangeone101.holoitems.items.Items;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 
 public class HoloItemsCommand implements CommandExecutor {
 
@@ -21,21 +24,16 @@ public class HoloItemsCommand implements CommandExecutor {
             }
         }
 
-        Player player;
+        int amount = CustomItemRegistry.getCustomItems().size();
+        int rows = ((amount - 1) / 9) + 1;
 
-        if (args.length > 0) {
-            player = Bukkit.getPlayer(args[0]);
+        Inventory inv = Bukkit.createInventory(null, rows * 9, "HoloItems List");
 
-            if (player == null) {
-                sender.sendMessage(ChatColor.RED + "The player you specified does not exist!");
-                return true;
-            }
-        } else {
-            player = (Player) sender;
+        for (CustomItem ci : CustomItemRegistry.getCustomItems().values()) {
+            inv.addItem(ci.buildStack((Player) sender));
         }
 
-        player.getInventory().addItem(CustomItemRegistry.RUSHIA_SHIELD.buildStack(player));
-        sender.sendMessage(ChatColor.YELLOW + "Custom item received!");
+        ((Player)sender).openInventory(inv);
 
         return true;
     }

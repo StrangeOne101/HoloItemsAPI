@@ -2,13 +2,12 @@ package com.strangeone101.holoitems.abilities;
 
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.ItemAbility;
-import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitems.items.Items;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Ageable;
-import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
@@ -164,7 +163,7 @@ public class RushiaShieldAbility extends ItemAbility {
 
     @Override
     public CustomItem getItem() {
-        return CustomItemRegistry.RUSHIA_SHIELD;
+        return Items.RUSHIA_SHIELD;
     }
 
     public Mob getShieldMob() {

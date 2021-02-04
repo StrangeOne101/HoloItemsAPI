@@ -27,13 +27,22 @@ public class RushiaShield extends CustomItem {
     public RushiaShield() {
         super("rushia_shield", Material.SHIELD);
         this.addVariable("mobs", data -> {
-            String s = data.get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING);
-            if (s != null) {
-                s = s.replace(";", ", ").replace("_", " ");
+            String s = data.get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING); //Pull data from item
+            if (s != null) { //If it DOES exist
+                s = s.replace(";", ", ").replace("_", " "); //Change PIG;ZOMBIE_PIGLIN into PIG, ZOMBIE PIGLIN
             }
-            if (s == null || s.equals("")) s = "(None)";
+            if (s == null || s.equals("")) s = "(None)"; //Put none if nothing exists
             return s;
         });
+        this.setDisplayName(ChatColor.RED + "Rushia Shield")
+                .addLore(ChatColor.GRAY + "Shield yourself with the power of the undead!")
+                .addLore("")
+                .addLore(ChatColor.GOLD + "Item Ability: Soul Recycling " + ChatColor.YELLOW + "RIGHT CLICK")
+                .addLore(ChatColor.GRAY + "Stores " + ChatColor.YELLOW + "2 souls" + ChatColor.GRAY + " in the shield when you kill")
+                .addLore(ChatColor.GRAY + "them while holding the shield. Use the shield")
+                .addLore(ChatColor.GRAY + "to them summon the soul to defend you.")
+                .addLore(ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.YELLOW + "10s")
+                .addLore(ChatColor.DARK_GRAY + "Souls stored: " + ChatColor.YELLOW + "{mobs}");
     }
 
     @Override

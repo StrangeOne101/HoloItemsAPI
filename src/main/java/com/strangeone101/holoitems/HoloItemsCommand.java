@@ -1,5 +1,6 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.items.Items;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -33,7 +34,7 @@ public class HoloItemsCommand implements CommandExecutor {
             player = (Player) sender;
         }
 
-        player.getInventory().addItem(CustomItemRegistry.RUSHIA_SHIELD.buildStack(player));
+        player.getInventory().addItem(Items.RUSHIA_SHIELD.buildStack(player));
         sender.sendMessage(ChatColor.YELLOW + "Custom item received!");
 
         return true;

@@ -2,7 +2,12 @@ package com.strangeone101.holoitems;
 
 import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -10,14 +15,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
-public abstract class CustomItem {
+public class CustomItem {
 
     private String name;
     private int internalIntID;
@@ -25,6 +34,9 @@ public abstract class CustomItem {
     private Material material;
     private String displayName;
     private List<String> lore = new ArrayList<>();
+    private int maxDurability = 0;
+    private boolean stackable = true;
+    private Set<Property> properties = new HashSet<Property>();
 
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
 
@@ -66,21 +78,33 @@ public abstract class CustomItem {
 
         //It's important to use the functions `getDisplayName()` and `getLore()` bellow
         //instead of the field names in case an object overrides them
-        meta.setDisplayName(replaceVariables(getDisplayName(), player, player == null ? "Player" : player.getName(), meta.getPersistentDataContainer()));
+        meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
         List<String> lore = new ArrayList<>();
 
         for (String line : getLore()) {
-            lore.add(replaceVariables(line, player, player == null ? "Player" : player.getName(), meta.getPersistentDataContainer()));
+            lore.add(replaceVariables(line, meta.getPersistentDataContainer()));
         }
         meta.setLore(lore);
         meta.setCustomModelData(internalIntID); //Used for resource packs
 
         if (player != null) {
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE, player.getUniqueId());
+            if (properties.contains(Properties.OWNER)) {
+                Properties.OWNER.set(meta.getPersistentDataContainer(), player.getUniqueId());
+                Properties.OWNER_NAME.set(meta.getPersistentDataContainer(), player.getName());
+            }
         }
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, player == null ? "Player" : player.getName());
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, 0L);
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING, getInternalName());
+        if (properties.contains(Properties.COOLDOWN)) {
+            Properties.COOLDOWN.set(meta.getPersistentDataContainer(), 0L);
+        }
+
+        Properties.ITEM_ID.set(meta.getPersistentDataContainer(), getInternalName());
+        //meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING, getInternalName());
+        if (getMaxDurability() > 0) {
+            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+        }
+
+         //If the item shouldn't be stackable, add a random INTEGER to the NBT
+        Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
         stack.setItemMeta(meta);
 
@@ -107,45 +131,117 @@ public abstract class CustomItem {
                 }
             }
         }
-        UUID owner = null;
-        //If they have the owner key, extract it
-        if (originalMeta.getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE)) {
-            owner = originalMeta.getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE);
-        } else if (player != null) owner = player.getUniqueId();
-
-        String ownerName = "Player";
-
-        if (owner != null) { //The owner can still be none if this is built using no player
-            if (Bukkit.getPlayer(owner) != null) { //If the player is online, use the new name
-                ownerName = Bukkit.getPlayer(owner).getName();
-            //If they have the owner name key, extract it
-            } else if (originalMeta.getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING)) {
-                ownerName = originalMeta.getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING);
-            } else ownerName = player.getName(); //Failsafe is the new player's name
+        if (properties.contains(Properties.OWNER)) {
+            UUID uuid = Properties.OWNER.get(meta.getPersistentDataContainer());
+            String ownerName;
+            if (uuid != null) { //The owner can still be none if this is built using no player
+                if (Bukkit.getPlayer(uuid) != null) { //If the player is online, use the new name
+                    ownerName = Bukkit.getPlayer(uuid).getName();
+                } else if (Properties.OWNER_NAME.has(meta.getPersistentDataContainer())) {
+                    ownerName = Properties.OWNER_NAME.get(meta.getPersistentDataContainer());
+                } else ownerName = player.getName(); //Failsafe is the new player's name
+                Properties.OWNER_NAME.set(meta.getPersistentDataContainer(), ownerName);
+            } else { //Owner is not defined but it should be
+                if (player != null) { //Be sure we aren't gonna get an NPE
+                    Properties.OWNER.set(meta.getPersistentDataContainer(), player.getUniqueId());
+                    Properties.OWNER_NAME.set(meta.getPersistentDataContainer(), player.getName());
+                }
+            }
         }
 
         //It's important to use the functions `getDisplayName()` and `getLore()` bellow
         //instead of the field names in case an object overrides them
-        meta.setDisplayName(replaceVariables(getDisplayName(), player, ownerName, meta.getPersistentDataContainer()));
+        meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
         List<String> lore = new ArrayList<>();
 
         for (String line : getLore()) {
-            lore.add(replaceVariables(line, player, ownerName, meta.getPersistentDataContainer()));
+            lore.add(replaceVariables(line, meta.getPersistentDataContainer()));
         }
         meta.setLore(lore);
         meta.setCustomModelData(internalIntID); //Used for resource packs
-
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, ownerName); //Update owner name
 
         stack.setItemMeta(meta);
 
         return stack;
     }
 
-    public String replaceVariables(String string, Player holder, String owner, PersistentDataContainer dataHolder) {
-        String s = string.replace("{player}", owner)
-                .replace("{name}", owner)
-                .replace("{owner}", owner);
+    public void damageItem(ItemStack stack, int amount, Player player) {
+        if (getMaxDurability() > 0 && player.getGameMode() != GameMode.CREATIVE) {
+            ItemMeta meta = stack.getItemMeta();
+            int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            damage += amount;
+
+            if (damage > getMaxDurability()) {
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
+                player.getWorld().spawnParticle(Particle.ITEM_CRACK, player.getLocation(), 16, stack.getData());
+                stack.setType(Material.AIR);
+                return;
+            }
+
+            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
+            stack.setItemMeta(meta);
+        }
+    }
+
+    public static String getDurabilityString(int durability, int maxDurability) {
+        if (maxDurability == 0) return ""; //No durability
+        double percentage = durability / maxDurability;
+        double bigPercentage = percentage * 100;
+        ChatColor color = ChatColor.DARK_RED;
+        if (bigPercentage >= 90) color = ChatColor.DARK_GREEN;
+        else if (bigPercentage >= 60) color = ChatColor.GREEN;
+        else if (bigPercentage >= 40) color = ChatColor.YELLOW;
+        else if (bigPercentage >= 25) color = ChatColor.GOLD;
+        else if (bigPercentage >= 5) color = ChatColor.RED;
+        int percentInt = (int) (15 * percentage) + 1;
+        //String template = "||||||xxxx||||||";
+        String template = "||||||x||||||";
+        String coloredPart, greyPart;
+
+        boolean greyAfterPercent;
+        if (percentInt <= 6) {
+            coloredPart = color + template.substring(0, percentInt);
+            greyPart = ChatColor.GRAY + template.substring(percentInt);
+            greyAfterPercent = true;
+        } else {
+            coloredPart = color + template.substring(0, percentInt - 3);
+            greyPart = ChatColor.GRAY + template.substring(percentInt - 3);
+            greyAfterPercent = false;
+        }
+
+        String complete = coloredPart + greyPart;
+        DecimalFormat dc = new DecimalFormat();
+        dc.setMaximumFractionDigits(2);
+        dc.setMaximumIntegerDigits(3);
+        dc.setMinimumFractionDigits(0);
+        dc.setMinimumIntegerDigits(2);
+
+        complete = complete.replace("x", color + dc.format(bigPercentage) + "%" + (greyAfterPercent ? ChatColor.GRAY : color));
+
+        return complete;
+
+    }
+
+    public static void setDurability(ItemStack damage) {
+        //TODO
+    }
+
+    public int getDurability(ItemStack stack) {
+        if (getMaxDurability() > 0) {
+            ItemMeta meta = stack.getItemMeta();
+            int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            return damage;
+        }
+        return 0;
+    }
+
+    public String replaceVariables(String string, PersistentDataContainer dataHolder) {
+        String s = string;
+        if (getMaxDurability() > 0) {
+            int damage = dataHolder.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            damage = getMaxDurability() - damage;
+            s = s.replace("{durability}", getDurabilityString(damage, getMaxDurability()));
+        }
         for (String variable : variables.keySet()) {
             String endResult = variables.get(variable).apply(dataHolder);
 
@@ -226,11 +322,56 @@ public abstract class CustomItem {
         return this;
     }
 
+    /**
+     * Get the max durability of the item
+     * @return The durability
+     */
+    public int getMaxDurability() {
+        return maxDurability;
+    }
+
+    /**
+     * Set the max durability of the item
+     * @param maxDurability The durability
+     * @return Itself
+     */
+    public CustomItem setMaxDurability(int maxDurability) {
+        this.maxDurability = maxDurability;
+        return this;
+    }
+
     protected void setInternalIntegerID(int id) {
         this.internalIntID = id;
     }
 
     public void selfRegister() {
         CustomItemRegistry.register(this);
+    }
+
+    /**
+     * If the item is stackable
+     * @return
+     */
+    public boolean isStackable() {
+        return stackable;
+    }
+
+    /**
+     * Whether the item can be stacked
+     * @param stackable Stackable
+     * @return Itself
+     */
+    public CustomItem setStackable(boolean stackable) {
+        this.stackable = stackable;
+        return this;
+    }
+
+    public Set<Property> getProperties() {
+        return properties;
+    }
+
+    public CustomItem addProperty(Property property) {
+        this.properties.add(property);
+        return this;
     }
 }

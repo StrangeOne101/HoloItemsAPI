@@ -1,5 +1,6 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.items.BerryTrident;
 import com.strangeone101.holoitems.items.RushiaShield;
 import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.ChatColor;
@@ -14,12 +15,10 @@ import java.util.Map;
 
 public class CustomItemRegistry {
 
-    private static int NEXT_ID = 0;
+    private static int NEXT_ID = 3000;
     private static final int INVALID_ID = 404;
 
     private static Map<String, CustomItem> CUSTOM_ITEMS = new HashMap<>();
-
-    public static RushiaShield RUSHIA_SHIELD;
 
     /**
      * Register a custom item
@@ -81,23 +80,12 @@ public class CustomItemRegistry {
         stack.setItemMeta(meta);
     }
 
-    public static void registerHoloItems() {
-
-        RUSHIA_SHIELD = (RushiaShield) new RushiaShield().setDisplayName(ChatColor.RED + "Rushia Shield")
-                .addLore(ChatColor.GRAY + "Shield yourself with the power of the undead!")
-                .addLore("")
-                .addLore(ChatColor.GOLD + "Item Ability: Soul Recycling " + ChatColor.YELLOW + "RIGHT CLICK")
-                .addLore(ChatColor.GRAY + "Stores " + ChatColor.YELLOW + "2 souls" + ChatColor.GRAY + " in the shield when you kill")
-                .addLore(ChatColor.GRAY + "them while holding the shield. Use the shield")
-                .addLore(ChatColor.GRAY + "to them summon the soul to defend you.")
-                .addLore(ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.YELLOW + "10s")
-                .addLore(ChatColor.DARK_GRAY + "Souls stored: " + ChatColor.YELLOW + "{mobs}");
-
-        register(RUSHIA_SHIELD);
-    }
-
     public static Map<String, CustomItem> getCustomItems() {
         return CUSTOM_ITEMS;
+    }
+
+    public static void registerBlankId() {
+        NEXT_ID++;
     }
 
 }
