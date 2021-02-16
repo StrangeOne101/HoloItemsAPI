@@ -18,6 +18,8 @@ public class Keys {
     public final NamespacedKey CUSTOM_ITEM_DURABILITY = new NamespacedKey(HoloItemsPlugin.INSTANCE, "itemdurability");
     /** The key for making it unstackable. Should be <strong>INT</strong> */
     public final NamespacedKey CUSTOM_ITEM_UNSTACK = new NamespacedKey(HoloItemsPlugin.INSTANCE, "unstackable");
+    /** The key for making it renamable. Should be <strong>INT</strong> */
+    public final NamespacedKey CUSTOM_ITEM_RENAME = new NamespacedKey(HoloItemsPlugin.INSTANCE, "rename");
 
 
     //Rushia Shield

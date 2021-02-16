@@ -149,9 +149,13 @@ public class CustomItem {
             }
         }
 
-        //It's important to use the functions `getDisplayName()` and `getLore()` bellow
-        //instead of the field names in case an object overrides them
-        meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
+        if (!properties.contains(Properties.RENAMED) || Properties.RENAMED.get(meta.getPersistentDataContainer()) == 0) {
+            //It's important to use the functions `getDisplayName()` and `getLore()` bellow
+            //instead of the field names in case an object overrides them
+            meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
+        }
+
+
         List<String> lore = new ArrayList<>();
 
         for (String line : getLore()) {

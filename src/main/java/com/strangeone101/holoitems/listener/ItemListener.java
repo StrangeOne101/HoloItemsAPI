@@ -3,6 +3,8 @@ package com.strangeone101.holoitems.listener;
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitems.Properties;
+import com.strangeone101.holoitems.Property;
 import com.strangeone101.holoitems.abilities.BerryTridentAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
 import com.strangeone101.holoitems.items.EnchantedBlock;
@@ -19,13 +21,23 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.BrewEvent;
+import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.inventory.TradeSelectEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MerchantInventory;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.List;
 
 public class ItemListener implements Listener {
 
@@ -140,6 +152,94 @@ public class ItemListener implements Listener {
             for (ItemStack ingredient : event.getInventory().getMatrix()) {
                 if (CustomItemRegistry.isCustomItem(ingredient)) {
                     event.getInventory().setResult(null); //Stops recipes using our custom items
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onItemClick(InventoryClickEvent event) {
+        //For villager inventories and grindstone inventories.
+        if (event.getClickedInventory() instanceof MerchantInventory
+                || event.getClickedInventory() instanceof GrindstoneInventory) {
+            if (event.getRawSlot() == 2) { //Output slot
+                //If any of the inputs are custom items
+                for (int slot = 0; slot < 1; slot++) {
+                    ItemStack stack = event.getClickedInventory().getItem(slot);
+                    if (stack == null) continue;
+                    if (CustomItemRegistry.isCustomItem(stack)) {
+
+                        if (event.getClickedInventory() instanceof MerchantInventory) {
+                            List<ItemStack> ingre = ((MerchantInventory)event.getClickedInventory()).getSelectedRecipe().getIngredients();
+                            //If the ingredient slot we are getting isnt null
+                            if (ingre.size() > slot) {
+                                //If the item in the recipe isnt a custom item OR if it doesnt match, set output to null
+                                if (!CustomItemRegistry.isCustomItem(ingre.get(slot)) ||
+                                           CustomItemRegistry.getCustomItem(stack) != CustomItemRegistry.getCustomItem(ingre.get(slot))) {
+                                    event.setCancelled(true); //Deny it
+                                    event.getClickedInventory().setItem(2, null); //Set the output to null again
+                                }
+                            }
+                        }
+
+                        event.setCancelled(true); //Deny it
+                        event.getClickedInventory().setItem(2, null); //Set the output to null again
+                    }
+                }
+
+            } else if (event.getRawSlot() < 3 && CustomItemRegistry.isCustomItem(event.getCurrentItem())) {
+                event.getClickedInventory().setItem(2, null); //Try set the output to null
+            }
+        } else if (event.getClickedInventory() instanceof AnvilInventory) {
+            if (event.getRawSlot() == 1 && CustomItemRegistry.isCustomItem(event.getCurrentItem())) {
+                event.getClickedInventory().setItem(2, null); //Set the output to null again
+            }
+
+            
+        }
+    }
+
+    @EventHandler
+    public void onTradeSelect(TradeSelectEvent event) {
+        for (int slot = 0; slot < 1; slot++) {
+            ItemStack stack = event.getInventory().getItem(slot);
+            if (stack == null) continue;
+            if (CustomItemRegistry.isCustomItem(stack)) {
+                List<ItemStack> ingre = ((MerchantInventory)event.getInventory()).getSelectedRecipe().getIngredients();
+                //If the ingredient slot we are getting isnt null
+                if (ingre.size() > slot) {
+                    //If the item in the recipe isnt a custom item OR if it doesnt match, set output to null
+                    if (!CustomItemRegistry.isCustomItem(ingre.get(slot)) ||
+                            CustomItemRegistry.getCustomItem(stack) != CustomItemRegistry.getCustomItem(ingre.get(slot))) {
+                        event.setCancelled(true); //Deny it
+                        event.getInventory().setItem(2, null); //Set the output to null again
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBrewRefuel(BrewingStandFuelEvent event) {
+        if (CustomItemRegistry.isCustomItem(event.getFuel())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onRenamePre(PrepareAnvilEvent event) {
+        if (event.getInventory().getItem(1) != null) {
+            if (CustomItemRegistry.isCustomItem(event.getInventory().getItem(1))) {
+                event.setResult(null);
+            }
+        }
+        if (event.getInventory().getItem(0) != null) {
+            CustomItem item = CustomItemRegistry.getCustomItem(event.getInventory().getItem(0));
+
+            if (item != null) {
+                //Cancel if it can't be renamed
+                if (!item.getProperties().contains(Properties.RENAMED)) {
+                    event.setResult(null);
                 }
             }
         }

@@ -127,4 +127,26 @@ public class Properties {
             return "Item ID";
         }
     };
+
+    public static final Property<Integer> RENAMED = new Property<Integer>() {
+        @Override
+        public boolean has(PersistentDataContainer data) {
+            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER);
+        }
+
+        @Override
+        public Integer get(PersistentDataContainer data) {
+            return data.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, 0);
+        }
+
+        @Override
+        public void set(PersistentDataContainer data, Integer value) {
+            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, value);
+        }
+
+        @Override
+        public String getPropertyName() {
+            return "Renamed";
+        }
+    };
 }

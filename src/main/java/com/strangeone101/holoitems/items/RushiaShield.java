@@ -2,6 +2,7 @@ package com.strangeone101.holoitems.items;
 
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitems.Properties;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -43,6 +44,8 @@ public class RushiaShield extends CustomItem {
                 .addLore(ChatColor.GRAY + "to them summon the soul to defend you.")
                 .addLore(ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.YELLOW + "10s")
                 .addLore(ChatColor.DARK_GRAY + "Souls stored: " + ChatColor.YELLOW + "{mobs}");
+
+        addProperty(Properties.RENAMED); //Allow it to be renamed
     }
 
     @Override
