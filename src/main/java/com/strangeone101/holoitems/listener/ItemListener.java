@@ -4,7 +4,6 @@ import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
-import com.strangeone101.holoitems.Property;
 import com.strangeone101.holoitems.abilities.BerryTridentAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
 import com.strangeone101.holoitems.items.EnchantedBlock;
@@ -21,7 +20,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -33,8 +31,10 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.GrindstoneInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
@@ -161,62 +161,96 @@ public class ItemListener implements Listener {
     public void onItemClick(InventoryClickEvent event) {
         //For villager inventories and grindstone inventories.
         if (event.getClickedInventory() instanceof MerchantInventory
-                || event.getClickedInventory() instanceof GrindstoneInventory) {
-            if (event.getRawSlot() == 2) { //Output slot
+                || event.getClickedInventory() instanceof GrindstoneInventory
+                || event.getClickedInventory() instanceof AnvilInventory) {
+            boolean prevent = shouldPrevent(event.getClickedInventory());
+            if (event.getRawSlot() == 2 && prevent) { //Output slot
                 //If any of the inputs are custom items
-                for (int slot = 0; slot < 1; slot++) {
-                    ItemStack stack = event.getClickedInventory().getItem(slot);
-                    if (stack == null) continue;
-                    if (CustomItemRegistry.isCustomItem(stack)) {
-
-                        if (event.getClickedInventory() instanceof MerchantInventory) {
-                            List<ItemStack> ingre = ((MerchantInventory)event.getClickedInventory()).getSelectedRecipe().getIngredients();
-                            //If the ingredient slot we are getting isnt null
-                            if (ingre.size() > slot) {
-                                //If the item in the recipe isnt a custom item OR if it doesnt match, set output to null
-                                if (!CustomItemRegistry.isCustomItem(ingre.get(slot)) ||
-                                           CustomItemRegistry.getCustomItem(stack) != CustomItemRegistry.getCustomItem(ingre.get(slot))) {
-                                    event.setCancelled(true); //Deny it
-                                    event.getClickedInventory().setItem(2, null); //Set the output to null again
-                                }
-                            }
-                        }
-
-                        event.setCancelled(true); //Deny it
-                        event.getClickedInventory().setItem(2, null); //Set the output to null again
-                    }
-                }
-
-            } else if (event.getRawSlot() < 3 && CustomItemRegistry.isCustomItem(event.getCurrentItem())) {
-                event.getClickedInventory().setItem(2, null); //Try set the output to null
-            }
-        } else if (event.getClickedInventory() instanceof AnvilInventory) {
-            if (event.getRawSlot() == 1 && CustomItemRegistry.isCustomItem(event.getCurrentItem())) {
+                event.setCancelled(true); //Deny it
                 event.getClickedInventory().setItem(2, null); //Set the output to null again
+            } else if (prevent) {
+                event.getClickedInventory().setItem(2, null); //Set the output to null again
+                updateLater(event.getClickedInventory());
+            } else if (event.getRawSlot() < 2 || event.getClick().isShiftClick()) {
+                updateLater(event.getClickedInventory());
+            } else if (event.getRawSlot() == 2 && event.getClickedInventory() instanceof AnvilInventory
+                    && CustomItemRegistry.isCustomItem(event.getClickedInventory().getItem(2))) {
+                ItemStack stack = event.getClickedInventory().getItem(2);
+                ItemMeta meta = stack.getItemMeta();
+                Properties.RENAMED.set(meta.getPersistentDataContainer(), 1); //Mark it as renamed
+                stack.setItemMeta(meta);
+                event.getClickedInventory().setItem(2, stack); //Set the updated item back into the inventory
             }
 
-            
         }
     }
 
     @EventHandler
     public void onTradeSelect(TradeSelectEvent event) {
-        for (int slot = 0; slot < 1; slot++) {
+        List<ItemStack> ingre = ((MerchantInventory)event.getInventory()).getSelectedRecipe().getIngredients();
+        for (int slot = 0; slot < 1 && slot < ingre.size() - 1; slot++) {
             ItemStack stack = event.getInventory().getItem(slot);
             if (stack == null) continue;
-            if (CustomItemRegistry.isCustomItem(stack)) {
-                List<ItemStack> ingre = ((MerchantInventory)event.getInventory()).getSelectedRecipe().getIngredients();
-                //If the ingredient slot we are getting isnt null
-                if (ingre.size() > slot) {
-                    //If the item in the recipe isnt a custom item OR if it doesnt match, set output to null
-                    if (!CustomItemRegistry.isCustomItem(ingre.get(slot)) ||
-                            CustomItemRegistry.getCustomItem(stack) != CustomItemRegistry.getCustomItem(ingre.get(slot))) {
-                        event.setCancelled(true); //Deny it
-                        event.getInventory().setItem(2, null); //Set the output to null again
-                    }
-                }
+            if (areStacksMismatched(ingre.get(slot), stack)) {
+                event.getInventory().setItem(2, null); //Set the output to null again
+                updateLater(event.getInventory());
             }
         }
+    }
+
+    public boolean areStacksMismatched(ItemStack stack1, ItemStack stack2) {
+        CustomItem ci1 = CustomItemRegistry.getCustomItem(stack1);
+        CustomItem ci2 = CustomItemRegistry.getCustomItem(stack2);
+
+        return (ci1 != ci2 && !(ci1 == null && ci2 == null)) //if they mismatch but both aren't null
+                || ci1.getDurability(stack1) != ci2.getDurability(stack2); //or if they have mismatched durability
+    }
+
+    public boolean shouldPrevent(Inventory inventory) {
+        if (inventory instanceof GrindstoneInventory) {
+            ItemStack slot1 = inventory.getItem(0);
+            ItemStack slot2 = inventory.getItem(1);
+            if ((CustomItemRegistry.isCustomItem(slot1))
+                    || CustomItemRegistry.isCustomItem(slot2)) {
+                return true; //Block disenchant of custom items
+            }
+            return false;
+        } else if (inventory instanceof AnvilInventory) {
+            ItemStack slot1 = inventory.getItem(0);
+            ItemStack slot2 = inventory.getItem(1);
+
+            if (CustomItemRegistry.isCustomItem(slot2)) {
+                return true; //Prevent custom items from being used to repair
+            } else if (slot2 != null && CustomItemRegistry.isCustomItem(slot1)) {
+                return true; //Prevent repair of custom items
+            } else if (CustomItemRegistry.isCustomItem(slot1)) {
+                CustomItem ci = CustomItemRegistry.getCustomItem(slot1);
+                if (!ci.getProperties().contains(Properties.RENAMED)) {
+                    return true; //This item cannot be renamed
+                }
+            }
+            return false;
+        } else if (inventory instanceof MerchantInventory) {
+            List<ItemStack> ingre = ((MerchantInventory)inventory).getSelectedRecipe().getIngredients();
+            for (int slot = 0; slot < 1 && slot < ingre.size() - 1; slot++) {
+                ItemStack stack = inventory.getItem(slot);
+                if (stack == null) continue;
+                if (areStacksMismatched(ingre.get(slot), stack)) {
+                    return true; //Trades dont match for our custom items
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public void updateLater(Inventory inventory) {
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (shouldPrevent(inventory)) inventory.setItem(2, null);
+            }
+        };
     }
 
     @EventHandler
