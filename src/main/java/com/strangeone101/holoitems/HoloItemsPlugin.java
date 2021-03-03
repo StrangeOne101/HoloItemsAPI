@@ -3,8 +3,10 @@ package com.strangeone101.holoitems;
 import com.strangeone101.holoitems.command.HoloItemsCommand;
 import com.strangeone101.holoitems.items.Items;
 import com.strangeone101.holoitems.listener.AbilityListener;
+import com.strangeone101.holoitems.listener.GenericListener;
 import com.strangeone101.holoitems.listener.ItemListener;
 import com.strangeone101.holoitems.listener.LootListener;
+import com.strangeone101.holoitems.loot.CustomLootRegistry;
 import com.strangeone101.holoitems.util.CIRecipeChoice;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -39,9 +41,12 @@ public final class HoloItemsPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemListener(), this);
         Bukkit.getPluginManager().registerEvents(new AbilityListener(), this);
         Bukkit.getPluginManager().registerEvents(new LootListener(), this);
+        Bukkit.getPluginManager().registerEvents(new GenericListener(), this);
 
         Items.registerHoloItems();
         registerRecipes();
+
+        CustomLootRegistry.registerDefaults();
 
         //Make all item abilities tick
         new ItemAbility.CustomItemAbilityTask().runTaskTimer(this, 1L, 1L);

@@ -8,7 +8,9 @@ import com.strangeone101.holoitems.abilities.BerryTridentAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
 import com.strangeone101.holoitems.items.EnchantedBlock;
 import com.strangeone101.holoitems.items.Items;
+import com.strangeone101.holoitems.items.MoguBoots;
 import com.strangeone101.holoitems.items.RushiaShield;
+import com.strangeone101.holoitems.items.RushianRevolver;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Boss;
@@ -20,6 +22,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -28,6 +31,7 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.GrindstoneInventory;
@@ -37,9 +41,39 @@ import org.bukkit.inventory.MerchantInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ItemListener implements Listener {
+
+    public static final HashSet<Material> INTERACTABLES = new HashSet<>();
+
+    public ItemListener() {
+        INTERACTABLES.addAll(Arrays.asList(
+                Material.CARTOGRAPHY_TABLE, Material.ENCHANTING_TABLE, Material.SMITHING_TABLE, Material.CRAFTING_TABLE,
+                Material.LOOM, Material.STONECUTTER, Material.GRINDSTONE,
+                Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.BARREL,
+                Material.HOPPER, Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER,
+                Material.ENDER_CHEST, Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL, Material.COMMAND_BLOCK,
+                Material.CHAIN_COMMAND_BLOCK, Material.REPEATING_COMMAND_BLOCK, Material.LEVER, Material.COMPARATOR,
+                Material.REPEATER, Material.NOTE_BLOCK, Material.DAYLIGHT_DETECTOR, Material.LECTERN, Material.OAK_DOOR,
+                Material.OAK_FENCE_GATE, Material.OAK_TRAPDOOR, Material.OAK_BUTTON, Material.SPRUCE_DOOR, Material.SPRUCE_TRAPDOOR,
+                Material.SPRUCE_FENCE_GATE, Material.SPRUCE_BUTTON, Material.BIRCH_DOOR, Material.BIRCH_TRAPDOOR,
+                Material.BIRCH_FENCE_GATE, Material.BIRCH_BUTTON, Material.JUNGLE_DOOR, Material.JUNGLE_TRAPDOOR,
+                Material.JUNGLE_FENCE_GATE, Material.JUNGLE_BUTTON, Material.ACACIA_DOOR, Material.ACACIA_TRAPDOOR,
+                Material.ACACIA_FENCE_GATE, Material.ACACIA_BUTTON, Material.DARK_OAK_DOOR, Material.DARK_OAK_TRAPDOOR,
+                Material.DARK_OAK_FENCE_GATE, Material.DARK_OAK_BUTTON, Material.WARPED_DOOR, Material.WARPED_FENCE_GATE,
+                Material.WARPED_TRAPDOOR, Material.WARPED_BUTTON, Material.CRIMSON_DOOR, Material.CRIMSON_FENCE_GATE,
+                Material.CRIMSON_TRAPDOOR, Material.CRIMSON_BUTTON, Material.STONE_BUTTON, Material.POLISHED_BLACKSTONE_BUTTON,
+                Material.SHULKER_BOX, Material.BLACK_SHULKER_BOX, Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX,
+                Material.CYAN_SHULKER_BOX, Material.GRAY_SHULKER_BOX, Material.GREEN_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX,
+                Material.LIGHT_GRAY_SHULKER_BOX, Material.LIME_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX,
+                Material.ORANGE_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.RED_SHULKER_BOX,
+                Material.YELLOW_SHULKER_BOX, Material.WHITE_SHULKER_BOX
+        ));
+    }
 
     @EventHandler
     public void onKill(EntityDeathEvent event) {
@@ -60,10 +94,6 @@ public class ItemListener implements Listener {
                     }
                 }
             }
-        }
-
-        if (event.getEntity().getType() == EntityType.ENDERMITE) {
-
         }
     }
 
@@ -89,7 +119,7 @@ public class ItemListener implements Listener {
                         }
                     }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
                 }
-            }
+            } else event.setCancelled(true);
         }
     }
 
@@ -109,23 +139,58 @@ public class ItemListener implements Listener {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
 
+        boolean isInteractable = event.getClickedBlock() != null && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
+
+        if (isInteractable) {
+            return; //Don't cancel the event because they opened some form of GUI
+        }
+
         if (customItem != null) {
             if (customItem == Items.RUSHIA_SHIELD) {
                 new RushiaShieldAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), slot);
             } else if (customItem == Items.BERRY_TRIDENT) {
                 new BerryTridentAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), slot);
+            } else if (customItem == Items.RUSSIAN_ROULETTE_REVOLVER) {
+                RushianRevolver.fire(event.getPlayer(), event.getItem(), event.getPlayer().isSneaking());
             }
+
+            if (customItem != Items.RUSHIA_SHIELD) {
+                event.setCancelled(true); //Prevent interactions of every other custom item
+            }
+
+
         }
     }
 
     @EventHandler
-    public void onPickup(InventoryPickupItemEvent event) {
+    public void onInvPickup(InventoryPickupItemEvent event) {
         ItemStack stack = event.getItem().getItemStack();
         CustomItem item = CustomItemRegistry.getCustomItem(stack);
 
         if (item != null) {
-            item.updateStack(stack, event.getInventory().getHolder() instanceof Player ? (Player)event.getInventory().getHolder() : null);
+            stack = item.updateStack(stack, event.getInventory().getHolder() instanceof Player ? (Player)event.getInventory().getHolder() : null);
             event.getItem().setItemStack(stack);
+        }
+    }
+
+    @EventHandler
+    public void onItemSpawn(ItemSpawnEvent event) {
+        ItemStack stack = event.getEntity().getItemStack();
+        CustomItem item = CustomItemRegistry.getCustomItem(stack);
+
+        if (item != null) {
+            stack = item.updateStack(stack, null);
+            event.getEntity().setItemStack(stack);
+        }
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent event) {
+        if (event.getFrom().getBlock() != event.getTo().getBlock()) {
+            CustomItem item = CustomItemRegistry.getCustomItem(event.getPlayer().getEquipment().getBoots());
+            if (item == Items.MOGU_BOOTS && event.getPlayer().isOnGround()) {
+                MoguBoots.mogu(event.getPlayer().getLocation());
+            }
         }
     }
 

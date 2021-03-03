@@ -32,4 +32,7 @@ public class Keys {
     /** The key for the types of mobs. Should be <strong>INT</strong> */
     public final NamespacedKey BERRY_TRIDENT_THROWN = new NamespacedKey(HoloItemsPlugin.INSTANCE, "berry_trident");
 
+    /** How many clicks until death. Should be <strong>INT</strong> */
+    public final NamespacedKey RUSSIAN_ROULETTE = new NamespacedKey(HoloItemsPlugin.INSTANCE, "russian_roulette");
+
 }

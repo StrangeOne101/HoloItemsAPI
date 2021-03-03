@@ -1,0 +1,5 @@
+DeathMessage:
+  RussianRoullete:
+    Self: '{player} blew their brains out'
+    Player: '{killer} cheated in russian roulette and killed {player}'
+    Other: '{player} blew their brains out'

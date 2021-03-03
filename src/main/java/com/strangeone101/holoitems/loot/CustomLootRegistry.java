@@ -2,16 +2,22 @@ package com.strangeone101.holoitems.loot;
 
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.loot.tables.Endermite;
+import com.strangeone101.holoitems.loot.tables.Spawner;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;
 import org.bukkit.loot.LootTable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +29,7 @@ import java.util.Set;
 public class CustomLootRegistry {
 
     private static Map<EntityType, Set<LootTable>> ENTITY_TABLES = new HashMap<>();
+    private static Map<Material, Set<BlockLootTable>> BLOCK_TABLES = new HashMap<>();
 
     public static void registerDeathTable(EntityType type, LootTable table) {
         if (!ENTITY_TABLES.containsKey(type)) {
@@ -32,10 +39,18 @@ public class CustomLootRegistry {
         ENTITY_TABLES.get(type).add(table);
     }
 
+    public static void registerBlockBreakTable(Material material, BlockLootTable table) {
+        if (!BLOCK_TABLES.containsKey(material)) {
+            BLOCK_TABLES.put(material, new HashSet<>());
+        }
+
+        BLOCK_TABLES.get(material).add(table);
+    }
+
     public static void handleDeath(LivingEntity entity, List<ItemStack> drops) {
         if (ENTITY_TABLES.containsKey(entity.getType())) {
 
-            HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 444");
+            //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 444");
 
             if (entity.getKiller() == null) return;
 
@@ -50,19 +65,54 @@ public class CustomLootRegistry {
             builder.killer(entity.getKiller());
             LootContext lootContext = builder.build();
 
-            HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 555");
+            //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 555");
 
             for (LootTable table : ENTITY_TABLES.get(entity.getType())) {
                 Collection<ItemStack> items = table.populateLoot(new Random(), lootContext);
                 if (!items.isEmpty()) {
                     drops.addAll(items);
-                    HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 666");
+                    //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 666");
                 }
             }
         }
     }
 
-    static {
+    public static void handleBlockBreak(BlockBreakEvent event) {
+        if (BLOCK_TABLES.containsKey(event.getBlock().getType())) {
+            int fortune_mod = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+            double luck_mod = event.getPlayer().getAttribute(Attribute.GENERIC_LUCK).getValue();
+            boolean silk_mod = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0;
+
+            BlockLootContext context = new BlockLootContext(event.getBlock());
+            context.setPlayer(event.getPlayer());
+            context.setFortune(fortune_mod);
+            context.setLuck(luck_mod);
+            context.setSilkTouch(silk_mod);
+
+            Collection<ItemStack> drops = new ArrayList<ItemStack>();
+            for (BlockLootTable table : BLOCK_TABLES.get(event.getBlock().getType())) {
+                List<ItemStack> tableDrops = new ArrayList<ItemStack>();
+                boolean b = table.populateLoot(tableDrops, new Random(), context);
+
+                if (!b) {
+                    event.setDropItems(false);
+                }
+
+                if (!tableDrops.isEmpty()) {
+                    drops.addAll(tableDrops);
+                }
+            }
+
+            if (!drops.isEmpty()) {
+                for (ItemStack stack : drops) {
+                    event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation().add(0.5, 0.5, 0.5), stack);
+                }
+            }
+        }
+    }
+
+    public static void registerDefaults() {
         registerDeathTable(EntityType.ENDERMITE, new Endermite());
+        registerBlockBreakTable(Material.SPAWNER, new Spawner());
     }
 }
