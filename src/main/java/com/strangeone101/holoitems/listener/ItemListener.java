@@ -53,7 +53,7 @@ public class ItemListener implements Listener {
     public ItemListener() {
         INTERACTABLES.addAll(Arrays.asList(
                 Material.CARTOGRAPHY_TABLE, Material.ENCHANTING_TABLE, Material.SMITHING_TABLE, Material.CRAFTING_TABLE,
-                Material.LOOM, Material.STONECUTTER, Material.GRINDSTONE,
+                Material.LOOM, Material.STONECUTTER, Material.GRINDSTONE, Material.BREWING_STAND,
                 Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.BARREL,
                 Material.HOPPER, Material.FURNACE, Material.BLAST_FURNACE, Material.SMOKER,
                 Material.ENDER_CHEST, Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL, Material.COMMAND_BLOCK,
