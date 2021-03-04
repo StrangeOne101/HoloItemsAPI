@@ -1,7 +1,5 @@
 package com.strangeone101.holoitems;
 
-import com.strangeone101.holoitems.items.BerryTrident;
-import com.strangeone101.holoitems.items.RushiaShield;
 import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;

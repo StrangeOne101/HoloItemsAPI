@@ -6,15 +6,15 @@ import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
 import com.strangeone101.holoitems.abilities.BerryTridentAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
-import com.strangeone101.holoitems.items.EnchantedBlock;
+import com.strangeone101.holoitems.items.implementations.EnchantedBlock;
 import com.strangeone101.holoitems.items.Items;
-import com.strangeone101.holoitems.items.MoguBoots;
-import com.strangeone101.holoitems.items.RushiaShield;
-import com.strangeone101.holoitems.items.RushianRevolver;
+import com.strangeone101.holoitems.items.implementations.MoguBoots;
+import com.strangeone101.holoitems.items.implementations.RushiaShield;
+import com.strangeone101.holoitems.items.implementations.RushianRevolver;
+import com.strangeone101.holoitems.items.interfaces.Placeable;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Boss;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,7 +44,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ItemListener implements Listener {
 
@@ -102,7 +101,15 @@ public class ItemListener implements Listener {
         CustomItem ci = CustomItemRegistry.getCustomItem(event.getItemInHand());
 
         if (ci != null) {
-            if (ci instanceof EnchantedBlock) {
+            if (ci instanceof Placeable) {
+                Placeable placeable = (Placeable) ci;
+
+                //If the place event according to the custom item should be stopped
+                if (placeable.place(event.getBlock(), event.getPlayer(), ci, event.getItemInHand())) {
+                    event.setCancelled(true);
+                }
+            }
+            /*if (ci instanceof EnchantedBlock) {
                 if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
                     final ItemStack stack = event.getItemInHand().clone();
                     final EquipmentSlot slot = event.getHand();
@@ -119,11 +126,11 @@ public class ItemListener implements Listener {
                         }
                     }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
                 }
-            } else event.setCancelled(true);
+            } else event.setCancelled(true);*/
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    /*@EventHandler(priority = EventPriority.HIGHEST)
     public void onContainerSteal(org.bukkit.event.inventory.InventoryMoveItemEvent event) {
         CustomItem item = CustomItemRegistry.getCustomItem(event.getItem());
         if (item != null) {
@@ -132,10 +139,11 @@ public class ItemListener implements Listener {
                 event.getDestination().addItem(new ItemStack(event.getItem().getType()));
             }
         }
-    }
+    }*/
 
     @EventHandler
     public void onItemUse(PlayerInteractEvent event) {
+
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
 
