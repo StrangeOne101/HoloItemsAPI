@@ -18,6 +18,7 @@ public abstract class ItemAbility {
     private ItemStack stack;
     private Inventory inventory;
     private int slot;
+    private long startTime;
 
     public ItemAbility(Player player, ItemStack stack, Inventory inventory, int slot) {
         this.player = player;
@@ -37,6 +38,8 @@ public abstract class ItemAbility {
         if (!INSTANCES.get(player).containsKey(this.getClass())) {
             INSTANCES.get(player).put(this.getClass(), this);
         }
+
+        startTime = System.currentTimeMillis();
     }
 
     /**
@@ -66,7 +69,7 @@ public abstract class ItemAbility {
     /**
      * Stops all abilities. Should be called on plugin disable.
      */
-    protected static void removeAll() {
+    protected static void stopPluginAndRemove() {
         for (Player player : INSTANCES.keySet()) {
             for (ItemAbility ability : INSTANCES.get(player).values()) {
                 ability.remove();
@@ -168,6 +171,14 @@ public abstract class ItemAbility {
      */
     public int getSlot() {
         return slot;
+    }
+
+    /**
+     * Gets the time the ability started
+     * @return The start time. In milliseconds
+     */
+    public long getStartTime() {
+        return startTime;
     }
 
     /**

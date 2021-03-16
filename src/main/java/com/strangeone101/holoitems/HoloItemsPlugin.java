@@ -61,7 +61,7 @@ public final class HoloItemsPlugin extends JavaPlugin {
             Bukkit.removeRecipe(recipe);
         }
 
-        ItemAbility.removeAll();
+        ItemAbility.stopPluginAndRemove();
     }
 
     private void registerRecipes() {
