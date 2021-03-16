@@ -10,6 +10,8 @@ import com.strangeone101.holoitems.items.implementations.RushianRevolver;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
+import java.util.Arrays;
+
 public class Items {
 
     public static RushiaShield RUSHIA_SHIELD;
@@ -22,6 +24,10 @@ public class Items {
     public static CustomItem ENCHANTED_STONE;
     public static CustomItem MOGU_BOOTS;
     public static CustomItem RUSSIAN_ROULETTE_REVOLVER;
+    public static CustomItem GEM_RUBY;
+    public static CustomItem GEM_SAPPHIRE;
+    public static CustomItem GEM_TOPAZ;
+    public static CustomItem GEM_AMETHYST;
 
     public static void registerHoloItems() {
 
@@ -46,6 +52,11 @@ public class Items {
         MOGU_BOOTS = new MoguBoots();
         RUSSIAN_ROULETTE_REVOLVER = new RushianRevolver();
 
+        GEM_RUBY = new CustomItem("gem_ruby", Material.EMERALD, ChatColor.DARK_RED + "Ruby");
+        GEM_SAPPHIRE = new CustomItem("gem_sapphire", Material.EMERALD, ChatColor.BLUE + "Sapphire");
+        GEM_TOPAZ = new CustomItem("gem_topaz", Material.EMERALD, ChatColor.GOLD + "Topaz");
+        GEM_AMETHYST = new CustomItem("gem_amethyst", Material.EMERALD, ChatColor.LIGHT_PURPLE + "Amethyst");
+
         CustomItemRegistry.register(RUSHIA_SHIELD);
         CustomItemRegistry.register(BERRY_TRIDENT);
         CustomItemRegistry.registerBlankId(); //Leave this one for thrown berry tridents
@@ -57,6 +68,10 @@ public class Items {
         CustomItemRegistry.register(ENCHANTED_STONE);
         CustomItemRegistry.register(MOGU_BOOTS);
         CustomItemRegistry.register(RUSSIAN_ROULETTE_REVOLVER);
+        CustomItemRegistry.register(GEM_RUBY);
+        CustomItemRegistry.register(GEM_SAPPHIRE);
+        CustomItemRegistry.register(GEM_TOPAZ);
+        CustomItemRegistry.register(GEM_AMETHYST);
 
 
     }

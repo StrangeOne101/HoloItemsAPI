@@ -2,6 +2,7 @@ package com.strangeone101.holoitems.loot;
 
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.loot.tables.Endermite;
+import com.strangeone101.holoitems.loot.tables.GemOre;
 import com.strangeone101.holoitems.loot.tables.Spawner;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -105,7 +106,7 @@ public class CustomLootRegistry {
 
             if (!drops.isEmpty()) {
                 for (ItemStack stack : drops) {
-                    event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation().add(0.5, 0.5, 0.5), stack);
+                    event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation().subtract(0.5, 0.5, 0.5), stack);
                 }
             }
         }
@@ -114,5 +115,6 @@ public class CustomLootRegistry {
     public static void registerDefaults() {
         registerDeathTable(EntityType.ENDERMITE, new Endermite());
         registerBlockBreakTable(Material.SPAWNER, new Spawner());
+        registerBlockBreakTable(Material.EMERALD_ORE, new GemOre());
     }
 }

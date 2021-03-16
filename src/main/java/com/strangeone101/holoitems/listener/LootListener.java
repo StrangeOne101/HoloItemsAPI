@@ -2,6 +2,7 @@ package com.strangeone101.holoitems.listener;
 
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.loot.CustomLootRegistry;
+import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,7 +21,8 @@ public class LootListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST) //Let all plugins go before us
     public void onBlockBreak(BlockBreakEvent event) {
-        if (event.getPlayer() != null && event.getBlock().getWorld().getGameRuleValue(GameRule.DO_TILE_DROPS)) {
+        if (event.getPlayer() != null && event.getBlock().getWorld().getGameRuleValue(GameRule.DO_TILE_DROPS)
+                && event.getPlayer().getGameMode() != GameMode.CREATIVE) {
             CustomLootRegistry.handleBlockBreak(event);
         }
     }
