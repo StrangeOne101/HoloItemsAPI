@@ -2,6 +2,8 @@ package com.strangeone101.holoitems.items.implementations;
 
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitems.abilities.BerryTridentAbility;
+import com.strangeone101.holoitems.items.interfaces.Interactable;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -9,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-public class BerryTrident extends CustomItem {
+public class BerryTrident extends CustomItem implements Interactable {
     public BerryTrident() {
         super("berry_trident", Material.SWEET_BERRIES);
         this.setDisplayName(ChatColor.RED + "Berry Trident");
@@ -42,5 +44,11 @@ public class BerryTrident extends CustomItem {
     @Override
     public boolean isStackable() {
         return false;
+    }
+
+    @Override
+    public boolean onInteract(Player player, CustomItem item, ItemStack stack) {
+        new BerryTridentAbility(player, stack, player.getInventory(), 0);
+        return true;
     }
 }

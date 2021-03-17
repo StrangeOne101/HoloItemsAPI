@@ -3,6 +3,8 @@ package com.strangeone101.holoitems.items.implementations;
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
+import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
+import com.strangeone101.holoitems.items.interfaces.Interactable;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,7 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class RushiaShield extends CustomItem {
+public class RushiaShield extends CustomItem implements Interactable {
 
     /** Exceptions for mobs that shouldn't be allowed to be captured due to their size. Boss mobs are already exempt*/
     public static Set<EntityType> EXCEPTIONS = new HashSet<EntityType>(Arrays.asList(EntityType.GHAST, EntityType.ELDER_GUARDIAN, EntityType.GIANT));
@@ -94,5 +96,11 @@ public class RushiaShield extends CustomItem {
 
         //This message may want to be disabled. Depends on if it gets annoying
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&d&kxxx &5Soul Absorbed &d&kxxx"));
+    }
+
+    @Override
+    public boolean onInteract(Player player, CustomItem item, ItemStack stack) {
+        new RushiaShieldAbility(player, stack, player.getInventory(), 0);
+        return false;
     }
 }

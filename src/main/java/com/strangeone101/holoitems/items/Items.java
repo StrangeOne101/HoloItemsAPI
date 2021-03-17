@@ -4,13 +4,12 @@ import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.items.implementations.BerryTrident;
 import com.strangeone101.holoitems.items.implementations.EnchantedBlock;
+import com.strangeone101.holoitems.items.implementations.MegaSponge;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
 import com.strangeone101.holoitems.items.implementations.RushiaShield;
-import com.strangeone101.holoitems.items.implementations.RushianRevolver;
+import com.strangeone101.holoitems.items.implementations.RussianRevolver;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-
-import java.util.Arrays;
 
 public class Items {
 
@@ -28,51 +27,60 @@ public class Items {
     public static CustomItem GEM_SAPPHIRE;
     public static CustomItem GEM_TOPAZ;
     public static CustomItem GEM_AMETHYST;
+    public static CustomItem SPONGE_LARGE;
+    public static CustomItem SPONGE_LARGE_WET;
+    public static CustomItem SPONGE_LAVA;
+    public static CustomItem SPONGE_LAVA_WET;
+
 
     public static void registerHoloItems() {
 
-        RUSHIA_SHIELD = new RushiaShield();
-        BERRY_TRIDENT = new BerryTrident();
-        ETHERREAL_ESSENSE = new CustomItem("etherreal_essense", Material.PURPLE_DYE)
-                .setDisplayName(ChatColor.LIGHT_PURPLE + "Etherreal Essense")
-                .addLore(ChatColor.GRAY + "Mysterious...? What use could it have?");
+        RUSHIA_SHIELD = (RushiaShield) new RushiaShield().setInternalID(1700).register();
+        //BERRY_TRIDENT = new BerryTrident();
+        ETHERREAL_ESSENSE = new CustomItem("void_essense", Material.PURPLE_DYE)
+                .setDisplayName(ChatColor.LIGHT_PURPLE + "Void Essense")
+                .addLore(ChatColor.DARK_GRAY + "Crafting Ingredient").addLore("")
+                .addLore(ChatColor.GRAY + "Mysterious...? What use could it have?")
+                .setInternalID(1010).register();
         OTHERWORLDLY_ADHESIVE = new CustomItem("otherworldly_adhesive", Material.BLAZE_POWDER)
-                .setDisplayName(ChatColor.LIGHT_PURPLE + "Otherwordly Adhesive")
+                .setDisplayName(ChatColor.LIGHT_PURPLE + "Ethereal Adhesive")
+                .addLore(ChatColor.DARK_GRAY + "Crafting Ingredient").addLore("")
                 .addLore(ChatColor.GRAY + "You feel a mysterious force pulling")
-                .addLore("things towards it");
+                .addLore(ChatColor.GRAY + "things towards it").setInternalID(1011).register();
         NETHER_DIAMOND = new CustomItem("nether_diamond", Material.DIAMOND)
                 .setDisplayName(ChatColor.RED + "Nether Diamond")
-                .addLore(ChatColor.GRAY + "Hot to the touch");
+                .addLore(ChatColor.DARK_GRAY + "Crafting Ingredient").addLore("")
+                .addLore(ChatColor.GRAY + "Hot to the touch").setInternalID(1012).register();
         ENCHANTED_SAND = new EnchantedBlock("enchanted_sand", Material.SAND, "sand")
-                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Sand");
+                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Sand").setInternalID(2100).register();
         ENCHANTED_DIRT = new EnchantedBlock("enchanted_dirt", Material.DIRT, "dirt")
-                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Dirt");
+                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Dirt").setInternalID(2101).register();
         ENCHANTED_STONE = new EnchantedBlock("enchanted_stone", Material.STONE, "stone")
-                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Stone");
-        MOGU_BOOTS = new MoguBoots();
-        RUSSIAN_ROULETTE_REVOLVER = new RushianRevolver();
+                .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Stone").setInternalID(2102).register();
+        MOGU_BOOTS = new MoguBoots().setInternalID(1701).register();
+        RUSSIAN_ROULETTE_REVOLVER = new RussianRevolver().setInternalID(1500).register();
 
-        GEM_RUBY = new CustomItem("gem_ruby", Material.EMERALD, ChatColor.DARK_RED + "Ruby");
-        GEM_SAPPHIRE = new CustomItem("gem_sapphire", Material.EMERALD, ChatColor.BLUE + "Sapphire");
-        GEM_TOPAZ = new CustomItem("gem_topaz", Material.EMERALD, ChatColor.GOLD + "Topaz");
-        GEM_AMETHYST = new CustomItem("gem_amethyst", Material.EMERALD, ChatColor.LIGHT_PURPLE + "Amethyst");
+        GEM_RUBY = new CustomItem("gem_ruby", Material.EMERALD, ChatColor.DARK_RED + "Ruby").setInternalID(1000).register();
+        GEM_SAPPHIRE = new CustomItem("gem_sapphire", Material.EMERALD, ChatColor.BLUE + "Sapphire").setInternalID(1001).register();
+        GEM_TOPAZ = new CustomItem("gem_topaz", Material.EMERALD, ChatColor.GOLD + "Topaz").setInternalID(1004).register();
+        GEM_AMETHYST = new CustomItem("gem_amethyst", Material.EMERALD, ChatColor.LIGHT_PURPLE + "Amethyst").setInternalID(1003).register();
 
-        CustomItemRegistry.register(RUSHIA_SHIELD);
-        CustomItemRegistry.register(BERRY_TRIDENT);
-        CustomItemRegistry.registerBlankId(); //Leave this one for thrown berry tridents
-        CustomItemRegistry.register(ETHERREAL_ESSENSE);
-        CustomItemRegistry.register(OTHERWORLDLY_ADHESIVE);
-        CustomItemRegistry.register(NETHER_DIAMOND);
-        CustomItemRegistry.register(ENCHANTED_SAND);
-        CustomItemRegistry.register(ENCHANTED_DIRT);
-        CustomItemRegistry.register(ENCHANTED_STONE);
-        CustomItemRegistry.register(MOGU_BOOTS);
-        CustomItemRegistry.register(RUSSIAN_ROULETTE_REVOLVER);
-        CustomItemRegistry.register(GEM_RUBY);
-        CustomItemRegistry.register(GEM_SAPPHIRE);
-        CustomItemRegistry.register(GEM_TOPAZ);
-        CustomItemRegistry.register(GEM_AMETHYST);
+        SPONGE_LARGE_WET = new CustomItem("sponge_large_wet", Material.WET_SPONGE, ChatColor.YELLOW + "Large Sponge (Full)")
+                .addLore(ChatColor.DARK_GRAY + "Block").addLore("").addLore(ChatColor.GRAY + "Soaks up a large amount of water.")
+                .addLore("").addLore(ChatColor.RED + "Dry it in a furnace!")
+        .setInternalID(2120).register();
 
+        SPONGE_LARGE = new MegaSponge("sponge_large", 15, Material.WATER, SPONGE_LARGE_WET)
+                .setDisplayName(ChatColor.YELLOW + "Large Sponge").addLore(ChatColor.DARK_GRAY + "Placeable Block").addLore("")
+                .addLore(ChatColor.GRAY + "Soaks up nearby lava").setInternalID(2121).register();
 
+        SPONGE_LAVA_WET = new CustomItem("sponge_lava_wet", Material.WET_SPONGE, ChatColor.RED + "Lava Sponge (Full)")
+                .addLore(ChatColor.DARK_GRAY + "Block").addLore("").addLore(ChatColor.GRAY + "Soaks up nearby lava")
+                .addLore("").addLore(ChatColor.YELLOW + "Must be emptied!")
+                .setInternalID(2122).register();
+
+        SPONGE_LAVA = new MegaSponge("sponge_lava", 5, Material.LAVA, SPONGE_LAVA_WET)
+                .setDisplayName(ChatColor.RED + "Lava Sponge").addLore(ChatColor.DARK_GRAY + "Placeable Block").addLore("")
+                .addLore(ChatColor.GRAY + "Soaks up a large amount of lava").setInternalID(2123).register();
     }
 }

@@ -1,5 +1,6 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.util.ItemUtils;
 import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -8,10 +9,13 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -21,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -37,6 +42,8 @@ public class CustomItem {
     private int maxDurability = 0;
     private boolean stackable = true;
     private Set<Property> properties = new HashSet<Property>();
+    private String extraData;
+    private Random random;
 
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
 
@@ -47,6 +54,7 @@ public class CustomItem {
     public CustomItem(String name, Material material) {
         this(name);
         this.material = material;
+        this.random = new Random(name.hashCode());
     }
 
     public CustomItem(String name, Material material, String displayName) {
@@ -73,7 +81,7 @@ public class CustomItem {
      */
     public ItemStack buildStack(Player player) {
         ItemStack stack = new ItemStack(getMaterial());
-
+        this.random = new Random(name.hashCode());
         ItemMeta meta = stack.getItemMeta();
 
         //It's important to use the functions `getDisplayName()` and `getLore()` bellow
@@ -86,6 +94,12 @@ public class CustomItem {
         }
         meta.setLore(lore);
         meta.setCustomModelData(internalIntID); //Used for resource packs
+
+        if (meta instanceof SkullMeta) {
+            if (extraData != null) {
+                ItemUtils.setSkin((SkullMeta) meta, extraData);
+            }
+        }
 
         if (player != null) {
             if (properties.contains(Properties.OWNER)) {
@@ -163,6 +177,11 @@ public class CustomItem {
         }
         meta.setLore(lore);
         meta.setCustomModelData(internalIntID); //Used for resource packs
+        if (meta instanceof SkullMeta) {
+            if (extraData != null) {
+                ItemUtils.setSkin((SkullMeta) meta, extraData);
+            }
+        }
 
         stack.setItemMeta(meta);
 
@@ -226,10 +245,6 @@ public class CustomItem {
 
     }
 
-    public static void setDurability(ItemStack damage) {
-        //TODO
-    }
-
     public int getDurability(ItemStack stack) {
         if (getMaxDurability() > 0) {
             ItemMeta meta = stack.getItemMeta();
@@ -237,6 +252,14 @@ public class CustomItem {
             return damage;
         }
         return 0;
+    }
+
+    public CustomItem setHeadSkin(String skin) {
+        if (material != Material.PLAYER_HEAD && material != Material.PLAYER_WALL_HEAD) {
+            this.extraData = skin;
+        }
+
+        return this;
     }
 
     public String replaceVariables(String string, PersistentDataContainer dataHolder) {
@@ -258,6 +281,11 @@ public class CustomItem {
 
     public void addVariable(String variable, Function<PersistentDataContainer, String> function) {
         variables.put(variable, function);
+    }
+
+    public CustomItem setToolSpeed(double speedPercentage) {
+        //TODO
+        return this;
     }
 
     /**
@@ -344,12 +372,18 @@ public class CustomItem {
         return this;
     }
 
-    protected void setInternalIntegerID(int id) {
+    public CustomItem setInternalID(int id) {
         this.internalIntID = id;
+        return this;
     }
 
-    public void selfRegister() {
+    public int getInternalID() {
+        return internalIntID;
+    }
+
+    public CustomItem register() {
         CustomItemRegistry.register(this);
+        return this;
     }
 
     /**

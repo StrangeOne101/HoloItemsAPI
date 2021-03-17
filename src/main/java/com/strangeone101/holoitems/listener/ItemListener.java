@@ -6,22 +6,36 @@ import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
 import com.strangeone101.holoitems.abilities.BerryTridentAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
-import com.strangeone101.holoitems.items.implementations.EnchantedBlock;
 import com.strangeone101.holoitems.items.Items;
+import com.strangeone101.holoitems.items.abilities.FoodAbility;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
 import com.strangeone101.holoitems.items.implementations.RushiaShield;
-import com.strangeone101.holoitems.items.implementations.RushianRevolver;
+import com.strangeone101.holoitems.items.implementations.RussianRevolver;
+import com.strangeone101.holoitems.items.interfaces.BlockInteractable;
+import com.strangeone101.holoitems.items.interfaces.Edible;
+import com.strangeone101.holoitems.items.interfaces.EntityInteractable;
+import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.items.interfaces.Placeable;
-import org.bukkit.GameMode;
+import com.strangeone101.holoitems.items.interfaces.Swingable;
+import com.strangeone101.holoitems.util.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Boss;
+import org.bukkit.entity.Breedable;
+import org.bukkit.entity.Cat;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.Wolf;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -30,6 +44,7 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.AnvilInventory;
@@ -42,12 +57,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class ItemListener implements Listener {
 
     public static final HashSet<Material> INTERACTABLES = new HashSet<>();
+
+    public static final HashSet<EntityType> GREENLIT_ENTITY_INTERACTIONS = new HashSet<>();
+    public static final HashMap<EntityType, BiFunction<Entity, Material, Boolean>> ENTITY_INTERACTABLES = new HashMap<>();
 
     public ItemListener() {
         INTERACTABLES.addAll(Arrays.asList(
@@ -72,6 +93,35 @@ public class ItemListener implements Listener {
                 Material.ORANGE_SHULKER_BOX, Material.PINK_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.RED_SHULKER_BOX,
                 Material.YELLOW_SHULKER_BOX, Material.WHITE_SHULKER_BOX
         ));
+
+        GREENLIT_ENTITY_INTERACTIONS.addAll(Arrays.asList(EntityType.VILLAGER, EntityType.MINECART, EntityType.BOAT,
+                EntityType.ARMOR_STAND, EntityType.ITEM_FRAME, EntityType.WANDERING_TRADER, EntityType.MINECART_CHEST,
+                EntityType.MINECART_HOPPER));
+
+        ENTITY_INTERACTABLES.put(EntityType.PIG, (entity, item) -> !(item == Material.CARROT || item == Material.SADDLE
+                || item == Material.LEAD || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.STRIDER, (entity, item) -> !(item == Material.WARPED_FUNGUS
+                || item == Material.LEAD || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.HORSE, (entity, item) -> !(item == Material.WHEAT || item == Material.HAY_BLOCK
+                || item == Material.APPLE || item == Material.SUGAR || item == Material.GOLDEN_CARROT || item == Material.GOLDEN_APPLE
+                || item == Material.LEAD || item == Material.ENCHANTED_GOLDEN_APPLE || item == Material.GOLDEN_HORSE_ARMOR
+                || item == Material.IRON_HORSE_ARMOR || item == Material.DIAMOND_HORSE_ARMOR || item == Material.LEATHER_HORSE_ARMOR
+                || item == Material.SADDLE || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.DONKEY, (entity, item) -> !(item == Material.WHEAT || item == Material.HAY_BLOCK
+                || item == Material.APPLE || item == Material.SUGAR || item == Material.GOLDEN_CARROT || item == Material.GOLDEN_APPLE
+                || item == Material.LEAD || item == Material.ENCHANTED_GOLDEN_APPLE || item == Material.CHEST
+                || item == Material.SADDLE || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.MULE, ENTITY_INTERACTABLES.get(EntityType.DONKEY));
+        ENTITY_INTERACTABLES.put(EntityType.LLAMA, (entity, item) -> !(item == Material.LEAD || item == Material.WHEAT
+                || item == Material.HAY_BLOCK || item == Material.CHEST || item.toString().endsWith("CARPET")
+                || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.SKELETON_HORSE, (entity, item) -> !(item == Material.SADDLE || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.ZOMBIE_HORSE, ENTITY_INTERACTABLES.get(EntityType.SKELETON_HORSE));
+        ENTITY_INTERACTABLES.put(EntityType.WOLF, (entity, item) -> (((Wolf)entity).isTamed()) && !(item == Material.BONE
+                || ItemUtils.isDye(item) || item == Material.LEAD || ItemUtils.isMeat(item) || item == Material.ROTTEN_FLESH
+                || item == Material.NAME_TAG));
+        ENTITY_INTERACTABLES.put(EntityType.CAT, (entity, item) -> (((Cat)entity).isTamed()) && !(item == Material.LEAD
+                || ItemUtils.isFish(item) || ItemUtils.isDye(item) || item == Material.NAME_TAG));
     }
 
     @EventHandler
@@ -108,7 +158,9 @@ public class ItemListener implements Listener {
                 if (placeable.place(event.getBlock(), event.getPlayer(), ci, event.getItemInHand())) {
                     event.setCancelled(true);
                 }
+                return;
             }
+            event.setCancelled(true);
             /*if (ci instanceof EnchantedBlock) {
                 if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
                     final ItemStack stack = event.getItemInHand().clone();
@@ -147,26 +199,76 @@ public class ItemListener implements Listener {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
 
-        boolean isInteractable = event.getClickedBlock() != null && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
-
-        if (isInteractable) {
-            return; //Don't cancel the event because they opened some form of GUI
-        }
+        boolean isInteractable = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
+                && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
 
         if (customItem != null) {
-            if (customItem == Items.RUSHIA_SHIELD) {
-                new RushiaShieldAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), slot);
-            } else if (customItem == Items.BERRY_TRIDENT) {
-                new BerryTridentAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), slot);
-            } else if (customItem == Items.RUSSIAN_ROULETTE_REVOLVER) {
-                RushianRevolver.fire(event.getPlayer(), event.getItem(), event.getPlayer().isSneaking());
+
+            //Run BlockInteractables before GUI checks
+            if (customItem instanceof BlockInteractable && event.getClickedBlock() != null) {
+                if (((BlockInteractable)customItem).onInteract(event.getPlayer(), event.getClickedBlock(), customItem,
+                        event.getItem(), event.getAction() == Action.LEFT_CLICK_BLOCK)) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    //event.setCancelled(true);
+                }
+                return;
             }
 
-            if (customItem != Items.RUSHIA_SHIELD) {
-                event.setCancelled(true); //Prevent interactions of every other custom item
+            if (isInteractable) {
+                return; //Don't cancel the event because they opened some form of GUI
             }
 
+            if (customItem instanceof Placeable) {
+                return; //Don't cancel placeable items since they are handled in the place event
+            }
 
+            if ((event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)) {
+                if (customItem instanceof Interactable) {
+                    if (((Interactable)customItem).onInteract(event.getPlayer(), customItem, event.getItem())) {
+                        event.setUseItemInHand(Event.Result.DENY);
+                        //event.setCancelled(true);
+
+                    }
+                    return;
+                }
+
+                if (customItem instanceof Edible) {
+                    event.setUseItemInHand(Event.Result.DENY);
+                    new FoodAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), 0);
+                    return;
+                }
+
+            } else if (customItem instanceof Swingable && (event.getAction() == Action.LEFT_CLICK_AIR
+                    || event.getAction() == Action.LEFT_CLICK_BLOCK)) {
+                 ((Swingable)customItem).swing(event.getPlayer(), customItem, event.getItem());
+                 return;
+            }
+
+            event.setUseItemInHand(Event.Result.DENY);
+        }
+    }
+
+    @EventHandler
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        CustomItem customItem = CustomItemRegistry.getCustomItem(event.getPlayer().getInventory().getItem(event.getHand()));
+
+        if (customItem != null) {
+            if (customItem instanceof EntityInteractable) {
+                if (((EntityInteractable)customItem).onInteract(event.getRightClicked(), event.getPlayer(), customItem,
+                        event.getPlayer().getInventory().getItem(event.getHand()))) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+
+            EntityType type = event.getRightClicked().getType();
+            Material mat = event.getPlayer().getInventory().getItem(event.getHand()).getType();
+
+            //If it's not a greenlit entity and its not an entity that can be interacted with based on the item
+            if (!(GREENLIT_ENTITY_INTERACTIONS.contains(type) ||
+                    (ENTITY_INTERACTABLES.containsKey(type) && ENTITY_INTERACTABLES.get(type).apply(event.getRightClicked(), mat)))) {
+                event.setCancelled(true);
+            }
         }
     }
 

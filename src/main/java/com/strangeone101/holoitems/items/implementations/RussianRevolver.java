@@ -3,6 +3,7 @@ package com.strangeone101.holoitems.items.implementations;
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.util.CustomDamage;
 import com.strangeone101.holoitems.util.CustomDamageSource;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -19,9 +20,9 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Random;
 
-public class RushianRevolver extends CustomItem {
+public class RussianRevolver extends CustomItem implements Interactable {
 
-    public RushianRevolver() {
+    public RussianRevolver() {
         super("russian_roulette_revolver", Material.GOLDEN_HOE);
 
         this.setDisplayName(ChatColor.YELLOW + "1967 Soviet Russian Revolver");
@@ -109,5 +110,11 @@ public class RushianRevolver extends CustomItem {
                 player.spigot().sendMessage(text);
             }
         }
+    }
+
+    @Override
+    public boolean onInteract(Player player, CustomItem item, ItemStack stack) {
+        fire(player, stack, player.isSneaking());
+        return true;
     }
 }

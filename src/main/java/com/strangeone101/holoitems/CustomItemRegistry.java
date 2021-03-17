@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class CustomItemRegistry {
 
-    private static int NEXT_ID = 3000;
+    private static int NEXT_ID = 2300;
     private static final int INVALID_ID = 404;
 
     private static Map<String, CustomItem> CUSTOM_ITEMS = new HashMap<>();
@@ -24,10 +24,13 @@ public class CustomItemRegistry {
      */
     public static void register(CustomItem item) {
         CUSTOM_ITEMS.put(item.getInternalName(), item);
-        item.setInternalIntegerID(NEXT_ID);
 
-        NEXT_ID++;
-        if (NEXT_ID == INVALID_ID) NEXT_ID++;
+        if (item.getInternalID() == 0) {
+            item.setInternalID(NEXT_ID);
+
+            NEXT_ID++;
+            if (NEXT_ID == INVALID_ID) NEXT_ID++;
+        }
     }
 
     public static CustomItem getCustomItem(String id) {
@@ -80,10 +83,6 @@ public class CustomItemRegistry {
 
     public static Map<String, CustomItem> getCustomItems() {
         return CUSTOM_ITEMS;
-    }
-
-    public static void registerBlankId() {
-        NEXT_ID++;
     }
 
 }
