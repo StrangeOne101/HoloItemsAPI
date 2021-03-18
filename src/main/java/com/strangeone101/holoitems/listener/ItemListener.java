@@ -11,13 +11,17 @@ import com.strangeone101.holoitems.items.abilities.FoodAbility;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
 import com.strangeone101.holoitems.items.implementations.RushiaShield;
 import com.strangeone101.holoitems.items.implementations.RussianRevolver;
+import com.strangeone101.holoitems.items.interfaces.BehaviourListener;
 import com.strangeone101.holoitems.items.interfaces.BlockInteractable;
+import com.strangeone101.holoitems.items.interfaces.DeathBehaviour;
 import com.strangeone101.holoitems.items.interfaces.Edible;
 import com.strangeone101.holoitems.items.interfaces.EntityInteractable;
 import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.items.interfaces.Placeable;
 import com.strangeone101.holoitems.items.interfaces.Swingable;
 import com.strangeone101.holoitems.util.ItemUtils;
+import com.strangeone101.holoitems.util.ListenerContext;
+import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Material;
 import org.bukkit.entity.Boss;
 import org.bukkit.entity.Breedable;
@@ -46,7 +50,11 @@ import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.GrindstoneInventory;
@@ -126,24 +134,37 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void onKill(EntityDeathEvent event) {
-        if (event.getEntity().getKiller() != null && event.getEntity() instanceof Mob && !(event.getEntity() instanceof Boss)) { //If the entity WAS killed by a player
-            Player killer = event.getEntity().getKiller();
-
-            //Cycle through the offhand and normal hand for
-            for (EquipmentSlot slot : new EquipmentSlot[] {EquipmentSlot.OFF_HAND, EquipmentSlot.HAND}) {
-                ItemStack item = killer.getInventory().getItem(slot);
-                CustomItem customItem = CustomItemRegistry.getCustomItem(item);
-
-                if (customItem != null) {
-                    if (customItem == Items.RUSHIA_SHIELD && !RushiaShieldAbility.getShieldMobs().contains(event.getEntity())
-                            && !RushiaShield.EXCEPTIONS.contains(event.getEntity().getType())) {
-                        ((RushiaShield)customItem).killMob((Mob) event.getEntity(), event.getEntity().getKiller(), item);
-                        killer.getInventory().setItem(slot, item); //Update the itemstack because it's not updated when accessed through getItem(slot)
-                        return;
-                    }
+        if (ListenerContext.CACHED_POSITIONS_BY_EVENT.containsKey(EntityDeathEvent.class)) {
+            for (Player playerKey : ListenerContext.CACHED_POSITIONS_BY_EVENT.get(EntityDeathEvent.class).keySet()) {
+                for (Triple<CustomItem, ItemStack, ListenerContext.Position> triple : ListenerContext.CACHED_POSITIONS_BY_EVENT.get(EntityDeathEvent.class).get(playerKey)) {
+                    //Build context
+                    ListenerContext context = ((BehaviourListener<EntityDeathEvent>)triple.getLeft())
+                            .buildContext(triple.getLeft(), triple.getMiddle(), playerKey, triple.getRight(), event);
+                    //Trigger the event on the item
+                    ((BehaviourListener<EntityDeathEvent>)triple.getLeft()).onTrigger(context);
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onLogin(PlayerLoginEvent event) {
+        if (!ListenerContext.isCached(event.getPlayer())) {
+            ListenerContext.fullCache(event.getPlayer());
+        }
+    }
+
+    @EventHandler
+    public void onLogout(PlayerQuitEvent event) {
+        //Release cache in 10 seconds after logout
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (event.getPlayer() == null || !event.getPlayer().isOnline()) {
+                    ListenerContext.release(event.getPlayer());
+                }
+            }
+        }.runTaskLater(HoloItemsPlugin.INSTANCE, 20 * 10L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -451,6 +472,18 @@ public class ItemListener implements Listener {
                     event.setResult(null);
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onDamageItem(PlayerItemDamageEvent event) {
+        CustomItem item = CustomItemRegistry.getCustomItem(event.getItem());
+
+        if (item != null) {
+            if (item.getMaxDurability() > 0) {
+                item.damageItem(event.getItem(), event.getDamage(), event.getPlayer());
+            }
+            event.setCancelled(true);
         }
     }
 }

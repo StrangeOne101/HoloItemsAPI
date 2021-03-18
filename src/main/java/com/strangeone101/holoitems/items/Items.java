@@ -23,6 +23,7 @@ public class Items {
     public static CustomItem ENCHANTED_STONE;
     public static CustomItem MOGU_BOOTS;
     public static CustomItem RUSSIAN_ROULETTE_REVOLVER;
+    public static CustomItem RUSSIAN_ROULETTE_REVOLVER_LARGE;
     public static CustomItem GEM_RUBY;
     public static CustomItem GEM_SAPPHIRE;
     public static CustomItem GEM_TOPAZ;
@@ -58,7 +59,17 @@ public class Items {
         ENCHANTED_STONE = new EnchantedBlock("enchanted_stone", Material.STONE, "stone")
                 .setDisplayName(ChatColor.LIGHT_PURPLE + "Enchanted Stone").setInternalID(2102).register();
         MOGU_BOOTS = new MoguBoots().setInternalID(1701).register();
-        RUSSIAN_ROULETTE_REVOLVER = new RussianRevolver().setInternalID(1500).register();
+        RUSSIAN_ROULETTE_REVOLVER = new RussianRevolver("russian_roulette_revolver", 6)
+                .setDisplayName(ChatColor.YELLOW + "1967 Soviet Russian Revolver")
+                .addLore(ChatColor.GRAY + "Great for playing russian roulette!").addLore("")
+                .addLore(ChatColor.GOLD + "Shift right click: " + ChatColor.YELLOW + "Spin barrel")
+                .addLore(ChatColor.GOLD + "Right click: " + ChatColor.YELLOW + "Fire one in the chamber").setInternalID(1500).register();
+        RUSSIAN_ROULETTE_REVOLVER_LARGE = new RussianRevolver("russian_roulette_revolver_extended", 12)
+                .setDisplayName(ChatColor.YELLOW + "1968 Extended Soviet Russian Revolver")
+                .addLore(ChatColor.GRAY + "Great for playing russian roulette!")
+                .addLore(ChatColor.GRAY + "The extended barrel fits 12 bullets.").addLore("")
+                .addLore(ChatColor.GOLD + "Shift right click: " + ChatColor.YELLOW + "Spin barrel")
+                .addLore(ChatColor.GOLD + "Right click: " + ChatColor.YELLOW + "Fire one in the chamber").setInternalID(1501).register();
 
         GEM_RUBY = new CustomItem("gem_ruby", Material.EMERALD, ChatColor.DARK_RED + "Ruby").setInternalID(1000).register();
         GEM_SAPPHIRE = new CustomItem("gem_sapphire", Material.EMERALD, ChatColor.BLUE + "Sapphire").setInternalID(1001).register();
@@ -70,7 +81,7 @@ public class Items {
                 .addLore("").addLore(ChatColor.RED + "Dry it in a furnace!")
         .setInternalID(2120).register();
 
-        SPONGE_LARGE = new MegaSponge("sponge_large", 15, Material.WATER, SPONGE_LARGE_WET)
+        SPONGE_LARGE = new MegaSponge("sponge_large", 11, Material.WATER, SPONGE_LARGE_WET)
                 .setDisplayName(ChatColor.YELLOW + "Large Sponge").addLore(ChatColor.DARK_GRAY + "Placeable Block").addLore("")
                 .addLore(ChatColor.GRAY + "Soaks up nearby lava").setInternalID(2121).register();
 

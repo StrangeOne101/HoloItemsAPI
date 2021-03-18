@@ -22,14 +22,11 @@ import java.util.Random;
 
 public class RussianRevolver extends CustomItem implements Interactable {
 
-    public RussianRevolver() {
-        super("russian_roulette_revolver", Material.GOLDEN_HOE);
+    private int shots;
 
-        this.setDisplayName(ChatColor.YELLOW + "1967 Soviet Russian Revolver");
-        this.addLore(ChatColor.GRAY + "Great for playing russian roulette!");
-        this.addLore("");
-        this.addLore(ChatColor.GOLD + "Shift right click: " + ChatColor.YELLOW + "Spin barrel");
-        this.addLore(ChatColor.GOLD + "Right click: " + ChatColor.YELLOW + "Fire one in the chamber");
+    public RussianRevolver(String name, int shots) {
+        super(name, Material.GOLDEN_HOE);
+        this.shots = shots;
     }
 
     @Override
@@ -45,7 +42,7 @@ public class RussianRevolver extends CustomItem implements Interactable {
         return stack; //Fix the lore for our added things
     }
 
-    public static void fire(Player player, ItemStack stack, boolean sneaking) {
+    public void fire(Player player, ItemStack stack, boolean sneaking) {
         ItemMeta meta = stack.getItemMeta();
 
         int value = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, -1);
@@ -53,14 +50,14 @@ public class RussianRevolver extends CustomItem implements Interactable {
         if (value == -1) {
             if (!sneaking) player.sendMessage(ChatColor.YELLOW + "The barrel needs to be spun first! Sneak right click to spin the barrel!");
             else {
-                update(stack, new Random().nextInt(6) + 1);
+                update(stack, new Random().nextInt(shots) + 1);
                 player.getWorld().playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_NETHERITE, 2, 2); //Reload sound
                 player.sendMessage(ChatColor.YELLOW + "You hear the barrel spin!");
             }
         } else if (value == 0) {
             if (!sneaking) player.sendMessage(ChatColor.YELLOW + "Reload the revolver with shift right click first!");
             else {
-                update(stack, new Random().nextInt(6) + 1);
+                update(stack, new Random().nextInt(shots) + 1);
                 player.getWorld().playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_NETHERITE, 2, 2); //Reload sound
                 player.sendMessage(ChatColor.YELLOW + "You reload and spin the barrel!");
                 broadcastGameMessage(player.getName() + " reloaded and spun the barrel!", player.getLocation(), player);

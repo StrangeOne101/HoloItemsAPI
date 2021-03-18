@@ -8,9 +8,11 @@ import com.strangeone101.holoitems.listener.ItemListener;
 import com.strangeone101.holoitems.listener.LootListener;
 import com.strangeone101.holoitems.loot.CustomLootRegistry;
 import com.strangeone101.holoitems.util.CIRecipeChoice;
+import com.strangeone101.holoitems.util.ListenerContext;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
@@ -50,6 +52,11 @@ public final class HoloItemsPlugin extends JavaPlugin {
 
         //Make all item abilities tick
         new ItemAbility.CustomItemAbilityTask().runTaskTimer(this, 1L, 1L);
+
+        //Create cache for all players
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            ListenerContext.fullCache(player);
+        }
 
     }
 
