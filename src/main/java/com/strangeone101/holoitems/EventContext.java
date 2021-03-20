@@ -1,23 +1,33 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitems;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.CustomItemRegistry;
-import com.strangeone101.holoitems.items.interfaces.BehaviourListener;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ListenerContext<E extends Event> {
+public class EventContext {
 
+    //Cache
     public static Map<Class<? extends Event>, Map<Player, Set<MutableTriple<CustomItem, ItemStack, Position>>>> CACHED_POSITIONS_BY_EVENT = new HashMap<>();
     public static Map<Player, Map<Integer, MutableTriple<CustomItem, ItemStack, Position>>> CACHED_POSITIONS_BY_SLOT = new HashMap<>();
+
+    //Registry
+    static Map<CustomItem, Map<Class<? extends Event>, Set<Method>>> ITEMEVENT_EXECUTORS = new HashMap<>();
+
+    //Events that we have ItemEvent listeners for
+    static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
 
     public static enum Position {
         HELD, OFFHAND, HOTBAR, ARMOR, INVENTORY
@@ -26,14 +36,12 @@ public class ListenerContext<E extends Event> {
     private Player player;
     private CustomItem item;
     private ItemStack stack;
-    private E event;
     private Position position;
 
-    public ListenerContext(Player player, CustomItem item, ItemStack stack, E entity, Position position) {
+    public EventContext(Player player, CustomItem item, ItemStack stack, Position position) {
         this.player = player;
         this.item = item;
         this.stack = stack;
-        this.event = entity;
         this.position = position;
     }
 
@@ -43,10 +51,6 @@ public class ListenerContext<E extends Event> {
 
     public ItemStack getStack() {
         return stack;
-    }
-
-    public E getEvent() {
-        return event;
     }
 
     public Position getPosition() {
@@ -69,7 +73,7 @@ public class ListenerContext<E extends Event> {
 
             CustomItem item = CustomItemRegistry.getCustomItem(stack);
 
-            if (item instanceof BehaviourListener) {
+            if (ITEMEVENT_EXECUTORS.containsKey(item)) {
                 Position pos = Position.INVENTORY;
                 if (slot >= 0 && slot <= 8) {
                     if (slot == player.getInventory().getHeldItemSlot()) {
@@ -81,20 +85,20 @@ public class ListenerContext<E extends Event> {
                     pos = Position.OFFHAND;
                 }
 
-                Class<? extends Event> clazz = ((BehaviourListener) item).getEventClass();
+                for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
+                    if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
+                        CACHED_POSITIONS_BY_EVENT.put(clazz, new HashMap<>());
+                    }
 
-                if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
-                    CACHED_POSITIONS_BY_EVENT.put(clazz, new HashMap<>());
+                    if (!CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) {
+                        CACHED_POSITIONS_BY_EVENT.get(clazz).put(player, new HashSet<>());
+                    }
+
+                    MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
+
+                    CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
+                    CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
                 }
-
-                if (!CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) {
-                    CACHED_POSITIONS_BY_EVENT.get(clazz).put(player, new HashSet<>());
-                }
-
-                MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
-
-                CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
-                CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
             }
         }
     }
@@ -172,5 +176,41 @@ public class ListenerContext<E extends Event> {
             pos = Position.OFFHAND;
         }
         return pos;
+    }
+
+    /**
+     * Get active contexts
+     * @param player The player
+     * @return The active contexts
+     */
+    public static Collection<EventContext> getActive(Player player) {
+        if (!CACHED_POSITIONS_BY_SLOT.containsKey(player)) return Collections.emptyList();
+
+        List<EventContext> contexts = new ArrayList<EventContext>();
+        for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_SLOT.get(player).values()) {
+            contexts.add(new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight()));
+        }
+        return contexts;
+    }
+
+    static void triggerItemEvents(Event event) {
+        if (CACHED_POSITIONS_BY_EVENT.containsKey(event.getClass())) {
+            for (Player player : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).keySet()) {
+                for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).get(player)) {
+                    EventContext context = new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight());
+
+                    for (Method method : ITEMEVENT_EXECUTORS.get(player).get(context.getItem())) {
+                        try {
+                            method.invoke(context.getItem(), context, event);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }

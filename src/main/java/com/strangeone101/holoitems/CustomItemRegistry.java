@@ -1,13 +1,23 @@
 package com.strangeone101.holoitems;
 
+import com.strangeone101.holoitems.items.interfaces.ItemEvent;
 import com.strangeone101.holoitems.util.UUIDTagType;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventException;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.EventExecutor;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +27,9 @@ public class CustomItemRegistry {
     private static final int INVALID_ID = 404;
 
     private static Map<String, CustomItem> CUSTOM_ITEMS = new HashMap<>();
+
+    private static final Listener DUMMY_LISTENER = new Listener() {};
+
 
     /**
      * Register a custom item
@@ -30,6 +43,37 @@ public class CustomItemRegistry {
 
             NEXT_ID++;
             if (NEXT_ID == INVALID_ID) NEXT_ID++;
+        }
+
+        HashSet<Method> methods = new HashSet<>();
+        methods.addAll(Arrays.asList(item.getClass().getDeclaredMethods()));
+        methods.addAll(Arrays.asList(item.getClass().getMethods()));
+        for (Method method : methods) {
+            if (method.isAnnotationPresent(ItemEvent.class)) {
+                if (method.getParameterTypes().length < 1 || !method.getParameterTypes()[0].equals(EventContext.class) || !Event.class.isAssignableFrom(method.getParameterTypes()[1])) {
+                    HoloItemsPlugin.INSTANCE.getLogger().severe("Item " + item.getInternalName()
+                            + "attempted to register an invalid ItemEvent method signature \\" + method.toGenericString() + "\" in " + item.getClass());
+                    continue;
+                }
+
+                Class<? extends Event> clazz = (Class<? extends Event>) method.getParameterTypes()[1];
+
+                if (!EventContext.ITEMEVENT_EXECUTORS.containsKey(item)) {
+                    EventContext.ITEMEVENT_EXECUTORS.put(item, new HashMap<>());
+                }
+
+                if (!EventContext.ITEMEVENT_EXECUTORS.get(item).containsKey(clazz)) {
+                    EventContext.ITEMEVENT_EXECUTORS.get(item).put(clazz, new HashSet<>());
+                }
+
+                method.setAccessible(true);
+                EventContext.ITEMEVENT_EXECUTORS.get(item).get(clazz).add(method);
+
+                //Make sure bukkit will trigger our event methods
+                if (!EventContext.REGISTERED_EVENT_HANDLERS.contains(clazz)) {
+                    registerItemEventListener(clazz);
+                }
+            }
         }
     }
 
@@ -83,6 +127,18 @@ public class CustomItemRegistry {
 
     public static Map<String, CustomItem> getCustomItems() {
         return CUSTOM_ITEMS;
+    }
+
+    private static void registerItemEventListener(Class<? extends Event> clazz) {
+        EventExecutor executor = new EventExecutor() {
+            @Override
+            public void execute(Listener listener, Event event) throws EventException {
+                EventContext.triggerItemEvents(event);
+            }
+        };
+
+        Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsPlugin.INSTANCE, false);
+        EventContext.REGISTERED_EVENT_HANDLERS.add(clazz);
     }
 
 }

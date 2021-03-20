@@ -8,7 +8,6 @@ import com.strangeone101.holoitems.listener.ItemListener;
 import com.strangeone101.holoitems.listener.LootListener;
 import com.strangeone101.holoitems.loot.CustomLootRegistry;
 import com.strangeone101.holoitems.util.CIRecipeChoice;
-import com.strangeone101.holoitems.util.ListenerContext;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -55,7 +54,7 @@ public final class HoloItemsPlugin extends JavaPlugin {
 
         //Create cache for all players
         for (Player player : Bukkit.getOnlinePlayers()) {
-            ListenerContext.fullCache(player);
+            EventContext.fullCache(player);
         }
 
     }

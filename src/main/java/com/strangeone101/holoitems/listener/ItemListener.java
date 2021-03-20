@@ -4,33 +4,23 @@ import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
-import com.strangeone101.holoitems.abilities.BerryTridentAbility;
-import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
 import com.strangeone101.holoitems.items.Items;
 import com.strangeone101.holoitems.items.abilities.FoodAbility;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
-import com.strangeone101.holoitems.items.implementations.RushiaShield;
-import com.strangeone101.holoitems.items.implementations.RussianRevolver;
-import com.strangeone101.holoitems.items.interfaces.BehaviourListener;
 import com.strangeone101.holoitems.items.interfaces.BlockInteractable;
-import com.strangeone101.holoitems.items.interfaces.DeathBehaviour;
 import com.strangeone101.holoitems.items.interfaces.Edible;
 import com.strangeone101.holoitems.items.interfaces.EntityInteractable;
 import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.items.interfaces.Placeable;
 import com.strangeone101.holoitems.items.interfaces.Swingable;
 import com.strangeone101.holoitems.util.ItemUtils;
-import com.strangeone101.holoitems.util.ListenerContext;
+import com.strangeone101.holoitems.EventContext;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Material;
-import org.bukkit.entity.Boss;
-import org.bukkit.entity.Breedable;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -39,7 +29,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -51,7 +40,6 @@ import org.bukkit.event.inventory.TradeSelectEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -69,7 +57,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class ItemListener implements Listener {
 
@@ -134,23 +121,13 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void onKill(EntityDeathEvent event) {
-        if (ListenerContext.CACHED_POSITIONS_BY_EVENT.containsKey(EntityDeathEvent.class)) {
-            for (Player playerKey : ListenerContext.CACHED_POSITIONS_BY_EVENT.get(EntityDeathEvent.class).keySet()) {
-                for (Triple<CustomItem, ItemStack, ListenerContext.Position> triple : ListenerContext.CACHED_POSITIONS_BY_EVENT.get(EntityDeathEvent.class).get(playerKey)) {
-                    //Build context
-                    ListenerContext context = ((BehaviourListener<EntityDeathEvent>)triple.getLeft())
-                            .buildContext(triple.getLeft(), triple.getMiddle(), playerKey, triple.getRight(), event);
-                    //Trigger the event on the item
-                    ((BehaviourListener<EntityDeathEvent>)triple.getLeft()).onTrigger(context);
-                }
-            }
-        }
+
     }
 
     @EventHandler
     public void onLogin(PlayerLoginEvent event) {
-        if (!ListenerContext.isCached(event.getPlayer())) {
-            ListenerContext.fullCache(event.getPlayer());
+        if (!EventContext.isCached(event.getPlayer())) {
+            EventContext.fullCache(event.getPlayer());
         }
     }
 
@@ -161,7 +138,7 @@ public class ItemListener implements Listener {
             @Override
             public void run() {
                 if (event.getPlayer() == null || !event.getPlayer().isOnline()) {
-                    ListenerContext.release(event.getPlayer());
+                    EventContext.release(event.getPlayer());
                 }
             }
         }.runTaskLater(HoloItemsPlugin.INSTANCE, 20 * 10L);

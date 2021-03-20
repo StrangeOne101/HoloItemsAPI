@@ -1,37 +1,32 @@
 package com.strangeone101.holoitems.items.implementations;
 
 import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.Properties;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
-import com.strangeone101.holoitems.items.Items;
-import com.strangeone101.holoitems.items.interfaces.DeathBehaviour;
 import com.strangeone101.holoitems.items.interfaces.Interactable;
-import com.strangeone101.holoitems.util.ListenerContext;
+import com.strangeone101.holoitems.items.interfaces.ItemEvent;
+import com.strangeone101.holoitems.EventContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Boss;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class RushiaShield extends CustomItem implements Interactable, DeathBehaviour {
+public class RushiaShield extends CustomItem implements Interactable {
 
     /** Exceptions for mobs that shouldn't be allowed to be captured due to their size. Boss mobs are already exempt*/
     public static Set<EntityType> EXCEPTIONS = new HashSet<EntityType>(Arrays.asList(EntityType.GHAST, EntityType.ELDER_GUARDIAN, EntityType.GIANT));
@@ -113,11 +108,11 @@ public class RushiaShield extends CustomItem implements Interactable, DeathBehav
         return false;
     }
 
-    @Override
-    public void onTrigger(ListenerContext<EntityDeathEvent> context) {
+    @ItemEvent
+    public void onTrigger(EventContext context, EntityDeathEvent event) {
         //If they are holding the item in the offhand or main hand
-        if (context.getPosition() == ListenerContext.Position.OFFHAND || context.getPosition() == ListenerContext.Position.HELD) {
-            LivingEntity entity = context.getEvent().getEntity();
+        if (context.getPosition() == EventContext.Position.OFFHAND || context.getPosition() == EventContext.Position.HELD) {
+            LivingEntity entity = event.getEntity();
 
             //If the killer is the person holding this item and the entity is a mob but not a boss
             if (entity.getKiller() == context.getPlayer() && entity instanceof Mob && !(entity instanceof Boss)) {
