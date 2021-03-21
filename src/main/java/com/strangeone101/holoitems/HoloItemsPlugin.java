@@ -26,13 +26,13 @@ public final class HoloItemsPlugin extends JavaPlugin {
 
     public static HoloItemsPlugin INSTANCE;
 
-    public static Map<NamespacedKey, Recipe> recipes = new HashMap<NamespacedKey, Recipe>();
+    public static Map<NamespacedKey, Recipe> recipes = new HashMap<>();
 
     private Keys keys;
 
     @Override
     public void onEnable() {
-        getLogger().info("Plugin enabled!");
+
 
         INSTANCE = this;
         this.keys = new Keys();
@@ -57,6 +57,10 @@ public final class HoloItemsPlugin extends JavaPlugin {
             EventContext.fullCache(player);
         }
 
+        getLogger().info("Registered " + CustomItemRegistry.getCustomItems().size()
+                + " custom items and " + recipes.size() + " custom recipes!");
+
+        getLogger().info("Plugin enabled!");
     }
 
     @Override

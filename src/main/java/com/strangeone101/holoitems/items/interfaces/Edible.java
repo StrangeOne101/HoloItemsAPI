@@ -6,17 +6,17 @@ import org.bukkit.inventory.ItemStack;
 
 public interface Edible {
 
-    public int getHungerAmount();
+    int getHungerAmount();
 
-    public float getSaturationAmount();
+    float getSaturationAmount();
 
-    public default void onEat(Player player, CustomItem item, ItemStack stack) { }
+    default void onEat(Player player, CustomItem item, ItemStack stack) { }
 
-    public static final long NORMAL_LENGTH = 1600;
-    public static final long SHORT_LENGTH = 800;
-    public static final long LONG_LENGTH = 3200;
+    static long NORMAL_LENGTH = 1600;
+    static long SHORT_LENGTH = 800;
+    static long LONG_LENGTH = 3200;
 
-    public default long getEatDuration() {
+    default long getEatDuration() {
         return NORMAL_LENGTH;
     }
 

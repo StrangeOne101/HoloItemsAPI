@@ -88,9 +88,8 @@ public class CustomItemRegistry {
     public static CustomItem getCustomItem(ItemStack stack) {
         if (isCustomItem(stack)) {
             String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
-            CustomItem item = getCustomItem(id);
 
-            return item;
+            return getCustomItem(id);
         }
 
         return null;
@@ -130,12 +129,7 @@ public class CustomItemRegistry {
     }
 
     private static void registerItemEventListener(Class<? extends Event> clazz) {
-        EventExecutor executor = new EventExecutor() {
-            @Override
-            public void execute(Listener listener, Event event) throws EventException {
-                EventContext.triggerItemEvents(event);
-            }
-        };
+        EventExecutor executor = (listener, event) -> EventContext.triggerItemEvents(event);
 
         Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsPlugin.INSTANCE, false);
         EventContext.REGISTERED_EVENT_HANDLERS.add(clazz);

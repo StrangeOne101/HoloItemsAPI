@@ -13,7 +13,7 @@ public interface Swingable {
      * @param item The custom item
      * @param stack The itemstack
      */
-    public void swing(Player player, CustomItem item, ItemStack stack);
+    void swing(Player player, CustomItem item, ItemStack stack);
 
     /**
      * Fired when the player swings this item at an entity and hits them
@@ -23,5 +23,5 @@ public interface Swingable {
      * @param stack The itemstack
      * @return If the entity should be damaged
      */
-    public boolean hit(Entity entityHit, Player player, CustomItem item, ItemStack stack);
+    boolean hit(Entity entityHit, Player player, CustomItem item, ItemStack stack);
 }

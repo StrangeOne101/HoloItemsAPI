@@ -15,7 +15,6 @@ import com.strangeone101.holoitems.items.interfaces.Placeable;
 import com.strangeone101.holoitems.items.interfaces.Swingable;
 import com.strangeone101.holoitems.util.ItemUtils;
 import com.strangeone101.holoitems.EventContext;
-import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Material;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Entity;
@@ -29,6 +28,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -282,6 +282,17 @@ public class ItemListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerPickup(EntityPickupItemEvent event) {
+        ItemStack stack = event.getItem().getItemStack();
+        CustomItem item = CustomItemRegistry.getCustomItem(stack);
+
+        if (item != null) {
+            stack = item.updateStack(stack, event.getEntity() instanceof Player ? (Player)event.getEntity() : null);
+            event.getItem().setItemStack(stack);
+        }
+    }
+
+    @EventHandler
     public void onItemSpawn(ItemSpawnEvent event) {
         ItemStack stack = event.getEntity().getItemStack();
         CustomItem item = CustomItemRegistry.getCustomItem(stack);
@@ -356,6 +367,11 @@ public class ItemListener implements Listener {
             }
 
         }
+
+        if (event.getRawSlot() >= event.getInventory().getSize()) { //If the click WASN'T in the top inventory
+
+
+        }
     }
 
     @EventHandler
@@ -398,9 +414,7 @@ public class ItemListener implements Listener {
                 return true; //Prevent repair of custom items
             } else if (CustomItemRegistry.isCustomItem(slot1)) {
                 CustomItem ci = CustomItemRegistry.getCustomItem(slot1);
-                if (!ci.getProperties().contains(Properties.RENAMED)) {
-                    return true; //This item cannot be renamed
-                }
+                return !ci.getProperties().contains(Properties.RENAMED); //This item cannot be renamed
             }
             return false;
         } else if (inventory instanceof MerchantInventory) {

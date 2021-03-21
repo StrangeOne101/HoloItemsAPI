@@ -1,6 +1,5 @@
 package com.strangeone101.holoitems.listener;
 
-import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.loot.CustomLootRegistry;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;

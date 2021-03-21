@@ -3,7 +3,6 @@ package com.strangeone101.holoitems.loot.tables;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.items.Items;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;

@@ -1,16 +1,12 @@
 package com.strangeone101.holoitems;
 
 import com.strangeone101.holoitems.util.ItemUtils;
-import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -28,7 +24,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public class CustomItem {
@@ -41,7 +36,7 @@ public class CustomItem {
     private List<String> lore = new ArrayList<>();
     private int maxDurability = 0;
     private boolean stackable = true;
-    private Set<Property> properties = new HashSet<Property>();
+    private Set<Property> properties = new HashSet<>();
     private String extraData;
     private Random random;
 
@@ -248,8 +243,7 @@ public class CustomItem {
     public int getDurability(ItemStack stack) {
         if (getMaxDurability() > 0) {
             ItemMeta meta = stack.getItemMeta();
-            int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
-            return damage;
+            return meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
         }
         return 0;
     }

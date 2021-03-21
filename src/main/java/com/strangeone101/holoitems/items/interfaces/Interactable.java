@@ -3,7 +3,6 @@ package com.strangeone101.holoitems.items.interfaces;
 
 import com.strangeone101.holoitems.CustomItem;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -19,5 +18,5 @@ public interface Interactable {
      * @param stack The item stack
      * @return Whether to cancel the interact event. Should be true.
      */
-    public boolean onInteract(Player player, CustomItem item, ItemStack stack);
+    boolean onInteract(Player player, CustomItem item, ItemStack stack);
 }

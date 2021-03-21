@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EventContext {
 
@@ -29,8 +30,8 @@ public class EventContext {
     //Events that we have ItemEvent listeners for
     static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
 
-    public static enum Position {
-        HELD, OFFHAND, HOTBAR, ARMOR, INVENTORY
+    public enum Position {
+        HELD, OFFHAND, HOTBAR, ARMOR, INVENTORY, OTHER
     }
 
     private Player player;
@@ -64,7 +65,7 @@ public class EventContext {
     public static void fullCache(Player player) {
         CACHED_POSITIONS_BY_SLOT.put(player, new HashMap<>());
 
-        for (Class key : CACHED_POSITIONS_BY_EVENT.keySet()) {
+        for (Class<? extends Event> key : CACHED_POSITIONS_BY_EVENT.keySet()) {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
 
@@ -74,16 +75,7 @@ public class EventContext {
             CustomItem item = CustomItemRegistry.getCustomItem(stack);
 
             if (ITEMEVENT_EXECUTORS.containsKey(item)) {
-                Position pos = Position.INVENTORY;
-                if (slot >= 0 && slot <= 8) {
-                    if (slot == player.getInventory().getHeldItemSlot()) {
-                        pos = Position.HELD;
-                    } else pos = Position.HOTBAR;
-                } else if (slot >= 100 && slot <= 103) {
-                    pos = Position.ARMOR;
-                } else if (slot == -146) {
-                    pos = Position.OFFHAND;
-                }
+                Position pos = getPosition(slot, player.getInventory().getHeldItemSlot());
 
                 for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
                     if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
@@ -119,7 +111,7 @@ public class EventContext {
         if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) return new HashSet<>();
         if (!CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) return new HashSet<>();
 
-        return CACHED_POSITIONS_BY_EVENT.get(player).get(clazz);
+        return CACHED_POSITIONS_BY_EVENT.get(clazz).get(player);
     }
 
     public static void updateCacheSlot(Player player, int oldSlot, int newSlot) {
@@ -166,13 +158,13 @@ public class EventContext {
 
     private static Position getPosition(int slot, int heldItemSlot) {
         Position pos = Position.INVENTORY;
-        if (slot >= 0 && slot <= 8) {
+        if (slot <= 8) {
             if (slot == heldItemSlot) {
                 pos = Position.HELD;
             } else pos = Position.HOTBAR;
-        } else if (slot >= 100 && slot <= 103) {
+        } else if (slot >= 36 && slot <= 39) {
             pos = Position.ARMOR;
-        } else if (slot == -146) {
+        } else if (slot == 40) {
             pos = Position.OFFHAND;
         }
         return pos;
@@ -186,7 +178,7 @@ public class EventContext {
     public static Collection<EventContext> getActive(Player player) {
         if (!CACHED_POSITIONS_BY_SLOT.containsKey(player)) return Collections.emptyList();
 
-        List<EventContext> contexts = new ArrayList<EventContext>();
+        List<EventContext> contexts = new ArrayList<>();
         for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_SLOT.get(player).values()) {
             contexts.add(new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight()));
         }
@@ -199,12 +191,10 @@ public class EventContext {
                 for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).get(player)) {
                     EventContext context = new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight());
 
-                    for (Method method : ITEMEVENT_EXECUTORS.get(player).get(context.getItem())) {
+                    for (Method method : ITEMEVENT_EXECUTORS.get(context.getItem()).get(event.getClass())) {
                         try {
                             method.invoke(context.getItem(), context, event);
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
+                        } catch (IllegalAccessException | InvocationTargetException e) {
                             e.printStackTrace();
                         }
                     }
@@ -212,5 +202,16 @@ public class EventContext {
 
             }
         }
+    }
+
+    public static List<String> getRegistryDebug() {
+        List<String> list = new ArrayList<>();
+
+        for (CustomItem ci : ITEMEVENT_EXECUTORS.keySet()) {
+            list.add("[" + ci.getInternalName() + "] " + String.join(", ",
+                    ITEMEVENT_EXECUTORS.get(ci).keySet().stream().map(clazz -> clazz.getSimpleName())
+                            .collect(Collectors.toList())));
+        }
+        return list;
     }
 }

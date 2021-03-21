@@ -17,5 +17,5 @@ public interface BlockInteractable {
      * @param leftClick If the click was a left click. False for right clicks.
      * @return Whether the interact event should be cancelled. Should be true
      */
-    public boolean onInteract(Player player, Block block, CustomItem item, ItemStack stack, boolean leftClick);
+    boolean onInteract(Player player, Block block, CustomItem item, ItemStack stack, boolean leftClick);
 }

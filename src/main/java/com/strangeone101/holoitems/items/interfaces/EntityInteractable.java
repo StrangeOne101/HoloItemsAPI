@@ -7,5 +7,5 @@ import org.bukkit.inventory.ItemStack;
 
 public interface EntityInteractable {
 
-    public boolean onInteract(Entity entity, Player player, CustomItem item, ItemStack stack);
+    boolean onInteract(Entity entity, Player player, CustomItem item, ItemStack stack);
 }

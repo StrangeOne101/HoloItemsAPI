@@ -2,7 +2,6 @@ package com.strangeone101.holoitems;
 
 import com.strangeone101.holoitems.util.UUIDTagType;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
@@ -92,7 +91,7 @@ public class Properties {
 
         @Override
         public void set(PersistentDataContainer data, Boolean value) {
-            if (value == true) {
+            if (value) {
                 data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_UNSTACK, PersistentDataType.INTEGER, ThreadLocalRandom.current().nextInt());
             } else {
                 data.remove(HoloItemsPlugin.getKeys().CUSTOM_ITEM_UNSTACK);

@@ -2,7 +2,6 @@ package com.strangeone101.holoitems.items.implementations;
 
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.Keys;
 import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.util.CustomDamage;
 import com.strangeone101.holoitems.util.CustomDamageSource;

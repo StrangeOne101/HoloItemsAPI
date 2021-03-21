@@ -1,18 +1,14 @@
 package com.strangeone101.holoitems.loot;
 
-import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.loot.tables.Endermite;
 import com.strangeone101.holoitems.loot.tables.GemOre;
 import com.strangeone101.holoitems.loot.tables.Spawner;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;
@@ -90,9 +86,9 @@ public class CustomLootRegistry {
             context.setLuck(luck_mod);
             context.setSilkTouch(silk_mod);
 
-            Collection<ItemStack> drops = new ArrayList<ItemStack>();
+            Collection<ItemStack> drops = new ArrayList<>();
             for (BlockLootTable table : BLOCK_TABLES.get(event.getBlock().getType())) {
-                List<ItemStack> tableDrops = new ArrayList<ItemStack>();
+                List<ItemStack> tableDrops = new ArrayList<>();
                 boolean b = table.populateLoot(tableDrops, new Random(), context);
 
                 if (!b) {

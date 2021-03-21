@@ -20,7 +20,7 @@ public class ItemUtils {
             UUID uuid = UUID.fromString(skin);
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
             return;
-        } catch (IllegalArgumentException e) { }
+        } catch (IllegalArgumentException ignored) { }
 
         if (skin.startsWith("https://")) {
             setSkinFromURL(meta, skin);
@@ -41,9 +41,9 @@ public class ItemUtils {
         byte[] encodedData = Base64.getEncoder()
                 .encode(String.format("{textures:{SKIN:{url:\"%s\"}}}", skin).getBytes());
         profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
-        Field profileField = null;
         try {
             profileField = im.getClass().getDeclaredField("profile");
+            Field profileField = im.getClass().getDeclaredField("profile");
             profileField.setAccessible(true);
             profileField.set(im, profile);
         } catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e1) {

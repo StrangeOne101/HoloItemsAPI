@@ -14,7 +14,7 @@ public interface BlockLootTable {
      * @param context The context of the block drop
      * @return Whether the block should drop its normal drops or not
      */
-    public boolean populateLoot(List<ItemStack> extraDrops, Random random, BlockLootContext context);
+    boolean populateLoot(List<ItemStack> extraDrops, Random random, BlockLootContext context);
 
     //So if I added an int for the exp in the parameters, it wouldn't update if I go `exp *= 3;` as that
     //would change the one within the populateLoot method. Not the original. Since its primitive

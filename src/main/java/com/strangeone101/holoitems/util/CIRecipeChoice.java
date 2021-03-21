@@ -17,8 +17,7 @@ public class CIRecipeChoice extends RecipeChoice.ExactChoice {
             if (CustomItemRegistry.isCustomItem(match)) {
                 CustomItem ci = CustomItemRegistry.getCustomItem(match);
                 if (ci != null && ci == CustomItemRegistry.getCustomItem(t) &&
-                        (ci.getMaxDurability() == 0 || ci.getDurability(match) == ci.getDurability(t)) &&
-                        (match.getDurability() == t.getDurability()))
+                        (ci.getMaxDurability() == 0 || ci.getDurability(match) == ci.getDurability(t)))
                     return true;
             }
             else if (match.isSimilar(t))

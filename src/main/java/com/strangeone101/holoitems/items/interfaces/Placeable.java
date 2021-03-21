@@ -15,5 +15,5 @@ public interface Placeable {
      * @param stack The item stack
      * @return If the event should cancel the place event
      */
-    public boolean place(Block block, Player player, CustomItem item, ItemStack stack);
+    boolean place(Block block, Player player, CustomItem item, ItemStack stack);
 }

@@ -29,7 +29,7 @@ import java.util.Set;
 public class RushiaShield extends CustomItem implements Interactable {
 
     /** Exceptions for mobs that shouldn't be allowed to be captured due to their size. Boss mobs are already exempt*/
-    public static Set<EntityType> EXCEPTIONS = new HashSet<EntityType>(Arrays.asList(EntityType.GHAST, EntityType.ELDER_GUARDIAN, EntityType.GIANT));
+    public static Set<EntityType> EXCEPTIONS = new HashSet<>(Arrays.asList(EntityType.GHAST, EntityType.ELDER_GUARDIAN, EntityType.GIANT));
 
     public RushiaShield() {
         super("rushia_shield", Material.SHIELD);

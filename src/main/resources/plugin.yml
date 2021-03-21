@@ -9,3 +9,4 @@ commands:
     description: Give our custom item
     usage: /holoitem
     default: op
+    aliases: [holoitems]

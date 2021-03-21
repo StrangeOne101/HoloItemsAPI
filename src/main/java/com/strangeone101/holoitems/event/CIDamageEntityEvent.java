@@ -5,7 +5,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityEvent;
 
 public class CIDamageEntityEvent extends EntityDamageEvent implements Cancellable {
 
