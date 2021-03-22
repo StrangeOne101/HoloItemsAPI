@@ -406,4 +406,18 @@ public class CustomItem {
         this.properties.add(property);
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "CustomItem{" +
+                "name='" + name + '\'' +
+                ", textureID=" + internalIntID +
+                ", material=" + material +
+                ", displayName='" + displayName + "\'\u00A7r'" +
+                ", maxDurability=" + maxDurability +
+                ", stackable=" + stackable +
+                ", properties=" + properties +
+                ", extraData='" + extraData + '\'' +
+                '}';
+    }
 }

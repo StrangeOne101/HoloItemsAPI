@@ -76,7 +76,6 @@ public class EventContext {
 
             if (ITEMEVENT_EXECUTORS.containsKey(item)) {
                 Position pos = getPosition(slot, player.getInventory().getHeldItemSlot());
-
                 for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
                     if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
                         CACHED_POSITIONS_BY_EVENT.put(clazz, new HashMap<>());
@@ -125,9 +124,10 @@ public class EventContext {
         }
     }
 
-    public static void swapCacheSlots(Player player, int slot1, int slot2) {
-        Position pos1 = getPosition(slot1, player.getInventory().getHeldItemSlot());
-        Position pos2 = getPosition(slot2, player.getInventory().getHeldItemSlot());
+    public static void swapCacheSlots(Player player, int slot1, int slot2, int... heldItemSlot) {
+        int heldSlot = heldItemSlot.length > 0 ? heldItemSlot[0] : player.getInventory().getHeldItemSlot();
+        Position pos1 = getPosition(slot1, heldSlot);
+        Position pos2 = getPosition(slot2, heldSlot);
 
         if (CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
             MutableTriple<CustomItem, ItemStack, Position> triple1 = CACHED_POSITIONS_BY_SLOT.get(player).get(slot1);
@@ -151,23 +151,47 @@ public class EventContext {
                     CACHED_POSITIONS_BY_SLOT.get(player).remove(slot2);
                 }
             }
+        }
+    }
 
+    /**
+     * Uncache an item removed from the inventory
+     * @param player The player
+     * @param slot The slot we are uncaching
+     */
+    public static void uncacheSlot(Player player, int slot) {
+        if (CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
+            Triple<CustomItem, ItemStack, Position> triple = CACHED_POSITIONS_BY_SLOT.get(player).get(slot);
 
+            if (triple != null) {
+                CACHED_POSITIONS_BY_SLOT.get(player).remove(slot); //Remove the slot
+
+                if (CACHED_POSITIONS_BY_SLOT.get(player).isEmpty()) { //If they have no more cache left
+                    CACHED_POSITIONS_BY_SLOT.remove(player); //Remove entire cache
+                }
+
+                for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(triple.getLeft()).keySet()) {
+                    if (CACHED_POSITIONS_BY_EVENT.containsKey(clazz) && CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) {
+                        CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).remove(triple);
+                    }
+                }
+            }
         }
     }
 
     private static Position getPosition(int slot, int heldItemSlot) {
-        Position pos = Position.INVENTORY;
-        if (slot <= 8) {
+        if (slot < 0) {
+            return Position.OTHER;
+        } else if (slot <= 8) {
             if (slot == heldItemSlot) {
-                pos = Position.HELD;
-            } else pos = Position.HOTBAR;
+                return Position.HELD;
+            } else return Position.HOTBAR;
         } else if (slot >= 36 && slot <= 39) {
-            pos = Position.ARMOR;
+            return Position.ARMOR;
         } else if (slot == 40) {
-            pos = Position.OFFHAND;
+            return Position.OFFHAND;
         }
-        return pos;
+        return Position.INVENTORY;
     }
 
     /**

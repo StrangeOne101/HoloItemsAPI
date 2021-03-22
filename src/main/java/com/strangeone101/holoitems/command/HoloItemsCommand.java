@@ -46,11 +46,10 @@ public class HoloItemsCommand implements CommandExecutor {
                     }
                     sender.sendMessage("----- Cache -------");
                     for (Integer slot : EventContext.CACHED_POSITIONS_BY_SLOT.get(sender).keySet()) {
-                        Set<MutableTriple<CustomItem, ItemStack, EventContext.Position>> set =
-                                EventContext.CACHED_POSITIONS_BY_EVENT.get(sender).get(slot);
-                        for (MutableTriple<CustomItem, ItemStack, EventContext.Position> triple : set) {
-                            sender.sendMessage("[" + slot + "] " + triple.getLeft().getInternalName() + " = " + triple.getRight().toString());
-                        }
+                        MutableTriple<CustomItem, ItemStack, EventContext.Position> triple =
+                                EventContext.CACHED_POSITIONS_BY_SLOT.get(sender).get(slot);
+                        sender.sendMessage("[" + slot + "] " + triple.getLeft().getInternalName() + " = " + triple.getRight().toString());
+
                     }
                     sender.sendMessage("----- End cache -------");
                 } else if (args[1].equalsIgnoreCase("registry")) {

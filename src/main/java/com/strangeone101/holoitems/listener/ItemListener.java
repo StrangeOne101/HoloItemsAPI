@@ -32,16 +32,20 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
+import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
@@ -120,11 +124,6 @@ public class ItemListener implements Listener {
     }
 
     @EventHandler
-    public void onKill(EntityDeathEvent event) {
-
-    }
-
-    @EventHandler
     public void onLogin(PlayerLoginEvent event) {
         if (!EventContext.isCached(event.getPlayer())) {
             EventContext.fullCache(event.getPlayer());
@@ -144,7 +143,7 @@ public class ItemListener implements Listener {
         }.runTaskLater(HoloItemsPlugin.INSTANCE, 20 * 10L);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         CustomItem ci = CustomItemRegistry.getCustomItem(event.getItemInHand());
 
@@ -159,39 +158,10 @@ public class ItemListener implements Listener {
                 return;
             }
             event.setCancelled(true);
-            /*if (ci instanceof EnchantedBlock) {
-                if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
-                    final ItemStack stack = event.getItemInHand().clone();
-                    final EquipmentSlot slot = event.getHand();
-                    new BukkitRunnable() {
-
-                        @Override
-                        public void run() {
-                            if (event.getPlayer().getEquipment().getItem(slot) == null ||
-                                    event.getPlayer().getEquipment().getItem(slot).getType() == Material.AIR) {
-                                event.getPlayer().getEquipment().setItem(slot, stack);
-                            } else {
-                                event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(), stack);
-                            }
-                        }
-                    }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
-                }
-            } else event.setCancelled(true);*/
         }
     }
 
-    /*@EventHandler(priority = EventPriority.HIGHEST)
-    public void onContainerSteal(org.bukkit.event.inventory.InventoryMoveItemEvent event) {
-        CustomItem item = CustomItemRegistry.getCustomItem(event.getItem());
-        if (item != null) {
-            if (item instanceof EnchantedBlock) {
-                event.setCancelled(true);
-                event.getDestination().addItem(new ItemStack(event.getItem().getType()));
-            }
-        }
-    }*/
-
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onItemUse(PlayerInteractEvent event) {
 
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
@@ -246,7 +216,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getPlayer().getInventory().getItem(event.getHand()));
 
@@ -270,7 +240,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onInvPickup(InventoryPickupItemEvent event) {
         ItemStack stack = event.getItem().getItemStack();
         CustomItem item = CustomItemRegistry.getCustomItem(stack);
@@ -281,7 +251,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerPickup(EntityPickupItemEvent event) {
         ItemStack stack = event.getItem().getItemStack();
         CustomItem item = CustomItemRegistry.getCustomItem(stack);
@@ -289,10 +259,20 @@ public class ItemListener implements Listener {
         if (item != null) {
             stack = item.updateStack(stack, event.getEntity() instanceof Player ? (Player)event.getEntity() : null);
             event.getItem().setItemStack(stack);
+
+            if (event.getEntity() instanceof Player) {
+                cacheLater((Player) event.getEntity());
+            }
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSlotSwitch(PlayerItemHeldEvent event) {
+        //Update the cached held item
+        EventContext.swapCacheSlots(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot(), event.getNewSlot());
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent event) {
         ItemStack stack = event.getEntity().getItemStack();
         CustomItem item = CustomItemRegistry.getCustomItem(stack);
@@ -303,7 +283,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
         if (event.getFrom().getBlock() != event.getTo().getBlock()) {
             CustomItem item = CustomItemRegistry.getCustomItem(event.getPlayer().getEquipment().getBoots());
@@ -313,7 +293,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onCraft(CraftItemEvent event) {
         ItemStack stack = event.getCurrentItem();
         if (CustomItemRegistry.isCustomItem(event.getCurrentItem()) && event.getWhoClicked() instanceof Player) {
@@ -341,7 +321,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onItemClick(InventoryClickEvent event) {
         //For villager inventories and grindstone inventories.
         if (event.getClickedInventory() instanceof MerchantInventory
@@ -368,13 +348,40 @@ public class ItemListener implements Listener {
 
         }
 
-        if (event.getRawSlot() >= event.getInventory().getSize()) { //If the click WASN'T in the top inventory
+        event.getWhoClicked().sendMessage(event.getAction() + "," + event.getClick() + ","
+                + event.getSlotType() + "," + event.getRawSlot() + "," + event.getSlot());
 
+        if (event.getRawSlot() >= event.getInventory().getSize() && event.getWhoClicked() instanceof Player) { //If the click WASN'T in the top inventory
+            if (event.getCursor() != null) {
+
+
+
+                if (event.getCurrentItem().isSimilar(event.getCursor()) && event.getCurrentItem().getAmount() < event.getCurrentItem().getMaxStackSize()) {
+                    EventContext.uncacheSlot((Player) event.getWhoClicked(), -1); //Delete the cached in item item
+                } else {
+                    EventContext.swapCacheSlots((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
+                }
+                return;
+            }
+
+            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                EventContext.uncacheSlot((Player) event.getWhoClicked(), event.getSlot());
+            }
+
+
+
+            if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF ||
+            event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME) {
+                EventContext.updateCacheSlot((Player) event.getWhoClicked(), event.getSlot(), -1);
+            } else if (event.getAction() == InventoryAction.PLACE_ALL || event.getAction() == InventoryAction.PLACE_ONE ||
+                    event.getAction() == InventoryAction.PLACE_SOME) {
+                EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot());
+            }
 
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onTradeSelect(TradeSelectEvent event) {
         List<ItemStack> ingre = ((MerchantInventory)event.getInventory()).getSelectedRecipe().getIngredients();
         for (int slot = 0; slot < 1 && slot < ingre.size() - 1; slot++) {
@@ -432,15 +439,24 @@ public class ItemListener implements Listener {
     }
 
     public void updateLater(Inventory inventory) {
-        BukkitRunnable runnable = new BukkitRunnable() {
+        new BukkitRunnable() {
             @Override
             public void run() {
                 if (shouldPrevent(inventory)) inventory.setItem(2, null);
             }
-        };
+        }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
     }
 
-    @EventHandler
+    public void cacheLater(Player player) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                EventContext.fullCache(player);
+            }
+        }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
+    }
+
+    @EventHandler(ignoreCancelled = true)
     public void onBrewRefuel(BrewingStandFuelEvent event) {
         if (CustomItemRegistry.isCustomItem(event.getFuel())) {
             event.setCancelled(true);
@@ -466,7 +482,7 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onDamageItem(PlayerItemDamageEvent event) {
         CustomItem item = CustomItemRegistry.getCustomItem(event.getItem());
 

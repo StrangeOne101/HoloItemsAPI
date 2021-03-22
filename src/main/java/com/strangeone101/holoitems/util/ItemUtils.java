@@ -42,7 +42,6 @@ public class ItemUtils {
                 .encode(String.format("{textures:{SKIN:{url:\"%s\"}}}", skin).getBytes());
         profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
         try {
-            profileField = im.getClass().getDeclaredField("profile");
             Field profileField = im.getClass().getDeclaredField("profile");
             profileField.setAccessible(true);
             profileField.set(im, profile);
