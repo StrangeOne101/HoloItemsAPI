@@ -7,6 +7,7 @@ import com.strangeone101.holoitems.items.implementations.MegaSponge;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
 import com.strangeone101.holoitems.items.implementations.RushiaShield;
 import com.strangeone101.holoitems.items.implementations.RussianRevolver;
+import com.strangeone101.holoitems.items.implementations.ScrambledEgg;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
@@ -31,6 +32,9 @@ public class Items {
     public static CustomItem SPONGE_LARGE_WET;
     public static CustomItem SPONGE_LAVA;
     public static CustomItem SPONGE_LAVA_WET;
+
+    public static CustomItem SCRAMBLED_EGG;
+    public static CustomItem BUTTER_CLOCK;
 
 
     public static void registerHoloItems() {
@@ -92,5 +96,9 @@ public class Items {
         SPONGE_LAVA = new MegaSponge("sponge_lava", 5, Material.LAVA, SPONGE_LAVA_WET)
                 .setDisplayName(ChatColor.RED + "Lava Sponge").addLore(ChatColor.DARK_GRAY + "Placeable Block").addLore("")
                 .addLore(ChatColor.GRAY + "Soaks up a large amount of lava").setInternalID(2123).register();
+
+        SCRAMBLED_EGG = new ScrambledEgg("scrambled_egg", Material.BAKED_POTATO).setDisplayName(ChatColor.YELLOW + "Scrambled Egg").setInternalID(501).register();
+        BUTTER_CLOCK = new ScrambledEgg("butter_clock", Material.CLOCK).setDisplayName(ChatColor.YELLOW + "Butter Clock").setInternalID(502).register();
+
     }
 }

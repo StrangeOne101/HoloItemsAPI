@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,7 @@ public class HoloItemsCommand implements CommandExecutor {
                     sender.sendMessage("/holoitems debug cache");
                     sender.sendMessage("/holoitems debug item");
                     sender.sendMessage("/holoitems debug registry");
+                    sender.sendMessage("/holoitems debug stresscache [amount]");
                 } else if (args[1].equalsIgnoreCase("cache")) {
                     if (!EventContext.CACHED_POSITIONS_BY_SLOT.containsKey(sender)) {
                         sender.sendMessage("No cache found!");
@@ -79,6 +81,28 @@ public class HoloItemsCommand implements CommandExecutor {
                             item.getProperties().stream().map(property -> property.getPropertyName() + "="
                                     + property.get(stack.getItemMeta().getPersistentDataContainer()))
                                     .collect(Collectors.joining()) + "]"));
+                } else if (args[1].equalsIgnoreCase("stresscache")) {
+                    int amount = 100;
+                    if (args.length > 2) {
+                        try {
+                            amount = Integer.parseInt(args[2]);
+                        } catch (NumberFormatException e) {
+                            sender.sendMessage(ChatColor.RED + "Not a number!");
+                        }
+                    }
+
+
+                    long totalTime = 0;
+                    Random rand = new Random();
+
+                    for (int i = 0; i < amount; i++) {
+                        Player player = (Player) Bukkit.getOnlinePlayers().toArray()[rand.nextInt(Bukkit.getOnlinePlayers().size())];
+                        long currentTime = System.currentTimeMillis();
+                        EventContext.fullCache(player);
+                        totalTime += (System.currentTimeMillis() - currentTime);
+                    }
+
+                    sender.sendMessage("Cached " + amount + " times in " + (totalTime) + "ms");
                 }
             }
             return true;

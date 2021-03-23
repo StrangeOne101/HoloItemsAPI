@@ -2,8 +2,10 @@ package com.strangeone101.holoitems.items.abilities;
 
 import com.strangeone101.holoitems.CustomItem;
 import com.strangeone101.holoitems.CustomItemRegistry;
+import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.ItemAbility;
 import com.strangeone101.holoitems.items.interfaces.Edible;
+import com.strangeone101.holoitems.util.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -11,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class FoodAbility extends ItemAbility {
@@ -25,12 +28,11 @@ public class FoodAbility extends ItemAbility {
         this.item = CustomItemRegistry.getCustomItem(stack);
         this.offHand = slot == 40;
 
-        if (!(this.item instanceof Edible)) {
-            start();
-
-            vanillaFood = stack.getType().isEdible();
-
-
+        if (this.item instanceof Edible && !ItemAbility.isAbilityActive(player, this.getClass())) {
+            if (player.getFoodLevel() < 20 || ((Edible)item).eatWhenFull()) {
+                start();
+                vanillaFood = stack.getType().isEdible();
+            }
         }
     }
 
@@ -43,11 +45,12 @@ public class FoodAbility extends ItemAbility {
             return;
         }
 
-        if (getStartTime() > ((Edible)item).getEatDuration()) {
-            getStack().setAmount(getStack().getAmount());
+        if (getStartTime() + ((Edible)item).getEatDuration() < System.currentTimeMillis()) {
+            getStack().setAmount(getStack().getAmount() - 1);
             if (getStack().getAmount() == 0) {
                 getStack().setType(Material.AIR);
             }
+
 
             Edible edible = (Edible) item;
 
@@ -57,6 +60,19 @@ public class FoodAbility extends ItemAbility {
 
             getPlayer().getWorld().playSound(getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 1);
 
+            if (vanillaFood) {
+                ItemStack clone = getStack().clone();
+                getStack().setType(Material.AIR);
+                getStack().setAmount(0);
+                getPlayer().getInventory().setItem(slot, getStack());
+                new BukkitRunnable() {
+
+                    @Override
+                    public void run() {
+                        getPlayer().getInventory().setItem(slot, clone);
+                    }
+                }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
+            }
             remove();
             return;
         }
@@ -64,12 +80,12 @@ public class FoodAbility extends ItemAbility {
         tick++;
 
         if (tick % 2 == 0) {
-            getPlayer().getWorld().playSound(getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 1);
+            if (tick % 4 == 0) getPlayer().getWorld().playSound(getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 1);
             Vector vector = getPlayer().getLocation().getDirection().clone();
             vector.setY(0); //Ignore their yaw
-            vector.normalize().multiply(0.15); //Get 0.15 blocks in front of the players face
+            vector.normalize().multiply(0.25); //Get 0.15 blocks in front of the players face
             vector.setY(1.6); //Add 1.6 blocks so the height is their face
-            getPlayer().getWorld().spawnParticle(Particle.ITEM_CRACK, getPlayer().getLocation().add(vector), 2, 0.25, 0.1, 0.25, getStack());
+            getPlayer().getWorld().spawnParticle(Particle.ITEM_CRACK, getPlayer().getLocation().add(vector), 2, 0.125, 0.05, 0.125, 0, getStack());
         }
 
     }

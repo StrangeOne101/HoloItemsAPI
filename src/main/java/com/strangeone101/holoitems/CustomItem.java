@@ -197,6 +197,9 @@ public class CustomItem {
             }
 
             meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
+            if (meta instanceof Damageable) {
+                ((Damageable) meta).setDamage((damage / getMaxDurability()) * stack.getType().getMaxDurability());
+            }
             stack.setItemMeta(meta);
         }
     }
@@ -240,12 +243,40 @@ public class CustomItem {
 
     }
 
+    /**
+     * Get the durability on this custom item
+     * @param stack The custom item stack
+     * @return The durability
+     */
     public int getDurability(ItemStack stack) {
         if (getMaxDurability() > 0) {
             ItemMeta meta = stack.getItemMeta();
             return meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
         }
         return 0;
+    }
+
+    /**
+     * Set the durability of this custom item
+     * @param stack The custom item stack
+     * @param durability The durability
+     */
+    public void setDurability(ItemStack stack, int durability) {
+        if (getMaxDurability() > 0) {
+            if (durability <= 0) {
+                stack.setType(Material.AIR);
+                return;
+            }
+            ItemMeta meta = stack.getItemMeta();
+            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, durability);
+
+            if (meta instanceof Damageable) {
+                ((Damageable) meta).setDamage((durability / getMaxDurability()) * stack.getType().getMaxDurability());
+            }
+
+            stack.setItemMeta(meta); //Update item
+        }
+        return;
     }
 
     public CustomItem setHeadSkin(String skin) {

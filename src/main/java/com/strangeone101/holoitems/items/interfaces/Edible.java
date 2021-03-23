@@ -20,5 +20,8 @@ public interface Edible {
         return NORMAL_LENGTH;
     }
 
+    default boolean eatWhenFull() {
+        return false;
+    }
 
 }

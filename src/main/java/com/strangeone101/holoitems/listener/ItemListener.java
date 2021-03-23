@@ -12,9 +12,12 @@ import com.strangeone101.holoitems.items.interfaces.Edible;
 import com.strangeone101.holoitems.items.interfaces.EntityInteractable;
 import com.strangeone101.holoitems.items.interfaces.Interactable;
 import com.strangeone101.holoitems.items.interfaces.Placeable;
+import com.strangeone101.holoitems.items.interfaces.Repairable;
 import com.strangeone101.holoitems.items.interfaces.Swingable;
 import com.strangeone101.holoitems.util.ItemUtils;
 import com.strangeone101.holoitems.EventContext;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Entity;
@@ -35,6 +38,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
@@ -161,8 +165,12 @@ public class ItemListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onItemUse(PlayerInteractEvent event) {
+        if (event.useInteractedBlock() == Event.Result.DENY && (event.getAction() == Action.RIGHT_CLICK_BLOCK ||
+                event.getAction() == Action.LEFT_CLICK_BLOCK)) return;
+        if (event.useItemInHand() == Event.Result.DENY && (event.getAction() == Action.RIGHT_CLICK_AIR ||
+                event.getAction() == Action.LEFT_CLICK_AIR)) return;
 
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
@@ -170,6 +178,7 @@ public class ItemListener implements Listener {
         boolean isInteractable = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
                 && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
 
+        //HoloItemsPlugin.INSTANCE.getLogger().info("Test----");
         if (customItem != null) {
 
             //Run BlockInteractables before GUI checks
@@ -202,7 +211,8 @@ public class ItemListener implements Listener {
 
                 if (customItem instanceof Edible) {
                     event.setUseItemInHand(Event.Result.DENY);
-                    new FoodAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(), 0);
+                    new FoodAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(),
+                            event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot());
                     return;
                 }
 
@@ -269,7 +279,7 @@ public class ItemListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSlotSwitch(PlayerItemHeldEvent event) {
         //Update the cached held item
-        EventContext.swapCacheSlots(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot(), event.getNewSlot());
+        EventContext.updateHeldSlot(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -340,39 +350,93 @@ public class ItemListener implements Listener {
             } else if (event.getRawSlot() == 2 && event.getClickedInventory() instanceof AnvilInventory
                     && CustomItemRegistry.isCustomItem(event.getClickedInventory().getItem(2))) {
                 ItemStack stack = event.getClickedInventory().getItem(2);
-                ItemMeta meta = stack.getItemMeta();
-                Properties.RENAMED.set(meta.getPersistentDataContainer(), 1); //Mark it as renamed
-                stack.setItemMeta(meta);
-                event.getClickedInventory().setItem(2, stack); //Set the updated item back into the inventory
+                CustomItem ci = CustomItemRegistry.getCustomItem(stack);
+
+                if (!ci.getProperties().contains(Properties.RENAMED) && !stack.getItemMeta().getDisplayName()
+                        .equals(event.getInventory().getItem(0).getItemMeta().getDisplayName())) {
+                    event.setCancelled(true);
+                    event.getWhoClicked().sendMessage(ChatColor.RED + "This item cannot be renamed!");
+                    return;
+                }
+
+                if (!stack.getItemMeta().getDisplayName()
+                        .equals(event.getInventory().getItem(0).getItemMeta().getDisplayName())) {
+                    ItemMeta meta = stack.getItemMeta();
+                    Properties.RENAMED.set(meta.getPersistentDataContainer(), 1); //Mark it as renamed
+                    stack.setItemMeta(meta);
+                    event.getClickedInventory().setItem(2, stack); //Set the updated item back into the inventory
+                    event.setCurrentItem(stack);
+                }
+
+                if (ci instanceof Repairable) {
+                    CustomItem ci2 = CustomItemRegistry.getCustomItem(event.getInventory().getItem(1));
+                    if (((Repairable)ci).getRepairMaterial(stack) != ci2) {
+                        event.setCancelled(true);
+                        return;
+                    }
+
+                    int durability = (int) Math.min(ci.getMaxDurability(), ci.getDurability(stack)
+                            + (((Repairable)ci).getRepairAmount(stack) * ci.getMaxDurability()));
+                    ci.setDurability(stack, durability);
+                    event.getClickedInventory().setItem(2, stack); //Set the updated item back into the inventory
+                    event.setCurrentItem(stack);
+                }
+
             }
 
         }
 
         event.getWhoClicked().sendMessage(event.getAction() + "," + event.getClick() + ","
-                + event.getSlotType() + "," + event.getRawSlot() + "," + event.getSlot());
+                + event.getSlotType() + "," + event.getRawSlot() + "," + event.getSlot() + ","
+                + event.getInventory().getSize() + "," + event.getInventory().getType());
 
-        if (event.getRawSlot() >= event.getInventory().getSize() && event.getWhoClicked() instanceof Player) { //If the click WASN'T in the top inventory
+        if (!(event.getWhoClicked() instanceof Player) || event.getAction() == InventoryAction.NOTHING) return;
+
+        if (event.getClick().isShiftClick() || event.getInventory().getType() == InventoryType.CREATIVE) { //TODO Rather than doing a full recache, calculate what it SHOULD be
+            cacheLater((Player) event.getWhoClicked());
+            return;
+        }
+
+        boolean inPlayerInv = event.getRawSlot() >= event.getInventory().getSize();
+
+        if (event.getAction() == InventoryAction.DROP_ALL_CURSOR || event.getAction() == InventoryAction.DROP_ALL_SLOT
+                || event.getAction() == InventoryAction.DROP_ONE_CURSOR || event.getAction() == InventoryAction.DROP_ONE_SLOT) {
+            if (inPlayerInv || event.getCursor() != null) { //if its in the inv or they are holding an item
+                EventContext.uncacheSlot((Player) event.getWhoClicked(), event.getCursor() != null ? event.getSlot() : -1); //-1 is held itemstack
+            }
+            return;
+        }
+
+        if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            if (event.getInventory().getType() == InventoryType.CRAFTING) {
+                cacheLater((Player) event.getWhoClicked());
+                return;
+            }
+        }
+
+        if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF ||
+                event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME) {
+            if (!EventContext.shouldCache(event.getCurrentItem())) return;
+
+
+            if (inPlayerInv) {
+                EventContext.updateCacheSlot((Player) event.getWhoClicked(), event.getSlot(), -1);
+            } else
+                EventContext.cacheItem((Player) event.getWhoClicked(), inPlayerInv ? event.getSlot() : -1, event.getCurrentItem());
+            return;
+        }
+
+        if (inPlayerInv) { //If the click WASN'T in the top inventory
+            if (!EventContext.shouldCache(event.getCursor())) return;
+
             if (event.getCursor() != null) {
-
-
 
                 if (event.getCurrentItem().isSimilar(event.getCursor()) && event.getCurrentItem().getAmount() < event.getCurrentItem().getMaxStackSize()) {
                     EventContext.uncacheSlot((Player) event.getWhoClicked(), -1); //Delete the cached in item item
                 } else {
-                    EventContext.swapCacheSlots((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
+                    EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
                 }
                 return;
-            }
-
-            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                EventContext.uncacheSlot((Player) event.getWhoClicked(), event.getSlot());
-            }
-
-
-
-            if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF ||
-            event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME) {
-                EventContext.updateCacheSlot((Player) event.getWhoClicked(), event.getSlot(), -1);
             } else if (event.getAction() == InventoryAction.PLACE_ALL || event.getAction() == InventoryAction.PLACE_ONE ||
                     event.getAction() == InventoryAction.PLACE_SOME) {
                 EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot());
@@ -415,13 +479,19 @@ public class ItemListener implements Listener {
             ItemStack slot1 = inventory.getItem(0);
             ItemStack slot2 = inventory.getItem(1);
 
-            if (CustomItemRegistry.isCustomItem(slot2)) {
+            if (CustomItemRegistry.isCustomItem(slot1)) {
+                CustomItem ci1 = CustomItemRegistry.getCustomItem(slot1);
+                CustomItem ci2 = CustomItemRegistry.getCustomItem(slot2);
+
+                //If it is repairable and the material is compatible, allow it
+                if (ci1 instanceof Repairable) return ((Repairable)ci1).getRepairMaterial(slot1) != ci2;
+                //If it can be renamed and there is nothing in slot 2, allow it
+                if (ci1.getProperties().contains(Properties.RENAMED) && slot2 == null) return false;
+
+                return true; //Block all other exceptions
+
+            } else if (CustomItemRegistry.isCustomItem(slot2)) {
                 return true; //Prevent custom items from being used to repair
-            } else if (slot2 != null && CustomItemRegistry.isCustomItem(slot1)) {
-                return true; //Prevent repair of custom items
-            } else if (CustomItemRegistry.isCustomItem(slot1)) {
-                CustomItem ci = CustomItemRegistry.getCustomItem(slot1);
-                return !ci.getProperties().contains(Properties.RENAMED); //This item cannot be renamed
             }
             return false;
         } else if (inventory instanceof MerchantInventory) {
@@ -442,7 +512,30 @@ public class ItemListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (shouldPrevent(inventory)) inventory.setItem(2, null);
+                if (shouldPrevent(inventory)) {
+                    inventory.setItem(2, null);
+                } else if (inventory instanceof AnvilInventory) {
+                    ItemStack slot1 = inventory.getItem(0);
+                    ItemStack slot2 = inventory.getItem(1);
+
+                    if (CustomItemRegistry.isCustomItem(slot1)) {
+                        CustomItem ci1 = CustomItemRegistry.getCustomItem(slot1);
+                        CustomItem ci2 = CustomItemRegistry.getCustomItem(slot2);
+
+                        ItemStack slot3 = inventory.getItem(2);
+                        if (slot3 == null) slot3 = slot1.clone();
+
+                        //Prevent if it's not repairable OR the material doesn't match OR if it can't be renamed
+                        if (ci1 instanceof Repairable) {
+                            if (((Repairable)ci1).getRepairMaterial(slot1) != ci2) {
+                                int durability = (int) Math.min(ci1.getMaxDurability(), ci1.getDurability(slot3)
+                                        + (((Repairable)ci1).getRepairAmount(slot3) * ci1.getMaxDurability()));
+                                ci1.setDurability(slot3, durability);
+                            }
+                        }
+                    }
+                }
+
             }
         }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
     }
@@ -465,6 +558,7 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void onRenamePre(PrepareAnvilEvent event) {
+        //TODO Update this for repairables
         if (event.getInventory().getItem(1) != null) {
             if (CustomItemRegistry.isCustomItem(event.getInventory().getItem(1))) {
                 event.setResult(null);

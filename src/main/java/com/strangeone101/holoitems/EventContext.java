@@ -76,6 +76,8 @@ public class EventContext {
 
             if (ITEMEVENT_EXECUTORS.containsKey(item)) {
                 Position pos = getPosition(slot, player.getInventory().getHeldItemSlot());
+                MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
+
                 for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
                     if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
                         CACHED_POSITIONS_BY_EVENT.put(clazz, new HashMap<>());
@@ -85,11 +87,9 @@ public class EventContext {
                         CACHED_POSITIONS_BY_EVENT.get(clazz).put(player, new HashSet<>());
                     }
 
-                    MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
-
                     CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
-                    CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
                 }
+                CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
             }
         }
     }
@@ -116,12 +116,53 @@ public class EventContext {
     public static void updateCacheSlot(Player player, int oldSlot, int newSlot) {
         Position pos = getPosition(newSlot, player.getInventory().getHeldItemSlot());
 
-        if (CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
+        if (CACHED_POSITIONS_BY_SLOT.containsKey(player) && CACHED_POSITIONS_BY_SLOT.get(player).containsKey(oldSlot)) {
             MutableTriple<CustomItem, ItemStack, Position> triple = CACHED_POSITIONS_BY_SLOT.get(player).get(oldSlot);
             triple.setRight(pos);
             CACHED_POSITIONS_BY_SLOT.get(player).remove(oldSlot);
             CACHED_POSITIONS_BY_SLOT.get(player).put(newSlot, triple);
         }
+    }
+
+    public static void cacheItem(Player player, int slot, ItemStack stack) {
+        CustomItem item = CustomItemRegistry.getCustomItem(stack);
+        if (item == null) return;
+
+        if (!CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
+            CACHED_POSITIONS_BY_SLOT.put(player, new HashMap<>());
+        }
+
+        MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, getPosition(slot, player.getInventory().getHeldItemSlot()));
+        CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
+
+        for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
+            if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) {
+                CACHED_POSITIONS_BY_EVENT.put(clazz, new HashMap<>());
+            }
+
+            if (!CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) {
+                CACHED_POSITIONS_BY_EVENT.get(clazz).put(player, new HashSet<>());
+            }
+
+            CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
+        }
+    }
+
+    public static void updateHeldSlot(Player player, int oldSlot, int newSlot) {
+        if (CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
+            if (CACHED_POSITIONS_BY_SLOT.get(player).containsKey(oldSlot)) {
+                CACHED_POSITIONS_BY_SLOT.get(player).get(oldSlot).setRight(getPosition(oldSlot, newSlot));
+            }
+            if (CACHED_POSITIONS_BY_SLOT.get(player).containsKey(newSlot)) {
+                CACHED_POSITIONS_BY_SLOT.get(player).get(newSlot).setRight(getPosition(newSlot, newSlot));
+            }
+        }
+
+
+    }
+
+    public static boolean shouldCache(ItemStack stack) {
+        return ITEMEVENT_EXECUTORS.containsKey(CustomItemRegistry.getCustomItem(stack));
     }
 
     public static void swapCacheSlots(Player player, int slot1, int slot2, int... heldItemSlot) {
