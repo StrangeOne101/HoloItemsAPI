@@ -1,7 +1,8 @@
 package com.strangeone101.holoitems.abilities;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.ItemAbility;
+import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.ItemAbility;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.items.Items;
 import org.bukkit.Location;
@@ -37,7 +38,7 @@ public class RushiaShieldAbility extends ItemAbility {
 
         if (ItemAbility.isAbilityActive(player, this.getClass()) || isOnCooldown()) return; //Ability already active or on cooldown
 
-        if (stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER) > 0) {
+        if (stack.getItemMeta().getPersistentDataContainer().get(Keys.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER) > 0) {
             start();
         }
     }
@@ -57,7 +58,7 @@ public class RushiaShieldAbility extends ItemAbility {
 
         if (!mobSpawned) { //If the shield is fully up but the mob hasn't spawned yet
             Location target = getPlayer().getLocation().add(getPlayer().getLocation().getDirection().clone().multiply(1.5));
-            String mobString = getStack().getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING);
+            String mobString = getStack().getItemMeta().getPersistentDataContainer().get(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING);
             String mobToUse = mobString.split(";")[0];
 
             if (mobToUse.equals("")) { //Something went really wrong!
@@ -91,8 +92,8 @@ public class RushiaShieldAbility extends ItemAbility {
             }
 
             ItemMeta meta = getStack().getItemMeta();
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, mobString);
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, count);
+            meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, mobString);
+            meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, count);
             getStack().setItemMeta(meta);
 
             getItem().updateStack(getStack(), getPlayer());

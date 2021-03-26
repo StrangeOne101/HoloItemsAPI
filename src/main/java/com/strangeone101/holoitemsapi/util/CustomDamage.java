@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitemsapi.util;
 
 import com.strangeone101.holoitems.event.CIDamageEntityEvent;
 import com.strangeone101.holoitems.event.CIEntityDamageEntityEvent;

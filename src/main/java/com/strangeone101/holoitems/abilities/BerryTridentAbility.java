@@ -1,8 +1,9 @@
 package com.strangeone101.holoitems.abilities;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.ItemAbility;
+import com.strangeone101.holoitemsapi.ItemAbility;
 import com.strangeone101.holoitems.items.Items;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -34,7 +35,7 @@ public class BerryTridentAbility extends ItemAbility {
 
         if (ItemAbility.isAbilityActive(player, this.getClass())) return; //Ability already active or on cooldown
 
-        if (stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER) == 0) {
+        if (stack.getItemMeta().getPersistentDataContainer().get(Keys.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER) == 0) {
             start();
         }
     }
@@ -59,7 +60,7 @@ public class BerryTridentAbility extends ItemAbility {
             stand.setVelocity(lastVelocity);
 
             ItemMeta meta = getStack().getItemMeta();
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER, 1);
+            meta.getPersistentDataContainer().set(Keys.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER, 1);
             getStack().setItemMeta(meta);
             return;
         }

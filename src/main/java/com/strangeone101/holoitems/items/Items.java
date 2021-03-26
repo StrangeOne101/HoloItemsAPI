@@ -1,6 +1,6 @@
 package com.strangeone101.holoitems.items;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.items.implementations.BerryTrident;
 import com.strangeone101.holoitems.items.implementations.EnchantedBlock;
 import com.strangeone101.holoitems.items.implementations.MegaSponge;

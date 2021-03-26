@@ -1,6 +1,6 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItem;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;

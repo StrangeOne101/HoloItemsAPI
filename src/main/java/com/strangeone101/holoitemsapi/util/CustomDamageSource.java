@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitemsapi.util;
 
 public class CustomDamageSource {
 

@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitemsapi.util;
 
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;

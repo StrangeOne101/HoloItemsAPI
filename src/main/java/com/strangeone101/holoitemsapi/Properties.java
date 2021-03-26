@@ -1,6 +1,7 @@
-package com.strangeone101.holoitems;
+package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.util.UUIDTagType;
+import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitemsapi.util.UUIDTagType;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -13,17 +14,17 @@ public class Properties {
 
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE);
         }
 
         @Override
         public UUID get(PersistentDataContainer data) {
-            return data.get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE);
+            return data.get(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE);
         }
 
         @Override
         public void set(PersistentDataContainer data, UUID value) {
-            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE, value);
+            data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE, value);
         }
 
         @Override
@@ -36,17 +37,17 @@ public class Properties {
 
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING);
         }
 
         @Override
         public String get(PersistentDataContainer data) {
-            return data.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, "Player");
+            return data.getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, "Player");
         }
 
         @Override
         public void set(PersistentDataContainer data, String value) {
-            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, value);
+            data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING, value);
         }
 
         @Override
@@ -59,17 +60,17 @@ public class Properties {
 
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG);
         }
 
         @Override
         public Long get(PersistentDataContainer data) {
-            return data.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, 0L);
+            return data.getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, 0L);
         }
 
         @Override
         public void set(PersistentDataContainer data, Long value) {
-            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, value);
+            data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, value);
         }
 
         @Override
@@ -81,7 +82,7 @@ public class Properties {
     public static final Property<Boolean> UNSTACKABLE = new Property<Boolean>() {
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_UNSTACK, PersistentDataType.INTEGER);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_UNSTACK, PersistentDataType.INTEGER);
         }
 
         @Override
@@ -92,9 +93,9 @@ public class Properties {
         @Override
         public void set(PersistentDataContainer data, Boolean value) {
             if (value) {
-                data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_UNSTACK, PersistentDataType.INTEGER, ThreadLocalRandom.current().nextInt());
+                data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_UNSTACK, PersistentDataType.INTEGER, ThreadLocalRandom.current().nextInt());
             } else {
-                data.remove(HoloItemsPlugin.getKeys().CUSTOM_ITEM_UNSTACK);
+                data.remove(HoloItemsAPI.getKeys().CUSTOM_ITEM_UNSTACK);
             }
         }
 
@@ -108,17 +109,17 @@ public class Properties {
 
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
         }
 
         @Override
         public String get(PersistentDataContainer data) {
-            return data.get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
+            return data.get(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
         }
 
         @Override
         public void set(PersistentDataContainer data, String value) {
-            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING, value);
+            data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING, value);
         }
 
         @Override
@@ -127,20 +128,20 @@ public class Properties {
         }
     };
 
-    public static final Property<Integer> RENAMED = new Property<Integer>() {
+    public static final Property<Integer> RENAMABLE = new Property<Integer>() {
         @Override
         public boolean has(PersistentDataContainer data) {
-            return data.has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER);
+            return data.has(HoloItemsAPI.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER);
         }
 
         @Override
         public Integer get(PersistentDataContainer data) {
-            return data.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, 0);
+            return data.getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, 0);
         }
 
         @Override
         public void set(PersistentDataContainer data, Integer value) {
-            data.set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, value);
+            data.set(HoloItemsAPI.getKeys().CUSTOM_ITEM_RENAME, PersistentDataType.INTEGER, value);
         }
 
         @Override

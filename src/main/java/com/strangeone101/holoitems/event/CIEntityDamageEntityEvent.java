@@ -1,6 +1,6 @@
 package com.strangeone101.holoitems.event;
 
-import com.strangeone101.holoitems.util.CustomDamageSource;
+import com.strangeone101.holoitemsapi.util.CustomDamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.HandlerList;
 

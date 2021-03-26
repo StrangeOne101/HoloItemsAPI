@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitemsapi.util;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;

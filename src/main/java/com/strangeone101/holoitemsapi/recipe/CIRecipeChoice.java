@@ -1,7 +1,7 @@
-package com.strangeone101.holoitems.util;
+package com.strangeone101.holoitemsapi.recipe;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.CustomItemRegistry;
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 

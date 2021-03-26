@@ -1,5 +1,6 @@
-package com.strangeone101.holoitems;
+package com.strangeone101.holoitemsapi;
 
+import com.strangeone101.holoitems.HoloItemsPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -118,8 +119,8 @@ public abstract class ItemAbility {
      */
     public boolean isOnCooldown() {
         return stack != null && stack.hasItemMeta() &&
-                stack.getItemMeta().getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) &&
-                stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) > System.currentTimeMillis();
+                stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) &&
+                stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) > System.currentTimeMillis();
     }
 
     /**
@@ -127,8 +128,8 @@ public abstract class ItemAbility {
      * @return
      */
     public long getCooldownRemaining() {
-        if (stack == null || !stack.hasItemMeta() || !stack.getItemMeta().getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG)) return -1;
-        return Math.max(0, stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) - System.currentTimeMillis());
+        if (stack == null || !stack.hasItemMeta() || !stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG)) return -1;
+        return Math.max(0, stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG) - System.currentTimeMillis());
 
     }
 
@@ -137,7 +138,7 @@ public abstract class ItemAbility {
      */
     public void applyCooldown() {
         ItemMeta meta = stack.getItemMeta();
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, System.currentTimeMillis() + getCooldownLength());
+        meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG, System.currentTimeMillis() + getCooldownLength());
         stack.setItemMeta(meta);
     }
 

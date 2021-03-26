@@ -1,13 +1,10 @@
 package com.strangeone101.holoitems.command;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.CustomItemRegistry;
-import com.strangeone101.holoitems.EventContext;
-import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.Properties;
-import com.strangeone101.holoitems.Property;
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItemRegistry;
+import com.strangeone101.holoitemsapi.EventContext;
+import com.strangeone101.holoitemsapi.Properties;
 import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -18,7 +15,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HoloItemsCommand implements CommandExecutor {

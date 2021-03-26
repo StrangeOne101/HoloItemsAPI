@@ -1,6 +1,6 @@
-package com.strangeone101.holoitems;
+package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.util.ItemUtils;
+import com.strangeone101.holoitemsapi.util.ItemUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -109,7 +109,7 @@ public class CustomItem {
         Properties.ITEM_ID.set(meta.getPersistentDataContainer(), getInternalName());
         //meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING, getInternalName());
         if (getMaxDurability() > 0) {
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
         }
 
          //If the item shouldn't be stackable, add a random INTEGER to the NBT
@@ -158,7 +158,7 @@ public class CustomItem {
             }
         }
 
-        if (!properties.contains(Properties.RENAMED) || Properties.RENAMED.get(meta.getPersistentDataContainer()) == 0) {
+        if (!properties.contains(Properties.RENAMABLE) || Properties.RENAMABLE.get(meta.getPersistentDataContainer()) == 0) {
             //It's important to use the functions `getDisplayName()` and `getLore()` bellow
             //instead of the field names in case an object overrides them
             meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
@@ -186,7 +186,7 @@ public class CustomItem {
     public void damageItem(ItemStack stack, int amount, Player player) {
         if (getMaxDurability() > 0 && player.getGameMode() != GameMode.CREATIVE) {
             ItemMeta meta = stack.getItemMeta();
-            int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
             damage += amount;
 
             if (damage > getMaxDurability()) {
@@ -196,7 +196,7 @@ public class CustomItem {
                 return;
             }
 
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
+            meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
             if (meta instanceof Damageable) {
                 ((Damageable) meta).setDamage((damage / getMaxDurability()) * stack.getType().getMaxDurability());
             }
@@ -251,7 +251,7 @@ public class CustomItem {
     public int getDurability(ItemStack stack) {
         if (getMaxDurability() > 0) {
             ItemMeta meta = stack.getItemMeta();
-            return meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            return meta.getPersistentDataContainer().getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
         }
         return 0;
     }
@@ -268,7 +268,7 @@ public class CustomItem {
                 return;
             }
             ItemMeta meta = stack.getItemMeta();
-            meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, durability);
+            meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, durability);
 
             if (meta instanceof Damageable) {
                 ((Damageable) meta).setDamage((durability / getMaxDurability()) * stack.getType().getMaxDurability());
@@ -290,7 +290,7 @@ public class CustomItem {
     public String replaceVariables(String string, PersistentDataContainer dataHolder) {
         String s = string;
         if (getMaxDurability() > 0) {
-            int damage = dataHolder.getOrDefault(HoloItemsPlugin.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
+            int damage = dataHolder.getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
             damage = getMaxDurability() - damage;
             s = s.replace("{durability}", getDurabilityString(damage, getMaxDurability()));
         }

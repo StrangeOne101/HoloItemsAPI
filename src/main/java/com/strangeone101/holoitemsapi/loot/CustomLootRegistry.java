@@ -107,10 +107,4 @@ public class CustomLootRegistry {
             }
         }
     }
-
-    public static void registerDefaults() {
-        registerDeathTable(EntityType.ENDERMITE, new Endermite());
-        registerBlockBreakTable(Material.SPAWNER, new Spawner());
-        registerBlockBreakTable(Material.EMERALD_ORE, new GemOre());
-    }
 }

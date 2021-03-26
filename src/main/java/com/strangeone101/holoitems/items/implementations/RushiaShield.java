@@ -1,12 +1,13 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.Properties;
+import com.strangeone101.holoitemsapi.Properties;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
-import com.strangeone101.holoitems.items.interfaces.Interactable;
-import com.strangeone101.holoitems.items.interfaces.ItemEvent;
-import com.strangeone101.holoitems.EventContext;
+import com.strangeone101.holoitemsapi.interfaces.Interactable;
+import com.strangeone101.holoitemsapi.interfaces.ItemEvent;
+import com.strangeone101.holoitemsapi.EventContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -34,7 +35,7 @@ public class RushiaShield extends CustomItem implements Interactable {
     public RushiaShield() {
         super("rushia_shield", Material.SHIELD);
         this.addVariable("mobs", data -> {
-            String s = data.get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING); //Pull data from item
+            String s = data.get(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING); //Pull data from item
             if (s != null) { //If it DOES exist
                 s = s.replace(";", ", ").replace("_", " "); //Change PIG;ZOMBIE_PIGLIN into PIG, ZOMBIE PIGLIN
             }
@@ -51,7 +52,7 @@ public class RushiaShield extends CustomItem implements Interactable {
                 .addLore(ChatColor.DARK_GRAY + "Cooldown: " + ChatColor.YELLOW + "10s")
                 .addLore(ChatColor.DARK_GRAY + "Souls stored: " + ChatColor.YELLOW + "{mobs}");
 
-        addProperty(Properties.RENAMED); //Allow it to be renamed
+        addProperty(Properties.RENAMABLE); //Allow it to be renamed
     }
 
     @Override
@@ -60,8 +61,8 @@ public class RushiaShield extends CustomItem implements Interactable {
         ItemMeta meta = stack.getItemMeta();
 
         //Add our custom data to built stacks
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, "");
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, 0);
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, "");
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, 0);
         meta.addItemFlags(ItemFlag.HIDE_DYE);
         meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
         stack.setItemMeta(meta);
@@ -72,16 +73,16 @@ public class RushiaShield extends CustomItem implements Interactable {
     public void killMob(Mob creature, Player player, ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
 
-        int count = meta.getPersistentDataContainer().get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER);
+        int count = meta.getPersistentDataContainer().get(Keys.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER);
 
         if (count > 2) return;
 
         String mobString = count == 0 ? creature.getType().name() :
-                meta.getPersistentDataContainer().get(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING) + ";" + creature.getType().name();
+                meta.getPersistentDataContainer().get(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING) + ";" + creature.getType().name();
 
         //Update the data on the item
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, count + 1);
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, mobString);
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_COUNT, PersistentDataType.INTEGER, count + 1);
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSHIA_SHIELD_MOBS, PersistentDataType.STRING, mobString);
 
         stack.setItemMeta(meta);
 

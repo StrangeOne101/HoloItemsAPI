@@ -1,11 +1,11 @@
-package com.strangeone101.holoitems;
+package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.items.interfaces.ItemEvent;
-import com.strangeone101.holoitems.util.UUIDTagType;
+import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitemsapi.interfaces.ItemEvent;
+import com.strangeone101.holoitemsapi.util.UUIDTagType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventException;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -82,12 +82,12 @@ public class CustomItemRegistry {
     }
 
     public static boolean isCustomItem(ItemStack stack) {
-        return stack != null && stack.hasItemMeta() && stack.getItemMeta().getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
+        return stack != null && stack.hasItemMeta() && stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
     }
 
     public static CustomItem getCustomItem(ItemStack stack) {
         if (isCustomItem(stack)) {
-            String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
+            String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
 
             return getCustomItem(id);
         }
@@ -101,15 +101,15 @@ public class CustomItemRegistry {
      */
     public static void invalidateItemstack(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
-        String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
+        String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
         String owner = "?";
         String ownerName = "?";
 
-        if (stack.getItemMeta().getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE)) {
-            owner = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE).toString();
+        if (stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE)) {
+            owner = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER, UUIDTagType.TYPE).toString();
         }
-        if (stack.getItemMeta().getPersistentDataContainer().has(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING)) {
-            ownerName = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsPlugin.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING);
+        if (stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING)) {
+            ownerName = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_OWNER_NAME, PersistentDataType.STRING);
         }
         meta.setDisplayName(ChatColor.RED + "Invalid Item");
         List<String> lore = new ArrayList<>();

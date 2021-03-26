@@ -1,8 +1,8 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.items.interfaces.Placeable;
+import com.strangeone101.holoitemsapi.interfaces.Placeable;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;

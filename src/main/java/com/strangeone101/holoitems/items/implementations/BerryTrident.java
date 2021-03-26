@@ -1,9 +1,10 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.abilities.BerryTridentAbility;
-import com.strangeone101.holoitems.items.interfaces.Interactable;
+import com.strangeone101.holoitemsapi.interfaces.Interactable;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -29,7 +30,7 @@ public class BerryTrident extends CustomItem implements Interactable {
         ItemMeta meta = stack.getItemMeta();
 
         //Add our custom data to built stacks
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER, 0);
+        meta.getPersistentDataContainer().set(Keys.getKeys().BERRY_TRIDENT_THROWN, PersistentDataType.INTEGER, 0);
 
         stack.setItemMeta(meta);
 

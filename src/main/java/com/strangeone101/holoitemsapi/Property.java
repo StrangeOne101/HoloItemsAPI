@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems;
+package com.strangeone101.holoitemsapi;
 
 import org.bukkit.persistence.PersistentDataContainer;
 

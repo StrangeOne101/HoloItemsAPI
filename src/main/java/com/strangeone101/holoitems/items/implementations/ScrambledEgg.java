@@ -1,7 +1,7 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.items.interfaces.Edible;
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.interfaces.Edible;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 

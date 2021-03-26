@@ -1,10 +1,11 @@
 package com.strangeone101.holoitems.items.implementations;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitems.Keys;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.items.interfaces.Interactable;
-import com.strangeone101.holoitems.util.CustomDamage;
-import com.strangeone101.holoitems.util.CustomDamageSource;
+import com.strangeone101.holoitemsapi.interfaces.Interactable;
+import com.strangeone101.holoitemsapi.util.CustomDamage;
+import com.strangeone101.holoitemsapi.util.CustomDamageSource;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Text;
@@ -34,7 +35,7 @@ public class RussianRevolver extends CustomItem implements Interactable {
         ItemMeta meta = stack.getItemMeta();
 
         //Add our custom data to built stacks
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, -1);
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, -1);
 
         stack.setItemMeta(meta);
 
@@ -44,7 +45,7 @@ public class RussianRevolver extends CustomItem implements Interactable {
     public void fire(Player player, ItemStack stack, boolean sneaking) {
         ItemMeta meta = stack.getItemMeta();
 
-        int value = meta.getPersistentDataContainer().getOrDefault(HoloItemsPlugin.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, -1);
+        int value = meta.getPersistentDataContainer().getOrDefault(Keys.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, -1);
 
         if (value == -1) {
             if (!sneaking) player.sendMessage(ChatColor.YELLOW + "The barrel needs to be spun first! Sneak right click to spin the barrel!");
@@ -91,7 +92,7 @@ public class RussianRevolver extends CustomItem implements Interactable {
 
     private static void update(ItemStack stack, int value) {
         ItemMeta meta = stack.getItemMeta();
-        meta.getPersistentDataContainer().set(HoloItemsPlugin.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, value);
+        meta.getPersistentDataContainer().set(Keys.getKeys().RUSSIAN_ROULETTE, PersistentDataType.INTEGER, value);
         stack.setItemMeta(meta);
     }
 
