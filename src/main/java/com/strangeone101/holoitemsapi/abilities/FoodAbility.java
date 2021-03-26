@@ -1,10 +1,10 @@
-package com.strangeone101.holoitems.items.abilities;
+package com.strangeone101.holoitemsapi.abilities;
 
 import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitemsapi.ItemAbility;
-import com.strangeone101.holoitems.items.interfaces.Edible;
+import com.strangeone101.holoitemsapi.interfaces.Edible;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;

@@ -1,6 +1,6 @@
-package com.strangeone101.holoitems.listener;
+package com.strangeone101.holoitemsapi.listener;
 
-import com.strangeone101.holoitems.loot.CustomLootRegistry;
+import com.strangeone101.holoitemsapi.loot.CustomLootRegistry;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.event.EventHandler;

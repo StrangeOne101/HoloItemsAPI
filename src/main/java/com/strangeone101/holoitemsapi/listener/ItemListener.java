@@ -1,23 +1,23 @@
-package com.strangeone101.holoitems.listener;
+package com.strangeone101.holoitemsapi.listener;
 
-import com.strangeone101.holoitems.CustomItem;
-import com.strangeone101.holoitems.CustomItemRegistry;
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import com.strangeone101.holoitems.HoloItemsPlugin;
-import com.strangeone101.holoitems.Properties;
+import com.strangeone101.holoitemsapi.Properties;
 import com.strangeone101.holoitems.items.Items;
-import com.strangeone101.holoitems.items.abilities.FoodAbility;
+import com.strangeone101.holoitemsapi.abilities.FoodAbility;
 import com.strangeone101.holoitems.items.implementations.MoguBoots;
-import com.strangeone101.holoitems.items.interfaces.BlockInteractable;
-import com.strangeone101.holoitems.items.interfaces.Edible;
-import com.strangeone101.holoitems.items.interfaces.EntityInteractable;
-import com.strangeone101.holoitems.items.interfaces.Interactable;
-import com.strangeone101.holoitems.items.interfaces.Placeable;
-import com.strangeone101.holoitems.items.interfaces.Repairable;
-import com.strangeone101.holoitems.items.interfaces.Swingable;
-import com.strangeone101.holoitems.util.ItemUtils;
-import com.strangeone101.holoitems.EventContext;
+import com.strangeone101.holoitemsapi.interfaces.BlockInteractable;
+import com.strangeone101.holoitemsapi.interfaces.Edible;
+import com.strangeone101.holoitemsapi.interfaces.EntityInteractable;
+import com.strangeone101.holoitemsapi.interfaces.Interactable;
+import com.strangeone101.holoitemsapi.interfaces.Placeable;
+import com.strangeone101.holoitemsapi.interfaces.Repairable;
+import com.strangeone101.holoitemsapi.interfaces.Swingable;
+import com.strangeone101.holoitemsapi.recipe.RecipeManager;
+import com.strangeone101.holoitemsapi.util.ItemUtils;
+import com.strangeone101.holoitemsapi.EventContext;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Entity;
@@ -30,7 +30,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.BrewingStandFuelEvent;
@@ -42,14 +41,12 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.inventory.TradeSelectEvent;
-import org.bukkit.event.player.PlayerChangedMainHandEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
@@ -311,7 +308,7 @@ public class ItemListener implements Listener {
             event.setCurrentItem(CustomItemRegistry.getCustomItem(stack).buildStack((Player) event.getWhoClicked()));
         }
 
-        if (!HoloItemsPlugin.recipes.containsValue(event.getRecipe())) {
+        if (!RecipeManager.isManagedRecipe(event.getRecipe())) {
             for (ItemStack ingredient : event.getInventory().getMatrix()) {
                 if (CustomItemRegistry.isCustomItem(ingredient)) {
                     event.setCancelled(true);
@@ -322,7 +319,7 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void onPreCraft(PrepareItemCraftEvent event) {
-        if (!HoloItemsPlugin.recipes.containsValue(event.getRecipe())) {
+        if (!RecipeManager.isManagedRecipe(event.getRecipe())) {
             for (ItemStack ingredient : event.getInventory().getMatrix()) {
                 if (CustomItemRegistry.isCustomItem(ingredient)) {
                     event.getInventory().setResult(null); //Stops recipes using our custom items
@@ -352,7 +349,7 @@ public class ItemListener implements Listener {
                 ItemStack stack = event.getClickedInventory().getItem(2);
                 CustomItem ci = CustomItemRegistry.getCustomItem(stack);
 
-                if (!ci.getProperties().contains(Properties.RENAMED) && !stack.getItemMeta().getDisplayName()
+                if (!ci.getProperties().contains(Properties.RENAMABLE) && !stack.getItemMeta().getDisplayName()
                         .equals(event.getInventory().getItem(0).getItemMeta().getDisplayName())) {
                     event.setCancelled(true);
                     event.getWhoClicked().sendMessage(ChatColor.RED + "This item cannot be renamed!");
@@ -362,7 +359,7 @@ public class ItemListener implements Listener {
                 if (!stack.getItemMeta().getDisplayName()
                         .equals(event.getInventory().getItem(0).getItemMeta().getDisplayName())) {
                     ItemMeta meta = stack.getItemMeta();
-                    Properties.RENAMED.set(meta.getPersistentDataContainer(), 1); //Mark it as renamed
+                    Properties.RENAMABLE.set(meta.getPersistentDataContainer(), 1); //Mark it as renamed
                     stack.setItemMeta(meta);
                     event.getClickedInventory().setItem(2, stack); //Set the updated item back into the inventory
                     event.setCurrentItem(stack);
@@ -486,7 +483,7 @@ public class ItemListener implements Listener {
                 //If it is repairable and the material is compatible, allow it
                 if (ci1 instanceof Repairable) return ((Repairable)ci1).getRepairMaterial(slot1) != ci2;
                 //If it can be renamed and there is nothing in slot 2, allow it
-                if (ci1.getProperties().contains(Properties.RENAMED) && slot2 == null) return false;
+                if (ci1.getProperties().contains(Properties.RENAMABLE) && slot2 == null) return false;
 
                 return true; //Block all other exceptions
 
@@ -569,7 +566,7 @@ public class ItemListener implements Listener {
 
             if (item != null) {
                 //Cancel if it can't be renamed
-                if (!item.getProperties().contains(Properties.RENAMED)) {
+                if (!item.getProperties().contains(Properties.RENAMABLE)) {
                     event.setResult(null);
                 }
             }

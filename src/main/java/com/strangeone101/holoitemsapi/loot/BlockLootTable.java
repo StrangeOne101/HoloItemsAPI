@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.loot;
+package com.strangeone101.holoitemsapi.loot;
 
 import org.bukkit.inventory.ItemStack;
 

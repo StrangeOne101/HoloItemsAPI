@@ -1,9 +1,9 @@
-package com.strangeone101.holoitems.loot.tables;
+package com.strangeone101.holoitemsapi.loot.tables;
 
-import com.strangeone101.holoitems.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitems.items.Items;
-import com.strangeone101.holoitems.loot.BlockLootContext;
-import com.strangeone101.holoitems.loot.BlockLootTable;
+import com.strangeone101.holoitemsapi.loot.BlockLootContext;
+import com.strangeone101.holoitemsapi.loot.BlockLootTable;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 

@@ -1,6 +1,6 @@
-package com.strangeone101.holoitems.listener;
+package com.strangeone101.holoitemsapi.listener;
 
-import com.strangeone101.holoitems.ItemAbility;
+import com.strangeone101.holoitemsapi.ItemAbility;
 import com.strangeone101.holoitems.abilities.RushiaShieldAbility;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

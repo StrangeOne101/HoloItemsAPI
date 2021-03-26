@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.items.interfaces;
+package com.strangeone101.holoitemsapi.interfaces;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

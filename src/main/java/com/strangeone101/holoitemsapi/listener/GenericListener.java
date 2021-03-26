@@ -1,8 +1,8 @@
-package com.strangeone101.holoitems.listener;
+package com.strangeone101.holoitemsapi.listener;
 
 import com.strangeone101.holoitems.event.CIDamageEntityEvent;
 import com.strangeone101.holoitems.event.CIEntityDamageEntityEvent;
-import com.strangeone101.holoitems.util.CustomDamageSource;
+import com.strangeone101.holoitemsapi.util.CustomDamageSource;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;

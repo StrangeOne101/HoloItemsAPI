@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.loot.tables;
+package com.strangeone101.holoitemsapi.loot.tables;
 
 import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitems.items.Items;

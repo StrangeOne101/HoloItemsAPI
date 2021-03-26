@@ -1,8 +1,5 @@
-package com.strangeone101.holoitems.loot;
+package com.strangeone101.holoitemsapi.loot;
 
-import com.strangeone101.holoitems.loot.tables.Endermite;
-import com.strangeone101.holoitems.loot.tables.GemOre;
-import com.strangeone101.holoitems.loot.tables.Spawner;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;

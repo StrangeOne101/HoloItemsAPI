@@ -1,4 +1,4 @@
-package com.strangeone101.holoitems.items.interfaces;
+package com.strangeone101.holoitemsapi.interfaces;
 
 import com.strangeone101.holoitemsapi.CustomItem;
 import org.bukkit.block.Block;
