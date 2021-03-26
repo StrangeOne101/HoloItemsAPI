@@ -79,7 +79,9 @@ public class FoodAbility extends ItemAbility {
 
         tick++;
 
+        //Only play particles every second tick
         if (tick % 2 == 0) {
+            //Only play sound every 4 ticks
             if (tick % 4 == 0) getPlayer().getWorld().playSound(getPlayer().getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 1);
             Vector vector = getPlayer().getLocation().getDirection().clone();
             vector.setY(0); //Ignore their yaw
@@ -87,7 +89,6 @@ public class FoodAbility extends ItemAbility {
             vector.setY(1.6); //Add 1.6 blocks so the height is their face
             getPlayer().getWorld().spawnParticle(Particle.ITEM_CRACK, getPlayer().getLocation().add(vector), 2, 0.125, 0.05, 0.125, 0, getStack());
         }
-
     }
 
     @Override
