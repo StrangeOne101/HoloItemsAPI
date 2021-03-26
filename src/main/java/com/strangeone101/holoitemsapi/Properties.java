@@ -1,6 +1,5 @@
 package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitemsapi.util.UUIDTagType;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;

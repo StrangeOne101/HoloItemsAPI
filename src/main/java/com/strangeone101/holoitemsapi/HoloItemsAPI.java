@@ -1,6 +1,5 @@
 package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitemsapi.listener.AbilityListener;
 import com.strangeone101.holoitemsapi.listener.GenericListener;
 import com.strangeone101.holoitemsapi.listener.ItemListener;
 import com.strangeone101.holoitemsapi.listener.LootListener;
@@ -25,7 +24,6 @@ public class HoloItemsAPI {
         keys = new Keys(plugin);
 
         Bukkit.getPluginManager().registerEvents(new ItemListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new AbilityListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new LootListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new GenericListener(), plugin);
 

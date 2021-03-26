@@ -1,6 +1,5 @@
 package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.HoloItemsPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;

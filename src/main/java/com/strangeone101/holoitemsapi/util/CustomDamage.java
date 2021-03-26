@@ -1,7 +1,7 @@
 package com.strangeone101.holoitemsapi.util;
 
-import com.strangeone101.holoitems.event.CIDamageEntityEvent;
-import com.strangeone101.holoitems.event.CIEntityDamageEntityEvent;
+import com.strangeone101.holoitemsapi.event.CIDamageEntityEvent;
+import com.strangeone101.holoitemsapi.event.CIEntityDamageEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;

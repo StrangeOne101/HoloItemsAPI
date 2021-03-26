@@ -1,6 +1,5 @@
 package com.strangeone101.holoitemsapi;
 
-import com.strangeone101.holoitems.HoloItemsPlugin;
 import com.strangeone101.holoitemsapi.interfaces.ItemEvent;
 import com.strangeone101.holoitemsapi.util.UUIDTagType;
 import org.bukkit.Bukkit;
@@ -51,7 +50,7 @@ public class CustomItemRegistry {
         for (Method method : methods) {
             if (method.isAnnotationPresent(ItemEvent.class)) {
                 if (method.getParameterTypes().length < 1 || !method.getParameterTypes()[0].equals(EventContext.class) || !Event.class.isAssignableFrom(method.getParameterTypes()[1])) {
-                    HoloItemsPlugin.INSTANCE.getLogger().severe("Item " + item.getInternalName()
+                    HoloItemsAPI.getPlugin().getLogger().severe("Item " + item.getInternalName()
                             + "attempted to register an invalid ItemEvent method signature \\" + method.toGenericString() + "\" in " + item.getClass());
                     continue;
                 }
@@ -131,7 +130,7 @@ public class CustomItemRegistry {
     private static void registerItemEventListener(Class<? extends Event> clazz) {
         EventExecutor executor = (listener, event) -> EventContext.triggerItemEvents(event);
 
-        Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsPlugin.INSTANCE, false);
+        Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsAPI.getPlugin(), false);
         EventContext.REGISTERED_EVENT_HANDLERS.add(clazz);
     }
 

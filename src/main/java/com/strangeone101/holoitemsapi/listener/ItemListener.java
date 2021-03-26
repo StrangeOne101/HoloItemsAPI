@@ -2,11 +2,9 @@ package com.strangeone101.holoitemsapi.listener;
 
 import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitemsapi.CustomItemRegistry;
-import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import com.strangeone101.holoitemsapi.Properties;
-import com.strangeone101.holoitems.items.Items;
 import com.strangeone101.holoitemsapi.abilities.FoodAbility;
-import com.strangeone101.holoitems.items.implementations.MoguBoots;
 import com.strangeone101.holoitemsapi.interfaces.BlockInteractable;
 import com.strangeone101.holoitemsapi.interfaces.Edible;
 import com.strangeone101.holoitemsapi.interfaces.EntityInteractable;
@@ -141,7 +139,7 @@ public class ItemListener implements Listener {
                     EventContext.release(event.getPlayer());
                 }
             }
-        }.runTaskLater(HoloItemsPlugin.INSTANCE, 20 * 10L);
+        }.runTaskLater(HoloItemsAPI.getPlugin(), 20 * 10L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -287,16 +285,6 @@ public class ItemListener implements Listener {
         if (item != null) {
             stack = item.updateStack(stack, null);
             event.getEntity().setItemStack(stack);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onMove(PlayerMoveEvent event) {
-        if (event.getFrom().getBlock() != event.getTo().getBlock()) {
-            CustomItem item = CustomItemRegistry.getCustomItem(event.getPlayer().getEquipment().getBoots());
-            if (item == Items.MOGU_BOOTS && event.getPlayer().isOnGround()) {
-                MoguBoots.mogu(event.getPlayer().getLocation());
-            }
         }
     }
 
@@ -534,7 +522,7 @@ public class ItemListener implements Listener {
                 }
 
             }
-        }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
+        }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
     }
 
     public void cacheLater(Player player) {
@@ -543,7 +531,7 @@ public class ItemListener implements Listener {
             public void run() {
                 EventContext.fullCache(player);
             }
-        }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
+        }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
     }
 
     @EventHandler(ignoreCancelled = true)

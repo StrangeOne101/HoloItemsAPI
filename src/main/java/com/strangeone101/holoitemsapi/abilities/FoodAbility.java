@@ -2,7 +2,7 @@ package com.strangeone101.holoitemsapi.abilities;
 
 import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitemsapi.CustomItemRegistry;
-import com.strangeone101.holoitems.HoloItemsPlugin;
+import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import com.strangeone101.holoitemsapi.ItemAbility;
 import com.strangeone101.holoitemsapi.interfaces.Edible;
 import org.bukkit.Material;
@@ -70,7 +70,7 @@ public class FoodAbility extends ItemAbility {
                     public void run() {
                         getPlayer().getInventory().setItem(slot, clone);
                     }
-                }.runTaskLater(HoloItemsPlugin.INSTANCE, 1L);
+                }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
             }
             remove();
             return;
