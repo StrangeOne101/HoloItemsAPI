@@ -21,7 +21,7 @@ public class HoloItemsAPI {
 
         HoloItemsAPI.plugin = plugin;
 
-        keys = new Keys(plugin);
+        keys = new Keys();
 
         Bukkit.getPluginManager().registerEvents(new ItemListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new LootListener(), plugin);
