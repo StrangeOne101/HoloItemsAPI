@@ -68,6 +68,8 @@ public class ItemListener implements Listener {
     public static final HashSet<EntityType> GREENLIT_ENTITY_INTERACTIONS = new HashSet<>();
     public static final HashMap<EntityType, BiFunction<Entity, Material, Boolean>> ENTITY_INTERACTABLES = new HashMap<>();
 
+    public static boolean DEBUG_MODE = false;
+
     public ItemListener() {
         INTERACTABLES.addAll(Arrays.asList(
                 Material.CARTOGRAPHY_TABLE, Material.ENCHANTING_TABLE, Material.SMITHING_TABLE, Material.CRAFTING_TABLE,
@@ -371,6 +373,7 @@ public class ItemListener implements Listener {
 
         }
 
+        if (DEBUG_MODE)
         event.getWhoClicked().sendMessage(event.getAction() + "," + event.getClick() + ","
                 + event.getSlotType() + "," + event.getRawSlot() + "," + event.getSlot() + ","
                 + event.getInventory().getSize() + "," + event.getInventory().getType());

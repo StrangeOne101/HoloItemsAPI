@@ -39,6 +39,7 @@ public class RecipeManager {
         if (Bukkit.getRecipe(((Keyed)recipe).getKey()) != null) {
             Bukkit.removeRecipe(((Keyed)recipe).getKey());
         }
+        Bukkit.addRecipe(recipe);
     }
 
     public static void addRecipe(Recipe recipe, NamespacedKey key) {
