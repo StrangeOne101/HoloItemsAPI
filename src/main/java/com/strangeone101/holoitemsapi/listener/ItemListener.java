@@ -419,7 +419,7 @@ public class ItemListener implements Listener {
 
             if (event.getCursor() != null) {
 
-                if (event.getCurrentItem().isSimilar(event.getCursor()) && event.getCurrentItem().getAmount() < event.getCurrentItem().getMaxStackSize()) {
+                if (event.getCurrentItem() != null && event.getCurrentItem().isSimilar(event.getCursor()) && event.getCurrentItem().getAmount() < event.getCurrentItem().getMaxStackSize()) {
                     EventContext.uncacheSlot((Player) event.getWhoClicked(), -1); //Delete the cached in item item
                 } else {
                     EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
