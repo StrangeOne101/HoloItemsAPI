@@ -1,14 +1,28 @@
-package com.strangeone101.holoitemsapi;
+package com.strangeone101.holoitemsapi.itemevent;
 
+import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.CustomItemRegistry;
+import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.apache.commons.lang3.tuple.MutableTriple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockEvent;
+import org.bukkit.event.entity.EntityEvent;
+import org.bukkit.event.inventory.InventoryEvent;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.EventExecutor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,49 +32,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class EventContext {
+public class EventCache {
+
+    private static final Listener DUMMY_LISTENER = new Listener() {};
 
     //Cache
+    @Deprecated
     public static Map<Class<? extends Event>, Map<Player, Set<MutableTriple<CustomItem, ItemStack, Position>>>> CACHED_POSITIONS_BY_EVENT = new HashMap<>();
+    @Deprecated
     public static Map<Player, Map<Integer, MutableTriple<CustomItem, ItemStack, Position>>> CACHED_POSITIONS_BY_SLOT = new HashMap<>();
+
+    public static Map<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> POSITIONS_BY_ITEM = new HashMap<>();
 
     //Registry
     static Map<CustomItem, Map<Class<? extends Event>, Set<Method>>> ITEMEVENT_EXECUTORS = new HashMap<>();
 
+    static Map<Class<? extends Event>, Map<Method, MutableTriple<CustomItem, Target, ActiveConditions>>> METHODS_BY_EVENT = new HashMap<>();
+
     //Events that we have ItemEvent listeners for
     static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
-
-    public enum Position {
-        HELD, OFFHAND, HOTBAR, ARMOR, INVENTORY, OTHER
-    }
-
-    private Player player;
-    private CustomItem item;
-    private ItemStack stack;
-    private Position position;
-
-    public EventContext(Player player, CustomItem item, ItemStack stack, Position position) {
-        this.player = player;
-        this.item = item;
-        this.stack = stack;
-        this.position = position;
-    }
-
-    public CustomItem getItem() {
-        return item;
-    }
-
-    public ItemStack getStack() {
-        return stack;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
-    public Player getPlayer() {
-        return player;
-    }
 
     public static void fullCache(Player player) {
         CACHED_POSITIONS_BY_SLOT.put(player, new HashMap<>());
@@ -251,7 +241,74 @@ public class EventContext {
     }
 
     static void triggerItemEvents(Event event) {
-        if (CACHED_POSITIONS_BY_EVENT.containsKey(event.getClass())) {
+        if (!METHODS_BY_EVENT.containsKey(event.getClass())) return;
+
+        for (Method m : METHODS_BY_EVENT.get(event.getClass()).keySet()) {
+            Triple<CustomItem, Target, ActiveConditions> t = METHODS_BY_EVENT.get(event.getClass()).get(m);
+
+            if (t.getRight() == ActiveConditions.NONE) { //We don't execute it based on whether the item is active
+                EventContext context = new EventContext(null, t.getLeft(), null, null);
+                try {
+                    m.invoke(t.getLeft(), context, event);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            } else if (t.getMiddle() == Target.SELF) { //Execute only if the player is the one doing it
+                if (event instanceof PlayerEvent) {
+                    if (POSITIONS_BY_ITEM.get(t.getLeft()).containsKey(((PlayerEvent)event).getPlayer())) {
+                        for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(((PlayerEvent)event).getPlayer()).keySet()) {
+                            Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(((PlayerEvent)event).getPlayer()).get(slot);
+                            if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                                EventContext context = new EventContext(((PlayerEvent) event).getPlayer(), t.getLeft(), pair.getLeft(), pair.getRight());
+                                try {
+                                    m.invoke(t.getLeft(), context, event);
+                                } catch (IllegalAccessException | InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                        }
+                    }
+                }
+            } else if (t.getMiddle() == Target.WORLD) { //Execute all events in the same world
+                World world = null;
+                if (event instanceof PlayerEvent) world = ((PlayerEvent)event).getPlayer().getWorld();
+                else if (event instanceof BlockEvent) world = ((BlockEvent)event).getBlock().getWorld();
+                else if (event instanceof EntityEvent) world = ((EntityEvent)event).getEntity().getWorld();
+                else if (event instanceof InventoryEvent) world = ((InventoryEvent)event).getView().getPlayer().getWorld();
+                if (world != null) {
+                    for (Player player : POSITIONS_BY_ITEM.get(t.getLeft()).keySet()) {
+                        if (player.getWorld() == world) { //If the world is the same
+                            for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(player).keySet()) {
+                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(player).get(slot);
+                                if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                                    EventContext context = new EventContext(player, t.getLeft(), pair.getLeft(), pair.getRight());
+                                    try {
+                                        m.invoke(t.getLeft(), context, event);
+                                    } catch (IllegalAccessException | InvocationTargetException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else { //Events for all worlds and all players
+                for (Player player : POSITIONS_BY_ITEM.get(t.getLeft()).keySet()) {
+                    for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(player).keySet()) {
+                        Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(player).get(slot);
+                        if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                            EventContext context = new EventContext(player, t.getLeft(), pair.getLeft(), pair.getRight());
+                            try {
+                                m.invoke(t.getLeft(), context, event);
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        /*if (CACHED_POSITIONS_BY_EVENT.containsKey(event.getClass())) {
             for (Player player : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).keySet()) {
                 for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).get(player)) {
                     EventContext context = new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight());
@@ -266,6 +323,7 @@ public class EventContext {
                 }
 
             }
+        }*/
         }
     }
 
@@ -278,5 +336,52 @@ public class EventContext {
                             .collect(Collectors.toList())));
         }
         return list;
+    }
+
+    public static void registerEvents(CustomItem item) {
+        HashSet<Method> methods = new HashSet<>();
+        methods.addAll(Arrays.asList(item.getClass().getDeclaredMethods()));
+        methods.addAll(Arrays.asList(item.getClass().getMethods()));
+        for (Method method : methods) {
+            if (method.isAnnotationPresent(ItemEvent.class)) {
+                if (method.getParameterTypes().length < 1 || !method.getParameterTypes()[0].equals(EventContext.class) || !Event.class.isAssignableFrom(method.getParameterTypes()[1])) {
+                    HoloItemsAPI.getPlugin().getLogger().severe("Item " + item.getInternalName()
+                            + "attempted to register an invalid ItemEvent method signature \\" + method.toGenericString() + "\" in " + item.getClass());
+                    continue;
+                }
+
+                Class<? extends Event> clazz = (Class<? extends Event>) method.getParameterTypes()[1];
+
+                ItemEvent event = method.getDeclaredAnnotation(ItemEvent.class);
+
+                if (!ITEMEVENT_EXECUTORS.containsKey(item)) {
+                    ITEMEVENT_EXECUTORS.put(item, new HashMap<>());
+                }
+
+                if (!ITEMEVENT_EXECUTORS.get(item).containsKey(clazz)) {
+                    ITEMEVENT_EXECUTORS.get(item).put(clazz, new HashSet<>());
+                }
+
+                if (!METHODS_BY_EVENT.containsKey(clazz)) {
+                    METHODS_BY_EVENT.put(clazz, new HashMap<>());
+                }
+
+                method.setAccessible(true);
+                ITEMEVENT_EXECUTORS.get(item).get(clazz).add(method);
+                METHODS_BY_EVENT.get(clazz).put(method, new MutableTriple<>(item, event.target(), event.active()));
+
+                //Make sure bukkit will trigger our event methods
+                if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
+                    registerItemEventListener(clazz);
+                }
+            }
+        }
+    }
+
+    private static void registerItemEventListener(Class<? extends Event> clazz) {
+        EventExecutor executor = (listener, event) -> triggerItemEvents(event);
+
+        Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsAPI.getPlugin(), false);
+        REGISTERED_EVENT_HANDLERS.add(clazz);
     }
 }

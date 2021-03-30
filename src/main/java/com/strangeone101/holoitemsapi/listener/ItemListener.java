@@ -12,9 +12,9 @@ import com.strangeone101.holoitemsapi.interfaces.Interactable;
 import com.strangeone101.holoitemsapi.interfaces.Placeable;
 import com.strangeone101.holoitemsapi.interfaces.Repairable;
 import com.strangeone101.holoitemsapi.interfaces.Swingable;
+import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
-import com.strangeone101.holoitemsapi.EventContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Cat;
@@ -44,7 +44,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
@@ -126,8 +125,8 @@ public class ItemListener implements Listener {
 
     @EventHandler
     public void onLogin(PlayerLoginEvent event) {
-        if (!EventContext.isCached(event.getPlayer())) {
-            EventContext.fullCache(event.getPlayer());
+        if (!EventCache.isCached(event.getPlayer())) {
+            EventCache.fullCache(event.getPlayer());
         }
     }
 
@@ -138,7 +137,7 @@ public class ItemListener implements Listener {
             @Override
             public void run() {
                 if (event.getPlayer() == null || !event.getPlayer().isOnline()) {
-                    EventContext.release(event.getPlayer());
+                    EventCache.release(event.getPlayer());
                 }
             }
         }.runTaskLater(HoloItemsAPI.getPlugin(), 20 * 10L);
@@ -276,7 +275,7 @@ public class ItemListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSlotSwitch(PlayerItemHeldEvent event) {
         //Update the cached held item
-        EventContext.updateHeldSlot(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
+        EventCache.updateHeldSlot(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -390,7 +389,7 @@ public class ItemListener implements Listener {
         if (event.getAction() == InventoryAction.DROP_ALL_CURSOR || event.getAction() == InventoryAction.DROP_ALL_SLOT
                 || event.getAction() == InventoryAction.DROP_ONE_CURSOR || event.getAction() == InventoryAction.DROP_ONE_SLOT) {
             if (inPlayerInv || event.getCursor() != null) { //if its in the inv or they are holding an item
-                EventContext.uncacheSlot((Player) event.getWhoClicked(), event.getCursor() != null ? event.getSlot() : -1); //-1 is held itemstack
+                EventCache.uncacheSlot((Player) event.getWhoClicked(), event.getCursor() != null ? event.getSlot() : -1); //-1 is held itemstack
             }
             return;
         }
@@ -404,30 +403,30 @@ public class ItemListener implements Listener {
 
         if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF ||
                 event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME) {
-            if (!EventContext.shouldCache(event.getCurrentItem())) return;
+            if (!EventCache.shouldCache(event.getCurrentItem())) return;
 
 
             if (inPlayerInv) {
-                EventContext.updateCacheSlot((Player) event.getWhoClicked(), event.getSlot(), -1);
+                EventCache.updateCacheSlot((Player) event.getWhoClicked(), event.getSlot(), -1);
             } else
-                EventContext.cacheItem((Player) event.getWhoClicked(), inPlayerInv ? event.getSlot() : -1, event.getCurrentItem());
+                EventCache.cacheItem((Player) event.getWhoClicked(), inPlayerInv ? event.getSlot() : -1, event.getCurrentItem());
             return;
         }
 
         if (inPlayerInv) { //If the click WASN'T in the top inventory
-            if (!EventContext.shouldCache(event.getCursor())) return;
+            if (!EventCache.shouldCache(event.getCursor())) return;
 
             if (event.getCursor() != null) {
 
                 if (event.getCurrentItem() != null && event.getCurrentItem().isSimilar(event.getCursor()) && event.getCurrentItem().getAmount() < event.getCurrentItem().getMaxStackSize()) {
-                    EventContext.uncacheSlot((Player) event.getWhoClicked(), -1); //Delete the cached in item item
+                    EventCache.uncacheSlot((Player) event.getWhoClicked(), -1); //Delete the cached in item item
                 } else {
-                    EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
+                    EventCache.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot()); //Swap held item and the clicked slot
                 }
                 return;
             } else if (event.getAction() == InventoryAction.PLACE_ALL || event.getAction() == InventoryAction.PLACE_ONE ||
                     event.getAction() == InventoryAction.PLACE_SOME) {
-                EventContext.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot());
+                EventCache.updateCacheSlot((Player) event.getWhoClicked(), -1, event.getSlot());
             }
 
         }
@@ -532,7 +531,7 @@ public class ItemListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                EventContext.fullCache(player);
+                EventCache.fullCache(player);
             }
         }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
     }

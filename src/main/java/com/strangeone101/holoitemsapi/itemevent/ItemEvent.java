@@ -1,4 +1,4 @@
-package com.strangeone101.holoitemsapi.interfaces;
+package com.strangeone101.holoitemsapi.itemevent;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,4 +10,7 @@ import java.lang.annotation.Target;
 
 public @interface ItemEvent {
 
+    com.strangeone101.holoitemsapi.itemevent.Target target() default com.strangeone101.holoitemsapi.itemevent.Target.SELF;
+
+    ActiveConditions active() default ActiveConditions.INVENTORY;
 }

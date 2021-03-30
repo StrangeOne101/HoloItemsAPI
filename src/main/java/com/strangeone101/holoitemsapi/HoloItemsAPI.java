@@ -1,12 +1,16 @@
 package com.strangeone101.holoitemsapi;
 
+import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.listener.GenericListener;
 import com.strangeone101.holoitemsapi.listener.ItemListener;
 import com.strangeone101.holoitemsapi.listener.LootListener;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 public class HoloItemsAPI {
 
@@ -32,7 +36,7 @@ public class HoloItemsAPI {
 
         //Create cache for all players
         for (Player player : Bukkit.getOnlinePlayers()) {
-            EventContext.fullCache(player);
+            EventCache.fullCache(player);
         }
 
         return true;
@@ -49,5 +53,17 @@ public class HoloItemsAPI {
 
     public static Keys getKeys() {
         return keys;
+    }
+
+    public static void setGeneralConfig(File file) {
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        Config.generalConfig = config;
+        Config.generalConfigFile = file;
+    }
+
+    public static void setDeathMessageConfig(File file) {
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        Config.deathMessageConfig = config;
+        Config.deathMessageConfigFile = file;
     }
 }
