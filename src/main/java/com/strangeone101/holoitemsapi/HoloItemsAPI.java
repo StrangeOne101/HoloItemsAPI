@@ -34,10 +34,13 @@ public class HoloItemsAPI {
         //Make all item abilities tick
         new ItemAbility.CustomItemAbilityTask().runTaskTimer(plugin, 1L, 1L);
 
-        //Create cache for all players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            EventCache.fullCache(player);
-        }
+        //Prepares caches after caller's onEnable() finishes
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            //Create cache for all players
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                EventCache.fullCache(player);
+            }
+        }, 1L);
 
         return true;
     }
