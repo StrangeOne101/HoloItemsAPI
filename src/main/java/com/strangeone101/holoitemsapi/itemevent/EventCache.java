@@ -3,6 +3,7 @@ package com.strangeone101.holoitemsapi.itemevent;
 import com.strangeone101.holoitemsapi.CustomItem;
 import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import com.strangeone101.holoitemsapi.HoloItemsAPI;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -17,6 +18,7 @@ import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.EventExecutor;
 
 import java.lang.reflect.InvocationTargetException;
@@ -52,6 +54,15 @@ public class EventCache {
     //Events that we have ItemEvent listeners for
     static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
 
+    public static void prepareCache(CustomItem item) {
+        Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
+        if (positionsCache == null) {
+            POSITIONS_BY_ITEM.put(item, new HashMap<>());
+        } else {
+            positionsCache.clear();
+        }
+    }
+
     public static void fullCache(Player player) {
         CACHED_POSITIONS_BY_SLOT.put(player, new HashMap<>());
 
@@ -59,13 +70,20 @@ public class EventCache {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
 
-        for (int slot = 0; slot < player.getInventory().getSize(); slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
+        PlayerInventory playerInventory = player.getInventory();
+        for (int slot = 0; slot < playerInventory.getSize(); slot++) {
+            ItemStack stack = playerInventory.getItem(slot);
 
             CustomItem item = CustomItemRegistry.getCustomItem(stack);
 
+            Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.computeIfAbsent(player, k -> new HashMap<>());
+
+            Position pos = getPosition(slot, playerInventory.getHeldItemSlot());
+
+            playerSlotCache.put(slot, new MutablePair<>(stack, pos));
+
             if (ITEMEVENT_EXECUTORS.containsKey(item)) {
-                Position pos = getPosition(slot, player.getInventory().getHeldItemSlot());
                 MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
 
                 for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
@@ -90,12 +108,21 @@ public class EventCache {
         for (Class key : CACHED_POSITIONS_BY_EVENT.keySet()) {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
+
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionCache : POSITIONS_BY_ITEM.values()) {
+            positionCache.remove(player);
+        }
     }
 
     public static boolean isCached(Player player) {
-        return CACHED_POSITIONS_BY_SLOT.containsKey(player);
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionCache : POSITIONS_BY_ITEM.values()) {
+            return positionCache.containsKey(player);
+        }
+
+        return false;
     }
 
+    @Deprecated
     public static Set<MutableTriple<CustomItem, ItemStack, Position>> getCache(Player player, Class<? extends Event> clazz) {
         if (!CACHED_POSITIONS_BY_EVENT.containsKey(clazz)) return new HashSet<>();
         if (!CACHED_POSITIONS_BY_EVENT.get(clazz).containsKey(player)) return new HashSet<>();
