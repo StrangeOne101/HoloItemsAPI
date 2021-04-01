@@ -31,7 +31,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
-//import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.AnvilInventory;
@@ -261,13 +261,11 @@ public class ItemListener implements Listener {
         }
     }
 
-    /*
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSlotSwitch(PlayerItemHeldEvent event) {
         //Update the cached held item
         EventCache.updateHeldSlot(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
     }
-    */
 
     @EventHandler(ignoreCancelled = true)
     public void onItemSpawn(ItemSpawnEvent event) {

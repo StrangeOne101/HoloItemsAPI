@@ -194,6 +194,8 @@ public class EventCache {
     }
 
     public static void updateHeldSlot(Player player, int oldSlot, int newSlot) {
+        if (LOG_DEBUG) Bukkit.getLogger().info ("Updating held slot from " + oldSlot + " to " + newSlot);
+
         if (CACHED_POSITIONS_BY_SLOT.containsKey(player)) {
             if (CACHED_POSITIONS_BY_SLOT.get(player).containsKey(oldSlot)) {
                 CACHED_POSITIONS_BY_SLOT.get(player).get(oldSlot).setRight(getPosition(oldSlot, newSlot));
@@ -206,6 +208,14 @@ public class EventCache {
         for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
             Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
             if (playerSlotCache == null) continue;
+
+            if (LOG_DEBUG) {
+                Bukkit.getLogger().info (player.toString() + "'s inventory has:");
+                for (Map.Entry<Integer, Pair<ItemStack, Position>> slots : playerSlotCache.entrySet()) {
+                    Bukkit.getLogger().info ("[" + slots.getKey() + "] : " + slots.getValue().getLeft().toString() + " @ " + slots.getValue().getRight().toString());
+                }
+            }
+
             Pair<ItemStack, Position> transfer;
             transfer = playerSlotCache.get(oldSlot);
             if (transfer != null) {
@@ -216,6 +226,8 @@ public class EventCache {
                 transfer.setValue(getPosition(newSlot, newSlot));
             }
         }
+
+        if (LOG_DEBUG) Bukkit.getLogger().info ("Held slot update end");
     }
 
     public static boolean shouldCache(ItemStack stack) {
