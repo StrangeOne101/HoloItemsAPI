@@ -1,5 +1,6 @@
 package com.strangeone101.holoitemsapi.listener;
 
+import com.strangeone101.holoitemsapi.Config;
 import com.strangeone101.holoitemsapi.event.CIDamageEntityEvent;
 import com.strangeone101.holoitemsapi.event.CIEntityDamageEntityEvent;
 import com.strangeone101.holoitemsapi.util.CustomDamageSource;
@@ -26,7 +27,7 @@ public class GenericListener implements Listener {
                 end = ((CIEntityDamageEntityEvent) event.getEntity().getLastDamageCause()).getDamagee() == event.getEntity() ? "Self" : "Player";
             }
 
-            String message = ""; //TODO config.getMessageConfig().get("DeathMessages." + source.getName() + "." + end);
+            String message = Config.getDeathMessage(source, end);
             message = message.replace("{player}", player).replace("{killer}", killer);
 
             event.setDeathMessage(message);
