@@ -70,14 +70,20 @@ public class EventCache {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
 
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.computeIfAbsent(player, k -> new HashMap<>());
+            playerSlotCache.clear();
+        }
+
         PlayerInventory playerInventory = player.getInventory();
         for (int slot = 0; slot < playerInventory.getSize(); slot++) {
             ItemStack stack = playerInventory.getItem(slot);
 
             CustomItem item = CustomItemRegistry.getCustomItem(stack);
+            if (item == null) continue;
 
             Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
-            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.computeIfAbsent(player, k -> new HashMap<>());
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
 
             Position pos = getPosition(slot, playerInventory.getHeldItemSlot());
 
@@ -116,7 +122,9 @@ public class EventCache {
 
     public static boolean isCached(Player player) {
         for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionCache : POSITIONS_BY_ITEM.values()) {
-            return positionCache.containsKey(player);
+            if (positionCache.containsKey(player)) {
+                return true;
+            }
         }
 
         return false;
@@ -138,6 +146,15 @@ public class EventCache {
             triple.setRight(pos);
             CACHED_POSITIONS_BY_SLOT.get(player).remove(oldSlot);
             CACHED_POSITIONS_BY_SLOT.get(player).put(newSlot, triple);
+        }
+
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
+            if (playerSlotCache == null) continue;
+            Pair<ItemStack, Position> transfer = playerSlotCache.remove(oldSlot);
+            if (transfer != null) {
+                playerSlotCache.put(newSlot, transfer);
+            }
         }
     }
 
@@ -163,6 +180,11 @@ public class EventCache {
 
             CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
         }
+
+        //---
+        Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
+        Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.computeIfAbsent(player, k -> new HashMap<>());
+        playerSlotCache.put(slot, new MutablePair<>(stack, getPosition(slot, player.getInventory().getHeldItemSlot())));
     }
 
     public static void updateHeldSlot(Player player, int oldSlot, int newSlot) {
@@ -174,8 +196,20 @@ public class EventCache {
                 CACHED_POSITIONS_BY_SLOT.get(player).get(newSlot).setRight(getPosition(newSlot, newSlot));
             }
         }
-
-
+        //---
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
+            if (playerSlotCache == null) continue;
+            Pair<ItemStack, Position> transfer;
+            transfer = playerSlotCache.get(oldSlot);
+            if (transfer != null) {
+                transfer.setValue(getPosition(oldSlot, newSlot));
+            }
+            transfer = playerSlotCache.get(newSlot);
+            if (transfer != null) {
+                transfer.setValue(getPosition(newSlot, newSlot));
+            }
+        }
     }
 
     public static boolean shouldCache(ItemStack stack) {
@@ -210,6 +244,37 @@ public class EventCache {
                 }
             }
         }
+        //--
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
+            if (playerSlotCache == null) continue;
+
+            Pair<ItemStack, Position> pair1 = playerSlotCache.get(slot1);
+            Pair<ItemStack, Position> pair2 = playerSlotCache.get(slot2);
+
+            if (pair1 != null) {
+                pair1.setValue(pos2);
+                playerSlotCache.put(slot2, pair1);
+            }
+            if (pair1 != null) {
+                pair1.setValue(pos2);
+                playerSlotCache.put(slot2, pair1);
+
+                //If we are swapping with null, remove the old position of this triple
+                if (pair2 == null) {
+                    playerSlotCache.remove(slot1);
+                }
+            }
+            if (pair2 != null) {
+                pair2.setValue(pos1);
+                playerSlotCache.put(slot1, pair2);
+
+                //If we are swapping with null, remove the old position of this triple
+                if (pair1 == null) {
+                    playerSlotCache.remove(slot2);
+                }
+            }
+        }
     }
 
     /**
@@ -235,6 +300,16 @@ public class EventCache {
                 }
             }
         }
+        //--
+        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
+            if (playerSlotCache == null) continue;
+            playerSlotCache.remove(slot); //Remove the slot
+
+            if (playerSlotCache.isEmpty()) { //If they have no more cache left
+                positionsCache.remove(player); //Remove entire cache
+            }
+        }
     }
 
     private static Position getPosition(int slot, int heldItemSlot) {
@@ -258,11 +333,25 @@ public class EventCache {
      * @return The active contexts
      */
     public static Collection<EventContext> getActive(Player player) {
+        /*
         if (!CACHED_POSITIONS_BY_SLOT.containsKey(player)) return Collections.emptyList();
 
         List<EventContext> contexts = new ArrayList<>();
         for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_SLOT.get(player).values()) {
             contexts.add(new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight()));
+        }
+        return contexts; */
+
+        List<EventContext> contexts = new ArrayList<>();
+        for (Map.Entry<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> positionsEntries : POSITIONS_BY_ITEM.entrySet()) {
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsEntries.getValue().get(player);
+            if (playerSlotCache == null) continue;
+
+            CustomItem customItem = positionsEntries.getKey();
+
+            for (Pair<ItemStack, Position> pairs : playerSlotCache.values()) {
+                contexts.add(new EventContext(player, customItem, pairs.getLeft(), pairs.getRight()));
+            }
         }
         return contexts;
     }
