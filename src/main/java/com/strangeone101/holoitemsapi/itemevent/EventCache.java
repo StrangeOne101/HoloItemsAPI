@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class EventCache {
+    private static final boolean LOG_DEBUG = false;
 
     private static final Listener DUMMY_LISTENER = new Listener() {};
 
@@ -46,6 +47,8 @@ public class EventCache {
 
     public static Map<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> POSITIONS_BY_ITEM = new HashMap<>();
 
+    public static Set<Player> DIRTY_INVENTORY = new HashSet<>();
+
     //Registry
     static Map<CustomItem, Map<Class<? extends Event>, Set<Method>>> ITEMEVENT_EXECUTORS = new HashMap<>();
 
@@ -54,26 +57,25 @@ public class EventCache {
     //Events that we have ItemEvent listeners for
     static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
 
-    public static void prepareCache(CustomItem item) {
-        Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
-        if (positionsCache == null) {
-            POSITIONS_BY_ITEM.put(item, new HashMap<>());
-        } else {
-            positionsCache.clear();
-        }
-    }
-
     public static void fullCache(Player player) {
+        if (LOG_DEBUG) Bukkit.getLogger().info("Full cache begin on " + player);
         CACHED_POSITIONS_BY_SLOT.put(player, new HashMap<>());
 
         for (Class<? extends Event> key : CACHED_POSITIONS_BY_EVENT.keySet()) {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
 
-        for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache : POSITIONS_BY_ITEM.values()) {
-            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.computeIfAbsent(player, k -> new HashMap<>());
+        //--
+        for (Map.Entry<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> entry : POSITIONS_BY_ITEM.entrySet()) {
+            if (!ITEMEVENT_EXECUTORS.containsKey(entry.getKey())) continue;
+
+            Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionCache = entry.getValue();
+            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionCache.computeIfAbsent(player, k -> new HashMap<>());
             playerSlotCache.clear();
         }
+
+        EventCache.DIRTY_INVENTORY.remove(player);
+        //--
 
         PlayerInventory playerInventory = player.getInventory();
         for (int slot = 0; slot < playerInventory.getSize(); slot++) {
@@ -82,14 +84,8 @@ public class EventCache {
             CustomItem item = CustomItemRegistry.getCustomItem(stack);
             if (item == null) continue;
 
-            Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
-            Map<Integer, Pair<ItemStack, Position>> playerSlotCache = positionsCache.get(player);
-
-            Position pos = getPosition(slot, playerInventory.getHeldItemSlot());
-
-            playerSlotCache.put(slot, new MutablePair<>(stack, pos));
-
             if (ITEMEVENT_EXECUTORS.containsKey(item)) {
+                Position pos = getPosition(slot, playerInventory.getHeldItemSlot());
                 MutableTriple<CustomItem, ItemStack, Position> triple = new MutableTriple<>(item, stack, pos);
 
                 for (Class<? extends Event> clazz : ITEMEVENT_EXECUTORS.get(item).keySet()) {
@@ -104,8 +100,16 @@ public class EventCache {
                     CACHED_POSITIONS_BY_EVENT.get(clazz).get(player).add(triple);
                 }
                 CACHED_POSITIONS_BY_SLOT.get(player).put(slot, triple);
+
+                //--
+                Map<Integer, Pair<ItemStack, Position>> playerSlotCache = POSITIONS_BY_ITEM.get(item).get(player);
+                playerSlotCache.put(slot, new MutablePair<>(stack, pos));
+                if (LOG_DEBUG) Bukkit.getLogger().info("Cached " + stack.getAmount() + "x " + item.getInternalName() + " on slot " + slot + " @ " + pos.toString());
+            } else {
+                if (LOG_DEBUG) Bukkit.getLogger().info("Skipped check for item " + item.getInternalName());
             }
         }
+        if (LOG_DEBUG) Bukkit.getLogger().info("Full cache end on " + player);
     }
 
     public static void release(Player player) {
@@ -123,10 +127,12 @@ public class EventCache {
     public static boolean isCached(Player player) {
         for (Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionCache : POSITIONS_BY_ITEM.values()) {
             if (positionCache.containsKey(player)) {
+                if (LOG_DEBUG) Bukkit.getLogger().info("isCached " + player + " : true");
                 return true;
             }
         }
 
+        if (LOG_DEBUG) Bukkit.getLogger().info("isCached " + player + " : false");
         return false;
     }
 
@@ -491,6 +497,13 @@ public class EventCache {
                     registerItemEventListener(clazz);
                 }
             }
+        }
+
+        Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
+        if (positionsCache == null) {
+            POSITIONS_BY_ITEM.put(item, new HashMap<>());
+        } else {
+            positionsCache.clear();
         }
     }
 
