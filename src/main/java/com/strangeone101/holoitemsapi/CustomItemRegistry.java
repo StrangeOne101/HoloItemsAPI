@@ -34,7 +34,6 @@ public class CustomItemRegistry {
             if (NEXT_ID == INVALID_ID) NEXT_ID++;
         }
 
-        EventCache.prepareCache(item);
         EventCache.registerEvents(item);
     }
 
