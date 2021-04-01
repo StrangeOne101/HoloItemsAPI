@@ -5,17 +5,10 @@ import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import com.strangeone101.holoitemsapi.Properties;
 import com.strangeone101.holoitemsapi.abilities.FoodAbility;
-import com.strangeone101.holoitemsapi.interfaces.BlockInteractable;
-import com.strangeone101.holoitemsapi.interfaces.Edible;
-import com.strangeone101.holoitemsapi.interfaces.EntityInteractable;
-import com.strangeone101.holoitemsapi.interfaces.Interactable;
-import com.strangeone101.holoitemsapi.interfaces.Placeable;
-import com.strangeone101.holoitemsapi.interfaces.Repairable;
-import com.strangeone101.holoitemsapi.interfaces.Swingable;
+import com.strangeone101.holoitemsapi.interfaces.*;
 import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -28,18 +21,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.GrindstoneInventory;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.MerchantInventory;
+import org.bukkit.event.player.*;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -115,7 +98,12 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onLogin(PlayerLoginEvent event) {
         if (!EventCache.isCached(event.getPlayer())) {
-            EventCache.fullCache(event.getPlayer());
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    EventCache.fullCache(event.getPlayer());
+                }
+            }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
         }
     }
 
