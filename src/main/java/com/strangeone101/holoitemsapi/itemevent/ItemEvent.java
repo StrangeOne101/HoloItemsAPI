@@ -3,14 +3,27 @@ package com.strangeone101.holoitemsapi.itemevent;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@java.lang.annotation.Target(ElementType.METHOD)
 
+/**
+ * A custom event annotation. Should be placed above any methods that wish
+ * to listen to bukkit events. The method should have {@link EventContext}
+ * and any bukkit event as parameters.
+ */
 public @interface ItemEvent {
 
-    com.strangeone101.holoitemsapi.itemevent.Target target() default com.strangeone101.holoitemsapi.itemevent.Target.SELF;
+    /**
+     * What player is the event targeting? Should be `SELF`, `WORLD` or `ALL`
+     * @return The event target
+     */
+    Target target() default Target.SELF;
 
+    /**
+     * The conditions that the item should be considered active and trigger
+     * events.
+     * @return The active item condition
+     */
     ActiveConditions active() default ActiveConditions.INVENTORY;
 }

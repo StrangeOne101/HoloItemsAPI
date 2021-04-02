@@ -20,11 +20,19 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * A registry class to register custom loot within the plugin
+ */
 public class CustomLootRegistry {
 
     private static Map<EntityType, Set<LootTable>> ENTITY_TABLES = new HashMap<>();
     private static Map<Material, Set<BlockLootTable>> BLOCK_TABLES = new HashMap<>();
 
+    /**
+     * Register a loot table that triggers when an entity is killed
+     * @param type The type of entity killed
+     * @param table The custom loot table
+     */
     public static void registerDeathTable(EntityType type, LootTable table) {
         if (!ENTITY_TABLES.containsKey(type)) {
             ENTITY_TABLES.put(type, new HashSet<>());
@@ -33,6 +41,11 @@ public class CustomLootRegistry {
         ENTITY_TABLES.get(type).add(table);
     }
 
+    /**
+     * Register a custom loot table that triggers when a block is broken
+     * @param material The material to listen for
+     * @param table The custom block loot table
+     */
     public static void registerBlockBreakTable(Material material, BlockLootTable table) {
         if (!BLOCK_TABLES.containsKey(material)) {
             BLOCK_TABLES.put(material, new HashSet<>());
@@ -41,6 +54,11 @@ public class CustomLootRegistry {
         BLOCK_TABLES.get(material).add(table);
     }
 
+    /**
+     * Called when an entity is killed. <strong>Already handled by HoloItemsAPI - Do not call</strong>
+     * @param entity The entity killed
+     * @param drops The list of drops they dropped
+     */
     public static void handleDeath(LivingEntity entity, List<ItemStack> drops) {
         if (ENTITY_TABLES.containsKey(entity.getType())) {
 
@@ -71,6 +89,10 @@ public class CustomLootRegistry {
         }
     }
 
+    /**
+     * Called when a block is broken. <strong>Already handled by HoloItemsAPI - Do not call</strong>
+     * @param event The block break event
+     */
     public static void handleBlockBreak(BlockBreakEvent event) {
         if (BLOCK_TABLES.containsKey(event.getBlock().getType())) {
             int fortune_mod = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);

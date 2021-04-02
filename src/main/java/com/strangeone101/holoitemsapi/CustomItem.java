@@ -26,6 +26,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * A class for creating custom items. Be sure to call {@link #register()} after creating it
+ * to properly register it
+ */
 public class CustomItem {
 
     private String name;
@@ -72,6 +76,7 @@ public class CustomItem {
 
     /**
      * Create a new ItemStack for use. NOT for updating existing ones; see {@link #updateStack(ItemStack, Player)}
+     * @param player The player
      * @return The ItemStack
      */
     public ItemStack buildStack(Player player) {
@@ -124,7 +129,7 @@ public class CustomItem {
      * Updates an existing itemstack with updated lore, name and variables
      * @param stack The itemstack
      * @param player The player holding it
-     * @return
+     * @return The updated stack
      */
     public ItemStack updateStack(ItemStack stack, Player player) {
         ItemMeta originalMeta = stack.getItemMeta();
@@ -183,6 +188,12 @@ public class CustomItem {
         return stack;
     }
 
+    /**
+     * Damages the item's durability
+     * @param stack The itemstack
+     * @param amount The amount to damage it
+     * @param player The player damageing it
+     */
     public void damageItem(ItemStack stack, int amount, Player player) {
         if (getMaxDurability() > 0 && player.getGameMode() != GameMode.CREATIVE) {
             ItemMeta meta = stack.getItemMeta();
@@ -204,6 +215,12 @@ public class CustomItem {
         }
     }
 
+    /**
+     * Get a fancy string that represents the durability % left
+     * @param durability The durability
+     * @param maxDurability The max durability
+     * @return The string
+     */
     public static String getDurabilityString(int durability, int maxDurability) {
         if (maxDurability == 0) return ""; //No durability
         double percentage = durability / maxDurability;
@@ -279,6 +296,11 @@ public class CustomItem {
         return;
     }
 
+    /**
+     * Set the custom skin of the head
+     * @param skin The skin
+     * @return Itself
+     */
     public CustomItem setHeadSkin(String skin) {
         if (material != Material.PLAYER_HEAD && material != Material.PLAYER_WALL_HEAD) {
             this.extraData = skin;
@@ -287,6 +309,12 @@ public class CustomItem {
         return this;
     }
 
+    /**
+     * Replaces the string provided with variables
+     * @param string The string
+     * @param dataHolder The data holder
+     * @return The replaced string
+     */
     public String replaceVariables(String string, PersistentDataContainer dataHolder) {
         String s = string;
         if (getMaxDurability() > 0) {
@@ -308,6 +336,12 @@ public class CustomItem {
         variables.put(variable, function);
     }
 
+    /**
+     * Unimplemented
+     * @param speedPercentage
+     * @return Itself
+     */
+    @Deprecated
     public CustomItem setToolSpeed(double speedPercentage) {
         //TODO
         return this;
@@ -406,6 +440,10 @@ public class CustomItem {
         return internalIntID;
     }
 
+    /**
+     * Register this item to the registry
+     * @return Itself
+     */
     public CustomItem register() {
         CustomItemRegistry.register(this);
         return this;
@@ -413,7 +451,7 @@ public class CustomItem {
 
     /**
      * If the item is stackable
-     * @return
+     * @return True if stackable
      */
     public boolean isStackable() {
         return stackable;
@@ -429,10 +467,19 @@ public class CustomItem {
         return this;
     }
 
+    /**
+     * Get the properties of this item
+     * @return The properties
+     */
     public Set<Property> getProperties() {
         return properties;
     }
 
+    /**
+     * Add a property to the item
+     * @param property The property
+     * @return Itself
+     */
     public CustomItem addProperty(Property property) {
         this.properties.add(property);
         return this;

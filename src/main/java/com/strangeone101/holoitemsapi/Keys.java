@@ -1,7 +1,6 @@
 package com.strangeone101.holoitemsapi;
 
 import org.bukkit.NamespacedKey;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class Keys {
 

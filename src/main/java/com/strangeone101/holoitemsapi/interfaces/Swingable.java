@@ -5,6 +5,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * An interface for custom items that can be used as weapons
+ */
 public interface Swingable {
 
     /**

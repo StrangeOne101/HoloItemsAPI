@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A registry for managing all custom items
+ */
 public class CustomItemRegistry {
 
     private static int NEXT_ID = 2300;
@@ -37,14 +40,29 @@ public class CustomItemRegistry {
         EventCache.registerEvents(item);
     }
 
+    /**
+     * Get a custom item from the item identifier
+     * @param id The item identifier
+     * @return The custom item
+     */
     public static CustomItem getCustomItem(String id) {
         return CUSTOM_ITEMS.get(id);
     }
 
+    /**
+     * Is this a custom item?
+     * @param stack The itemstack
+     * @return True if it's a custom item
+     */
     public static boolean isCustomItem(ItemStack stack) {
         return stack != null && stack.hasItemMeta() && stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
     }
 
+    /**
+     * Get the CustomItem from the provided stack
+     * @param stack The itemstack
+     * @return The custom item
+     */
     public static CustomItem getCustomItem(ItemStack stack) {
         if (isCustomItem(stack)) {
             String id = stack.getItemMeta().getPersistentDataContainer().get(HoloItemsAPI.getKeys().CUSTOM_ITEM_ID, PersistentDataType.STRING);
@@ -57,7 +75,7 @@ public class CustomItemRegistry {
 
     /**
      * When an ItemStack with an invalid ID is found, it should transform into this
-     * @param stack
+     * @param stack The itemstack
      */
     public static void invalidateItemstack(ItemStack stack) {
         ItemMeta meta = stack.getItemMeta();
@@ -84,6 +102,10 @@ public class CustomItemRegistry {
         stack.setItemMeta(meta);
     }
 
+    /**
+     * Get all custom items
+     * @return The many many items
+     */
     public static Map<String, CustomItem> getCustomItems() {
         return CUSTOM_ITEMS;
     }

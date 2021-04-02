@@ -81,7 +81,7 @@ public abstract class ItemAbility {
      * Whether an ability is already active
      * @param player The player
      * @param clazz The ability class
-     * @return
+     * @return True if the ability is active
      */
     public static boolean isAbilityActive(Player player, Class<? extends ItemAbility> clazz) {
         return INSTANCES.containsKey(player) && INSTANCES.get(player).containsKey(clazz);
@@ -108,13 +108,13 @@ public abstract class ItemAbility {
 
     /**
      * The item this ability should be used with
-     * @return
+     * @return The item
      */
     public abstract CustomItem getItem();
 
     /**
      * Check whether the item is currently on cooldown
-     * @return
+     * @return True if on cooldown
      */
     public boolean isOnCooldown() {
         return stack != null && stack.hasItemMeta() &&
@@ -124,7 +124,7 @@ public abstract class ItemAbility {
 
     /**
      * Gets how long in milliseconds until the cooldown is up.
-     * @return
+     * @return The time remaining
      */
     public long getCooldownRemaining() {
         if (stack == null || !stack.hasItemMeta() || !stack.getItemMeta().getPersistentDataContainer().has(HoloItemsAPI.getKeys().CUSTOM_ITEM_COOLDOWN, PersistentDataType.LONG)) return -1;
@@ -159,7 +159,7 @@ public abstract class ItemAbility {
 
     /**
      * Get the inventory this item is in.
-     * @return
+     * @return The inventory
      */
     public Inventory getInventory() {
         return inventory;
@@ -167,7 +167,7 @@ public abstract class ItemAbility {
 
     /**
      * Get the slot the item is in
-     * @return
+     * @return The slot number
      */
     public int getSlot() {
         return slot;

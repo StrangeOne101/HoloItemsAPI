@@ -3,6 +3,9 @@ package com.strangeone101.holoitemsapi.interfaces;
 import com.strangeone101.holoitemsapi.CustomItem;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * An interface for custom items that can be repaired
+ */
 public interface Repairable {
 
     /**

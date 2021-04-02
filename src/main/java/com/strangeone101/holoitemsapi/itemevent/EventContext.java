@@ -4,6 +4,9 @@ import com.strangeone101.holoitemsapi.CustomItem;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * The context of an {@link ItemEvent} firing
+ */
 public class EventContext {
 
     private Player player;
@@ -18,18 +21,34 @@ public class EventContext {
         this.position = position;
     }
 
+    /**
+     * The item in the event
+     * @return The custom item
+     */
     public CustomItem getItem() {
         return item;
     }
 
+    /**
+     * The custom item stack in the event
+     * @return The itemstack
+     */
     public ItemStack getStack() {
         return stack;
     }
 
+    /**
+     * The position of the item within the player's inventory
+     * @return The position
+     */
     public Position getPosition() {
         return position;
     }
 
+    /**
+     * The player involved
+     * @return The player
+     */
     public Player getPlayer() {
         return player;
     }

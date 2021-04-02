@@ -15,6 +15,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+/**
+ * An ability class that gives an item the ability to be eaten. Implemented with the {@link Edible} class
+ */
 public class FoodAbility extends ItemAbility {
 
     private CustomItem item;

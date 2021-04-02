@@ -1,5 +1,9 @@
 package com.strangeone101.holoitemsapi.itemevent;
 
+/**
+ * Used in {@link ItemEvent} to specify when the item should be considered active
+ * in order to trigger events
+ */
 public enum ActiveConditions {
 
     /**
@@ -31,6 +35,11 @@ public enum ActiveConditions {
      */
     NONE;
 
+    /**
+     * Tests if this condition matches the provided position of the item
+     * @param position The item position
+     * @return True if it matches
+     */
     public boolean matches(Position position) {
         switch (this) {
             case MAINHAND:

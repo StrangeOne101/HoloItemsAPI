@@ -5,6 +5,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * An interface for custom items that can be placed
+ */
 public interface Placeable {
 
     /**

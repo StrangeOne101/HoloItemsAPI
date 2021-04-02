@@ -5,6 +5,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * An interface to run code when a player interacts with a block using the item
+ */
 public interface BlockInteractable {
 
     /**
