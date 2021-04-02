@@ -1,6 +1,11 @@
 package com.strangeone101.holoitemsapi;
 
 import com.strangeone101.holoitemsapi.util.ItemUtils;
+import com.strangeone101.holoitemsapi.util.ReflectionUtils;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -17,6 +22,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +44,7 @@ public class CustomItem {
     private Material material;
     private String displayName;
     private List<String> lore = new ArrayList<>();
+    private boolean jsonLore = false;
     private int maxDurability = 0;
     private boolean stackable = true;
     private Set<Property> properties = new HashSet<>();
@@ -92,7 +99,9 @@ public class CustomItem {
         for (String line : getLore()) {
             lore.add(replaceVariables(line, meta.getPersistentDataContainer()));
         }
-        meta.setLore(lore);
+        if (!this.jsonLore) {
+            meta.setLore(lore);
+        }
         meta.setCustomModelData(internalIntID); //Used for resource packs
 
         if (meta instanceof SkullMeta) {
@@ -121,6 +130,10 @@ public class CustomItem {
         Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
         stack.setItemMeta(meta);
+
+        if (this.jsonLore) {
+            ReflectionUtils.setTrueLore(stack, lore);
+        }
 
         return stack;
     }
@@ -175,7 +188,9 @@ public class CustomItem {
         for (String line : getLore()) {
             lore.add(replaceVariables(line, meta.getPersistentDataContainer()));
         }
-        meta.setLore(lore);
+        if (!this.jsonLore) {
+            meta.setLore(lore);
+        }
         meta.setCustomModelData(internalIntID); //Used for resource packs
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
@@ -184,6 +199,10 @@ public class CustomItem {
         }
 
         stack.setItemMeta(meta);
+
+        if (this.jsonLore) {
+            ReflectionUtils.setTrueLore(stack, lore);
+        }
 
         return stack;
     }
@@ -398,6 +417,7 @@ public class CustomItem {
      */
     public CustomItem setLore(List<String> lore) {
         this.lore = lore;
+        this.jsonLore = false;
         return this;
     }
 
@@ -409,7 +429,48 @@ public class CustomItem {
     public CustomItem addLore(String string) {
         if (this.lore == null) this.lore = new ArrayList<>();
 
-        lore.add(string);
+        if (this.jsonLore) {
+            //Don't bother adding white and non italics to nothing
+            if (string.length() == 0) lore.add(ComponentSerializer.toString(new TextComponent()));
+            else {
+                //Append white and non italics to the front so it doesn't appear in italics
+                BaseComponent comp = new ComponentBuilder().append("")
+                        .color(net.md_5.bungee.api.ChatColor.WHITE).italic(false).getCurrentComponent();
+                comp.setExtra(Arrays.asList(TextComponent.fromLegacyText(string)));
+                lore.add(ComponentSerializer.toString(comp));
+            }
+
+        } else {
+            lore.add(string);
+        }
+
+        return this;
+    }
+
+    public CustomItem addLore(BaseComponent component) {
+        if (this.lore == null) this.lore = new ArrayList<>();
+        if (!this.jsonLore) {
+            this.jsonLore = true;
+            List<String> jsonList = new ArrayList<>();
+
+            for (String s : this.lore) {
+                //Don't bother adding white and non italics to nothing
+                if (s.length() == 0) jsonList.add(ComponentSerializer.toString(new TextComponent()));
+                else {
+                    //Append white and non italics to the front so it doesn't appear in italics
+                    BaseComponent comp = new ComponentBuilder().append("")
+                            .color(net.md_5.bungee.api.ChatColor.WHITE).italic(false).getCurrentComponent();
+                    comp.setExtra(Arrays.asList(TextComponent.fromLegacyText(s)));
+                    jsonList.add(ComponentSerializer.toString(comp));
+                }
+            }
+            this.lore = jsonList;
+        }
+
+        BaseComponent baseComp = new ComponentBuilder().append("")
+                .color(net.md_5.bungee.api.ChatColor.WHITE).italic(false).getCurrentComponent();
+        baseComp.addExtra(component);
+        this.lore.add(ComponentSerializer.toString(baseComp));
         return this;
     }
 

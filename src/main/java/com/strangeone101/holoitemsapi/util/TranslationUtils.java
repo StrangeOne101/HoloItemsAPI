@@ -19,8 +19,9 @@ public class TranslationUtils {
     private static void setup() {
         try {
             Class mobEffectListClass = Class.forName(ReflectionUtils.nms + ".MobEffectList");
-            Method fromIdMethod = mobEffectListClass.getDeclaredMethod("getId", Integer.TYPE);
+            Method fromIdMethod = mobEffectListClass.getDeclaredMethod("fromId", Integer.TYPE);
             Method bMethod = mobEffectListClass.getDeclaredMethod("b");
+            if (!bMethod.isAccessible()) bMethod.setAccessible(true);
 
             for (PotionEffectType type : PotionEffectType.values()) {
                 Object mobEffectList = fromIdMethod.invoke(null, type.getId());
