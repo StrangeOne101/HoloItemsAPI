@@ -48,19 +48,20 @@ public class FoodAbility extends ItemAbility {
         }
 
         if (getStartTime() + ((Edible)item).getEatDuration() < System.currentTimeMillis()) {
+            Edible edible = (Edible) item;
+            edible.onEat(getPlayer(), getItem(), getStack());
+
             getStack().setAmount(getStack().getAmount() - 1);
             if (getStack().getAmount() == 0) {
                 getStack().setType(Material.AIR);
             }
-
-
-            Edible edible = (Edible) item;
 
             //Using Math.min to make sure the amount doesn't exceed 20
             getPlayer().setFoodLevel(Math.min(getPlayer().getFoodLevel() + edible.getHungerAmount(), 20));
             getPlayer().setSaturation(Math.min(getPlayer().getSaturation() + edible.getSaturationAmount(), 20));
 
             getPlayer().getWorld().playSound(getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 1);
+
 
             if (vanillaFood) {
                 ItemStack clone = getStack().clone();

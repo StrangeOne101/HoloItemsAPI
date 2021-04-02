@@ -4,11 +4,18 @@ import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.SmithingRecipe;
 
 import java.io.InvalidObjectException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Manages all custom recipes used with custom items
@@ -16,6 +23,7 @@ import java.util.Map;
 public class RecipeManager {
 
     private static Map<NamespacedKey, Recipe> recipes = new HashMap<>();
+    private static Set<Recipe> nonConsumableRecipes = new HashSet<>();
 
     /**
      * Get a recipe
@@ -62,6 +70,26 @@ public class RecipeManager {
             Bukkit.removeRecipe(((Keyed)recipe).getKey());
         }
         Bukkit.addRecipe(recipe);
+
+        if (recipe instanceof ShapedRecipe) {
+            for (RecipeChoice choice : ((ShapedRecipe) recipe).getChoiceMap().values()) {
+                if (choice instanceof NonConsumableChoice)
+                    nonConsumableRecipes.add(recipe);
+                break;
+            }
+        } else if (recipe instanceof ShapelessRecipe) {
+            for (RecipeChoice choice : ((ShapelessRecipe) recipe).getChoiceList()) {
+                if (choice instanceof NonConsumableChoice)
+                    nonConsumableRecipes.add(recipe);
+                break;
+            }
+        } else if (recipe instanceof SmithingRecipe) {
+            if (((SmithingRecipe) recipe).getAddition() instanceof NonConsumableChoice ||
+            ((SmithingRecipe) recipe).getBase() instanceof NonConsumableChoice)
+                    nonConsumableRecipes.add(recipe);
+
+
+        }
     }
 
     /**
@@ -106,5 +134,15 @@ public class RecipeManager {
      */
     public static int getRegisteredAmount() {
         return recipes.size();
+    }
+
+    /**
+     * Gets whether the recipe contains an ingredient that shouldn't
+     * be consumed on use
+     * @param recipe The recipe
+     * @return True if it does
+     */
+    public static boolean hasNonConsumable(Recipe recipe) {
+        return nonConsumableRecipes.contains(recipe);
     }
 }

@@ -13,6 +13,7 @@ import com.strangeone101.holoitemsapi.interfaces.Placeable;
 import com.strangeone101.holoitemsapi.interfaces.Repairable;
 import com.strangeone101.holoitemsapi.interfaces.Swingable;
 import com.strangeone101.holoitemsapi.itemevent.EventCache;
+import com.strangeone101.holoitemsapi.recipe.NonConsumableChoice;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
 import org.bukkit.ChatColor;
@@ -44,6 +45,9 @@ import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -51,6 +55,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 public class ItemListener implements Listener {
@@ -300,6 +305,47 @@ public class ItemListener implements Listener {
                 if (CustomItemRegistry.isCustomItem(ingredient)) {
                     event.setCancelled(true);
                 }
+            }
+        }
+
+        if (RecipeManager.hasNonConsumable(event.getRecipe())) {
+            Map<Integer, ItemStack> slots = new HashMap<>();
+            for (int slot = 0; slot < event.getInventory().getSize(); slot++) {
+                ItemStack slotItem = event.getInventory().getItem(slot);
+
+                if (event.getRecipe() instanceof ShapedRecipe) {
+                    for (RecipeChoice choice : ((ShapedRecipe) event.getRecipe()).getChoiceMap().values()) {
+                        if (choice instanceof NonConsumableChoice && choice.test(slotItem)) {
+                            slots.put(slot, slotItem.clone());
+                            if (event.isShiftClick()) { //If they shift click,
+                                slotItem.setAmount(64); //Allow it to craft as many as possible
+                                event.getInventory().setItem(slot, slotItem);
+                            }
+                        }
+                    }
+                } else if (event.getRecipe() instanceof ShapelessRecipe) {
+                    for (RecipeChoice choice : ((ShapelessRecipe) event.getRecipe()).getChoiceList()) {
+                        if (choice instanceof NonConsumableChoice && choice.test(slotItem)) {
+                            slots.put(slot, slotItem.clone());
+                            if (event.isShiftClick()) { //If they shift click,
+                                slotItem.setAmount(64); //Allow it to craft as many as possible
+                                event.getInventory().setItem(slot, slotItem);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //1 tick later, restore the items that were removed
+            if (slots.size() > 0) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        for (int slot : slots.keySet()) {
+                            event.getInventory().setItem(slot, slots.get(slot));
+                        }
+                    }
+                }.runTaskLater(HoloItemsAPI.getPlugin(), 1L);
             }
         }
     }
