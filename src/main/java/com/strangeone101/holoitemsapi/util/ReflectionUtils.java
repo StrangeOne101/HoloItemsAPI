@@ -1,6 +1,9 @@
 package com.strangeone101.holoitemsapi.util;
 
 import com.google.common.base.Predicate;
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import com.mojang.authlib.GameProfile;
 import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import net.md_5.bungee.api.ChatColor;
@@ -8,12 +11,17 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,6 +41,21 @@ public class ReflectionUtils {
     private static Field profileField;
     private static Method forceCacheMethod;
 
+    private static Method asNMSCopy;
+    private static Method getHandle;
+    private static Field playerConnection;
+    private static Method sendPacket;
+    private static Constructor playOutSetSlotPacket;
+
+    private static Constructor newNbtTagCompound;
+    private static Method saveNBT;
+    private static Method writeNbt;
+
+    private static Method readStreamToNbt;
+    private static Method loadItemFromNbt;
+    private static Method asBukkitCopy;
+
+
     private static void setup() {
         try {
             Class craftMetaClass = Class.forName(craft + ".inventory.CraftMetaItem");
@@ -50,6 +73,28 @@ public class ReflectionUtils {
             Class tileEntitySkullClass = Class.forName(nms + ".TileEntitySkull");
             forceCacheMethod = tileEntitySkullClass.getDeclaredMethod("b", GameProfile.class, Predicate.class, Boolean.TYPE);
             if (!forceCacheMethod.isAccessible()) forceCacheMethod.setAccessible(true);
+
+            Class packetClass = Class.forName(nms + ".PacketPlayOutSetSlot");
+            Class connectionClass = Class.forName(nms + ".PlayerConnection");
+            Class itemStack = Class.forName(nms + ".ItemStack");
+            Class craftStackClass = Class.forName(craft + ".inventory.CraftItemStack");
+            Class craftPlayerClass = Class.forName(craft + ".entity.CraftPlayer");
+            Class abstractPacketClass = Class.forName(nms + ".Packet");
+            asNMSCopy = craftStackClass.getDeclaredMethod("asNMSCopy", ItemStack.class);
+            getHandle = craftPlayerClass.getDeclaredMethod("getHandle");
+            playerConnection = connectionClass.getDeclaredField("playerConnection");
+            sendPacket = connectionClass.getDeclaredMethod("sendPacket", abstractPacketClass);
+            playOutSetSlotPacket = packetClass.getConstructor(Integer.TYPE, Integer.TYPE, itemStack);
+
+            Class nbtTagCompoundClass = Class.forName(nms + ".NBTTagCompound");
+            newNbtTagCompound = nbtTagCompoundClass.getConstructor();
+            saveNBT = itemStack.getDeclaredMethod("save", nbtTagCompoundClass);
+            writeNbt = nbtTagCompoundClass.getDeclaredMethod("write", DataOutput.class);
+
+            Class nbtStreamToolsClass = Class.forName(nms + ".NBTCompressedStreamTools");
+            readStreamToNbt = nbtStreamToolsClass.getDeclaredMethod("a", DataInput.class);
+            loadItemFromNbt = itemStack.getDeclaredMethod("a", nbtTagCompoundClass);
+            asBukkitCopy = craftStackClass.getDeclaredMethod("asBukkitCopy", itemStack);
 
             setup = true;
         } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
@@ -165,5 +210,61 @@ public class ReflectionUtils {
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void sendFakeItem(Player player, int slot, ItemStack stack) {
+
+        try {
+            Object nmsCopy = asNMSCopy.invoke(null, stack);
+            Object handlePlayer = getHandle.invoke(player);
+            Object connection = playerConnection.get(handlePlayer);
+            int fixedSlot = slot + 9;
+            if (slot > 35) fixedSlot = Math.abs((slot - 35) - 5);
+            else if (slot >= 0 && slot <= 8) fixedSlot = slot + 27 + 9;
+            Object packet = playOutSetSlotPacket.newInstance(0, fixedSlot, nmsCopy);
+            sendPacket.invoke(connection, packet);
+
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static byte[] writeNBT(ItemStack stack) {
+        try {
+            Object nmsCopy = asNMSCopy.invoke(null, stack);
+            Object newTag = newNbtTagCompound.newInstance();
+            Object updatedTag = saveNBT.invoke(nmsCopy, newTag);
+            ByteArrayDataOutput byteArray = ByteStreams.newDataOutput();
+            writeNbt.invoke(updatedTag, byteArray);
+            return byteArray.toByteArray();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+
+        return new byte[0];
+    }
+
+    public static ItemStack loadNBT(byte[] bytes) {
+        ByteArrayDataInput byteInput = ByteStreams.newDataInput(bytes);
+        try {
+            Object nbtTag = readStreamToNbt.invoke(null, byteInput);
+            Object itemStack = loadItemFromNbt.invoke(null, nbtTag);
+            return (ItemStack) asBukkitCopy.invoke(null, itemStack);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

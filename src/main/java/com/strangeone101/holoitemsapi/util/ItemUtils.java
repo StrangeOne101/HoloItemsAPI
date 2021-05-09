@@ -136,42 +136,4 @@ public class ItemUtils {
                 return false;
         }
     }
-
-    public static void sendFakeItem(Player player, int slot, ItemStack stack) {
-        String nms = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().substring(23);
-        String craft = "org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().substring(23);
-
-        try {
-            Class packetClass = Class.forName(nms + ".PacketPlayOutSetSlot");
-            Class itemStack = Class.forName(nms + ".ItemStack");
-            Class craftStackClass = Class.forName(craft + ".inventory.CraftItemStack");
-            Class craftPlayerClass = Class.forName(craft + ".entity.CraftPlayer");
-            Class abstractPacketClass = Class.forName(nms + ".Packet");
-            Method asNMSCopy = craftStackClass.getDeclaredMethod("asNMSCopy", ItemStack.class);
-            Method getHandle = craftPlayerClass.getDeclaredMethod("getHandle");
-            Object nmsCopy = asNMSCopy.invoke(null, stack);
-            Object handlePlayer = getHandle.invoke(player);
-            Object connection = handlePlayer.getClass().getDeclaredField("playerConnection").get(handlePlayer);
-            Method sendPacket = connection.getClass().getDeclaredMethod("sendPacket", abstractPacketClass);
-            Constructor constructor = packetClass.getDeclaredConstructor(Integer.TYPE, Integer.TYPE, itemStack);
-            int fixedSlot = slot + 9;
-            if (slot > 35) fixedSlot = Math.abs((slot - 35) - 5);
-            else if (slot >= 0 && slot <= 8) fixedSlot = slot + 27 + 9;
-            Object packet = constructor.newInstance(0, fixedSlot, nmsCopy);
-            sendPacket.invoke(connection, packet);
-
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-    }
 }
