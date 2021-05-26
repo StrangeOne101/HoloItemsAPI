@@ -473,6 +473,7 @@ public class EventCache {
 
     public static void registerEvents(CustomItem item) {
         HashSet<Method> methods = new HashSet<>();
+        HashSet<Class<? extends Event>> clazz_to_register = new HashSet<>();
         methods.addAll(Arrays.asList(item.getClass().getDeclaredMethods()));
         methods.addAll(Arrays.asList(item.getClass().getMethods()));
         for (Method method : methods) {
@@ -505,9 +506,26 @@ public class EventCache {
 
                 //Make sure bukkit will trigger our event methods
                 if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
-                    registerItemEventListener(clazz);
+                    if (!clazz_to_register.isEmpty()) {
+                        for (Class<? extends Event> clazz_check: clazz_to_register) {
+                            if (clazz_check.isAssignableFrom(clazz)) {
+                                clazz_to_register.remove(clazz_check);
+                                clazz_to_register.add(clazz);
+                                break;
+                            } else if (clazz.isAssignableFrom(clazz_check)) {
+                                break;
+                            }
+                        }
+                    } else {
+                        clazz_to_register.add(clazz);
+                    }
+                    REGISTERED_EVENT_HANDLERS.add(clazz);
                 }
             }
+        }
+
+        for (Class<? extends Event> clazz_registering: clazz_to_register) {
+            registerItemEventListener(clazz_registering);
         }
 
         Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
@@ -522,6 +540,5 @@ public class EventCache {
         EventExecutor executor = (listener, event) -> triggerItemEvents(event);
 
         Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsAPI.getPlugin(), false);
-        REGISTERED_EVENT_HANDLERS.add(clazz);
     }
 }
