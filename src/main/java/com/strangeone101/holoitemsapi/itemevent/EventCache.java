@@ -473,7 +473,6 @@ public class EventCache {
 
     public static void registerEvents(CustomItem item) {
         HashSet<Method> methods = new HashSet<>();
-        HashSet<Class<? extends Event>> clazz_to_register = new HashSet<>();
         methods.addAll(Arrays.asList(item.getClass().getDeclaredMethods()));
         methods.addAll(Arrays.asList(item.getClass().getMethods()));
         for (Method method : methods) {
@@ -506,26 +505,28 @@ public class EventCache {
 
                 //Make sure bukkit will trigger our event methods
                 if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
-                    if (!clazz_to_register.isEmpty()) {
-                        for (Class<? extends Event> clazz_check: clazz_to_register) {
-                            if (clazz_check.isAssignableFrom(clazz)) {
-                                clazz_to_register.remove(clazz_check);
-                                clazz_to_register.add(clazz);
-                                break;
-                            } else if (clazz.isAssignableFrom(clazz_check)) {
-                                break;
+                    boolean superclass_available = false;
+                    for (Class<? extends Event> registered_class: REGISTERED_EVENT_HANDLERS) {
+                        if (clazz.isAssignableFrom(registered_class)) {
+                            try {
+                                registered_class.newInstance().getHandlers().unregister(DUMMY_LISTENER);
+                            } catch (IllegalAccessException | InstantiationException e) {
+                                e.printStackTrace();
                             }
+                            System.out.println("Unregistered " + registered_class);
+                        } else if (registered_class.isAssignableFrom(clazz)) {
+                            System.out.println("Skipped " + clazz);
+                            superclass_available = true;
+                            break;
                         }
-                    } else {
-                        clazz_to_register.add(clazz);
+                    }
+                    if (!superclass_available) {
+                        registerItemEventListener(clazz);
+                        System.out.println("Registered " + clazz);
                     }
                     REGISTERED_EVENT_HANDLERS.add(clazz);
                 }
             }
-        }
-
-        for (Class<? extends Event> clazz_registering: clazz_to_register) {
-            registerItemEventListener(clazz_registering);
         }
 
         Map<Player, Map<Integer, Pair<ItemStack, Position>>> positionsCache = POSITIONS_BY_ITEM.get(item);
