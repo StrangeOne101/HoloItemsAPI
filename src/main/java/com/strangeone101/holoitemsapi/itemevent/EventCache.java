@@ -51,7 +51,7 @@ public class EventCache {
     //Registry
     static Map<CustomItem, Map<Class<? extends Event>, Set<Method>>> ITEMEVENT_EXECUTORS = new HashMap<>();
 
-    static Map<Class<? extends Event>, Map<Method, MutableTriple<CustomItem, Target, ActiveConditions>>> METHODS_BY_EVENT = new HashMap<>();
+    static Map<Class<? extends Event>, Map<Method, MutableTriple<Set<CustomItem>, Target, ActiveConditions>>> METHODS_BY_EVENT = new HashMap<>();
 
     //Events that we have ItemEvent listeners for
     static Set<Class<? extends Event>> REGISTERED_EVENT_HANDLERS = new HashSet<>();
@@ -64,7 +64,6 @@ public class EventCache {
             CACHED_POSITIONS_BY_EVENT.get(key).remove(player);
         }
 
-        //--
         for (Map.Entry<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> entry : POSITIONS_BY_ITEM.entrySet()) {
             if (!ITEMEVENT_EXECUTORS.containsKey(entry.getKey())) continue;
 
@@ -74,7 +73,6 @@ public class EventCache {
         }
 
         EventCache.DIRTY_INVENTORY.remove(player);
-        //--
 
         PlayerInventory playerInventory = player.getInventory();
         for (int slot = 0; slot < playerInventory.getSize(); slot++) {
@@ -377,65 +375,67 @@ public class EventCache {
         if (!METHODS_BY_EVENT.containsKey(event.getClass())) return;
 
         for (Method m : METHODS_BY_EVENT.get(event.getClass()).keySet()) {
-            Triple<CustomItem, Target, ActiveConditions> t = METHODS_BY_EVENT.get(event.getClass()).get(m);
+            Triple<Set<CustomItem>, Target, ActiveConditions> t = METHODS_BY_EVENT.get(event.getClass()).get(m);
 
-            if (t.getRight() == ActiveConditions.NONE) { //We don't execute it based on whether the item is active
-                EventContext context = new EventContext(null, t.getLeft(), null, null);
-                try {
-                    m.invoke(t.getLeft(), context, event);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            } else if (t.getMiddle() == Target.SELF) { //Execute only if the player is the one doing it
-                if (event instanceof PlayerEvent) {
-                    if (POSITIONS_BY_ITEM.get(t.getLeft()).containsKey(((PlayerEvent)event).getPlayer())) {
-                        for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(((PlayerEvent)event).getPlayer()).keySet()) {
-                            Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(((PlayerEvent)event).getPlayer()).get(slot);
-                            if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
-                                EventContext context = new EventContext(((PlayerEvent) event).getPlayer(), t.getLeft(), pair.getLeft(), pair.getRight());
-                                try {
-                                    m.invoke(t.getLeft(), context, event);
-                                } catch (IllegalAccessException | InvocationTargetException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                        }
+            for (CustomItem item : t.getLeft()) {
+                if (t.getRight() == ActiveConditions.NONE) { //We don't execute it based on whether the item is active
+                    EventContext context = new EventContext(null, item, null, null);
+                    try {
+                        m.invoke(item, context, event);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
                     }
-                }
-            } else if (t.getMiddle() == Target.WORLD) { //Execute all events in the same world
-                World world = null;
-                if (event instanceof PlayerEvent) world = ((PlayerEvent)event).getPlayer().getWorld();
-                else if (event instanceof BlockEvent) world = ((BlockEvent)event).getBlock().getWorld();
-                else if (event instanceof EntityEvent) world = ((EntityEvent)event).getEntity().getWorld();
-                else if (event instanceof InventoryEvent) world = ((InventoryEvent)event).getView().getPlayer().getWorld();
-                if (world != null) {
-                    for (Player player : POSITIONS_BY_ITEM.get(t.getLeft()).keySet()) {
-                        if (player.getWorld() == world) { //If the world is the same
-                            for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(player).keySet()) {
-                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(player).get(slot);
+                } else if (t.getMiddle() == Target.SELF) { //Execute only if the player is the one doing it
+                    if (event instanceof PlayerEvent) {
+                        if (POSITIONS_BY_ITEM.get(item).containsKey(((PlayerEvent)event).getPlayer())) {
+                            for (int slot : POSITIONS_BY_ITEM.get(item).get(((PlayerEvent)event).getPlayer()).keySet()) {
+                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(((PlayerEvent)event).getPlayer()).get(slot);
                                 if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
-                                    EventContext context = new EventContext(player, t.getLeft(), pair.getLeft(), pair.getRight());
+                                    EventContext context = new EventContext(((PlayerEvent) event).getPlayer(), item, pair.getLeft(), pair.getRight());
                                     try {
-                                        m.invoke(t.getLeft(), context, event);
+                                        m.invoke(item, context, event);
                                     } catch (IllegalAccessException | InvocationTargetException e) {
                                         e.printStackTrace();
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                } else if (t.getMiddle() == Target.WORLD) { //Execute all events in the same world
+                    World world = null;
+                    if (event instanceof PlayerEvent) world = ((PlayerEvent)event).getPlayer().getWorld();
+                    else if (event instanceof BlockEvent) world = ((BlockEvent)event).getBlock().getWorld();
+                    else if (event instanceof EntityEvent) world = ((EntityEvent)event).getEntity().getWorld();
+                    else if (event instanceof InventoryEvent) world = ((InventoryEvent)event).getView().getPlayer().getWorld();
+                    if (world != null) {
+                        for (Player player : POSITIONS_BY_ITEM.get(item).keySet()) {
+                            if (player.getWorld() == world) { //If the world is the same
+                                for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
+                                    Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
+                                    if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                                        EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
+                                        try {
+                                            m.invoke(item, context, event);
+                                        } catch (IllegalAccessException | InvocationTargetException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            } else { //Events for all worlds and all players
-                for (Player player : POSITIONS_BY_ITEM.get(t.getLeft()).keySet()) {
-                    for (int slot : POSITIONS_BY_ITEM.get(t.getLeft()).get(player).keySet()) {
-                        Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(t.getLeft()).get(player).get(slot);
-                        if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
-                            EventContext context = new EventContext(player, t.getLeft(), pair.getLeft(), pair.getRight());
-                            try {
-                                m.invoke(t.getLeft(), context, event);
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                e.printStackTrace();
+                } else { //Events for all worlds and all players
+                    for (Player player : POSITIONS_BY_ITEM.get(item).keySet()) {
+                        for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
+                            Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
+                            if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                                EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
+                                try {
+                                    m.invoke(item, context, event);
+                                } catch (IllegalAccessException | InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     }
@@ -499,9 +499,15 @@ public class EventCache {
                     METHODS_BY_EVENT.put(clazz, new HashMap<>());
                 }
 
+                Set<CustomItem> items = new HashSet<>();
+                if (METHODS_BY_EVENT.get(clazz).containsKey(method)) {          //If the method is already registered for
+                    items = METHODS_BY_EVENT.get(clazz).get(method).getLeft();  //another item (multiple items, single class)
+                }
+                items.add(item);
+
                 method.setAccessible(true);
                 ITEMEVENT_EXECUTORS.get(item).get(clazz).add(method);
-                METHODS_BY_EVENT.get(clazz).put(method, new MutableTriple<>(item, event.target(), event.active()));
+                METHODS_BY_EVENT.get(clazz).put(method, new MutableTriple<>(items, event.target(), event.active()));
 
                 //Make sure bukkit will trigger our event methods
                 if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
@@ -513,16 +519,16 @@ public class EventCache {
                             } catch (IllegalAccessException | InstantiationException e) {
                                 e.printStackTrace();
                             }
-                            System.out.println("Unregistered " + registered_class);
+                            //System.out.println("Unregistered " + registered_class);
                         } else if (registered_class.isAssignableFrom(clazz)) {
-                            System.out.println("Skipped " + clazz);
+                            //System.out.println("Skipped " + clazz);
                             superclass_available = true;
                             break;
                         }
                     }
                     if (!superclass_available) {
                         registerItemEventListener(clazz);
-                        System.out.println("Registered " + clazz);
+                        //System.out.println("Registered " + clazz);
                     }
                     REGISTERED_EVENT_HANDLERS.add(clazz);
                 }
