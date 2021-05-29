@@ -67,7 +67,8 @@ public class RecipeManager {
     public static void registerRecipe(Recipe recipe, NamespacedKey key) {
         recipes.put(key, recipe);
         if (Bukkit.getRecipe(((Keyed)recipe).getKey()) != null) {
-            Bukkit.removeRecipe(((Keyed)recipe).getKey());
+        if (Bukkit.getRecipe(key) != null) {
+            Bukkit.removeRecipe(key);
         }
         Bukkit.addRecipe(recipe);
 
@@ -125,7 +126,9 @@ public class RecipeManager {
      * @return True if handled
      */
     public static boolean isManagedRecipe(Recipe recipe) {
-        return recipes.values().contains(recipe);
+        if (recipe instanceof Keyed)
+            return recipes.containsKey(((Keyed) recipe).getKey());
+        return false;
     }
 
     /**
