@@ -6,12 +6,16 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -42,6 +46,7 @@ public class CustomItem {
     private int internalIntID;
 
     private Material material;
+    private Material fakeMaterial;
     private String displayName;
     private List<String> lore = new ArrayList<>();
     private boolean jsonLore = false;
@@ -51,6 +56,7 @@ public class CustomItem {
     private String extraData;
     private Random random;
 
+    private Map<Attribute, Pair<AttributeModifier.Operation, Double>> attributes = new HashMap<>();
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
 
     private CustomItem(String name) {
@@ -102,7 +108,7 @@ public class CustomItem {
         if (!this.jsonLore) {
             meta.setLore(lore);
         }
-        meta.setCustomModelData(internalIntID); //Used for resource packs
+        if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
 
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
@@ -130,6 +136,12 @@ public class CustomItem {
         Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
         stack.setItemMeta(meta);
+
+        //Add all attributes to the item
+        for (Attribute attr : getAttributes().keySet()) {
+            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
+            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+        }
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
@@ -191,7 +203,7 @@ public class CustomItem {
         if (!this.jsonLore) {
             meta.setLore(lore);
         }
-        meta.setCustomModelData(internalIntID); //Used for resource packs
+        if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
                 ItemUtils.setSkin((SkullMeta) meta, extraData);
@@ -199,6 +211,12 @@ public class CustomItem {
         }
 
         stack.setItemMeta(meta);
+
+        //Add all attributes to the item
+        for (Attribute attr : getAttributes().keySet()) {
+            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
+            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+        }
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
@@ -573,5 +591,91 @@ public class CustomItem {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    public CustomItem setDamage(double damage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, damage));
+
+        return this;
+    }
+
+    public CustomItem setDamagePercentage(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setArmor(int armor) {
+        getAttributes().put(Attribute.GENERIC_ARMOR,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
+
+        return this;
+    }
+
+    public CustomItem setArmorToughness(int armor) {
+        getAttributes().put(Attribute.GENERIC_ARMOR_TOUGHNESS,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
+
+        return this;
+    }
+
+    public CustomItem setHealth(int health) {
+        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)health));
+
+        return this;
+    }
+
+    public CustomItem setHealthPercentage(double percentage) {
+        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, (double)percentage));
+
+        return this;
+    }
+
+    public CustomItem setSpeed(double percentage) {
+        getAttributes().put(Attribute.GENERIC_MOVEMENT_SPEED,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setKnockbackResistance(double percentage) {
+        getAttributes().put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setAttackSpeed(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_SPEED,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setAttackKnockback(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_KNOCKBACK,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setLuck(double percentage) {
+        getAttributes().put(Attribute.GENERIC_LUCK,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public Map<Attribute, Pair<AttributeModifier.Operation, Double>> getAttributes() {
+        return attributes;
+    }
+
+    public CustomItem setVisibleMaterial(Material material) {
+        this.fakeMaterial = material;
+        return this;
     }
 }

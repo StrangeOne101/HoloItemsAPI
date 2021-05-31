@@ -4,9 +4,12 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.lang.reflect.Constructor;
@@ -14,12 +17,23 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
 public class ItemUtils {
 
+    public static final Map<Attribute, UUID> ATTRIBUTE_MAP = new HashMap<>();
+
+    /**
+     * Sets the skin of a Skull to the skin provided. Can be a UUID, name, texture ID or URL
+     * @param meta The skull meta
+     * @param skin The skin
+     * @return The corrected ItemMeta
+     */
     public static void setSkin(SkullMeta meta, String skin) {
+
         try {
             UUID uuid = UUID.fromString(skin);
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
@@ -35,6 +49,12 @@ public class ItemUtils {
         }
     }
 
+    /**
+     * Sets the skin of a Skull to the skin from the provided URL
+     * @param meta The skull meta
+     * @param skin The skin URL
+     * @return The corrected ItemMeta
+     */
     public static SkullMeta setSkinFromURL(SkullMeta meta, String skin) {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD, 1);
         SkullMeta im = (SkullMeta) stack.getItemMeta();
@@ -55,6 +75,48 @@ public class ItemUtils {
         return im;
     }
 
+    /**
+     * Sets attributes on an item
+     * @param number The amount to use
+     * @param attribute The attribute
+     * @param operation The operation
+     * @param stack The itemstack
+     */
+    public static void setAttriute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack) {
+        if (ATTRIBUTE_MAP.isEmpty()) {
+            Random random = new Random("unique_seed".hashCode());
+
+            //Due to the set random seed above, the UUIDs bellow should always be the same.
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_DAMAGE, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_SPEED, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_KNOCKBACK, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_MAX_HEALTH, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_ARMOR, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_ARMOR_TOUGHNESS, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_MOVEMENT_SPEED, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_FLYING_SPEED, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_FOLLOW_RANGE, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.GENERIC_LUCK, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.HORSE_JUMP_STRENGTH, new UUID(random.nextLong(), random.nextLong()));
+            ATTRIBUTE_MAP.put(Attribute.ZOMBIE_SPAWN_REINFORCEMENTS, new UUID(random.nextLong(), random.nextLong()));
+
+            if (!ATTRIBUTE_MAP.containsKey(attribute)) { //Bodge for attributes added in future
+                ATTRIBUTE_MAP.put(attribute, new UUID(random.nextLong(), random.nextLong()));
+            }
+        }
+
+        AttributeModifier mod = new AttributeModifier(ATTRIBUTE_MAP.get(attribute), attribute.name(), number, operation, getSlotForItem(stack.getType()));
+        ItemMeta meta = stack.getItemMeta();
+        meta.addAttributeModifier(attribute, mod);
+        stack.setItemMeta(meta);
+    }
+
+    /**
+     * Gets what Equipment slot this item should be used for
+     * @param material The material
+     * @return The EquipmentSlot
+     */
     public static EquipmentSlot getSlotForItem(Material material) {
         switch (material) {
             case SHIELD:
@@ -95,6 +157,11 @@ public class ItemUtils {
         }
     }
 
+    /**
+     * Is this material meat?
+     * @param material The material?
+     * @return True if it's meat
+     */
     public static boolean isMeat(Material material) {
         switch (material) {
             case BEEF:          case COOKED_BEEF:
@@ -110,6 +177,11 @@ public class ItemUtils {
         }
     }
 
+    /**
+     * Is this material fish?
+     * @param material The material?
+     * @return True if it's fish
+     */
     public static boolean isFish(Material material) {
         switch (material) {
             case COD:               case COOKED_COD:
@@ -121,6 +193,11 @@ public class ItemUtils {
         }
     }
 
+    /**
+     * Is this material a dye?
+     * @param material The material?
+     * @return True if it's a dye
+     */
     public static boolean isDye(Material material) {
         switch (material) {
             case WHITE_DYE:         case BLACK_DYE:

@@ -4,7 +4,6 @@ import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
@@ -66,7 +65,6 @@ public class RecipeManager {
      */
     public static void registerRecipe(Recipe recipe, NamespacedKey key) {
         recipes.put(key, recipe);
-        if (Bukkit.getRecipe(((Keyed)recipe).getKey()) != null) {
         if (Bukkit.getRecipe(key) != null) {
             Bukkit.removeRecipe(key);
         }

@@ -80,9 +80,10 @@ public class ReflectionUtils {
             Class craftStackClass = Class.forName(craft + ".inventory.CraftItemStack");
             Class craftPlayerClass = Class.forName(craft + ".entity.CraftPlayer");
             Class abstractPacketClass = Class.forName(nms + ".Packet");
+            Class nmsPlayer = Class.forName(nms + ".EntityPlayer");
+            playerConnection = nmsPlayer.getDeclaredField("playerConnection");
             asNMSCopy = craftStackClass.getDeclaredMethod("asNMSCopy", ItemStack.class);
             getHandle = craftPlayerClass.getDeclaredMethod("getHandle");
-            playerConnection = connectionClass.getDeclaredField("playerConnection");
             sendPacket = connectionClass.getDeclaredMethod("sendPacket", abstractPacketClass);
             playOutSetSlotPacket = packetClass.getConstructor(Integer.TYPE, Integer.TYPE, itemStack);
 
