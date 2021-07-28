@@ -164,7 +164,6 @@ public class CustomItem {
         if (onBuild != null) {
             meta = stack.getItemMeta();
             onBuild.accept(stack, meta);
-            stack.setItemMeta(meta);
         }
 
         return stack;
@@ -250,7 +249,6 @@ public class CustomItem {
         if (onUpdate != null) {
             meta = stack.getItemMeta();
             onUpdate.accept(stack, meta);
-            stack.setItemMeta(meta);
         }
 
         return stack;

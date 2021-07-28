@@ -20,7 +20,7 @@ public interface INMSHandler {
 
     <T> T readNBT(Class<T> clazzType, String key, ItemStack stack);
 
-    <T> void writeNBT(Class<T> clazzType, T value, String key, ItemStack stack);
+    <T> ItemStack writeNBT(Class<T> clazzType, T value, String key, ItemStack stack);
 
     boolean containsNBT(String key, ItemStack stack);
 }

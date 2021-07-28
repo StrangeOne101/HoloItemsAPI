@@ -36,9 +36,8 @@ public class ReflectionUtils {
     static Method asNMSCopy;
     static Method getHandle;
 
-    static Method asBukkitCopy;
-
-    private static void setup() {
+    static void setup() {
+        if (setup) return;
         try {
             Class craftMetaClass = Class.forName(craft + ".inventory.CraftMetaItem");
             repairCostField = craftMetaClass.getDeclaredField("repairCost");
@@ -57,8 +56,6 @@ public class ReflectionUtils {
 
             asNMSCopy = craftStackClass.getDeclaredMethod("asNMSCopy", ItemStack.class);
             getHandle = craftPlayerClass.getDeclaredMethod("getHandle");
-
-            asBukkitCopy = craftStackClass.getDeclaredMethod("asBukkitCopy", net.minecraft.world.item.ItemStack.class);
 
             setup = true;
         } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {

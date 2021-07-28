@@ -10,16 +10,22 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Ref;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public class NMS_117_1 implements INMSHandler {
+
+    public NMS_117_1() {
+        ReflectionUtils.setup();
+    }
 
     @Override
     public String getVersion() {
@@ -47,8 +53,8 @@ public class NMS_117_1 implements INMSHandler {
         try {
             CompoundTag tag = NbtIo.read(byteInput);
             net.minecraft.world.item.ItemStack itemstack = net.minecraft.world.item.ItemStack.of(tag);
-            return (ItemStack) ReflectionUtils.asBukkitCopy.invoke(null, itemstack);
-        } catch (IllegalAccessException | InvocationTargetException | IOException e) {
+            return CraftItemStack.asCraftMirror(itemstack);
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
@@ -61,7 +67,6 @@ public class NMS_117_1 implements INMSHandler {
 
     @Override
     public void sendFakeItem(Player player, int slot, ItemStack stack) {
-
         try {
             net.minecraft.world.item.ItemStack nmsCopy = (net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy.invoke(null, stack);
             ServerPlayer handlePlayer = (ServerPlayer) ReflectionUtils.getHandle.invoke(player);
@@ -82,7 +87,7 @@ public class NMS_117_1 implements INMSHandler {
         try {
 
             net.minecraft.world.item.ItemStack nmsCopy = (net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy.invoke(null, stack);
-            CompoundTag tag = nmsCopy.getTag();
+            CompoundTag tag = nmsCopy.getOrCreateTag();
 
             while (key.contains(".")) {
                 String thisKey = key.split(".")[0];
@@ -128,11 +133,11 @@ public class NMS_117_1 implements INMSHandler {
     }
 
     @Override
-    public <T> void writeNBT(Class<T> clazzType, T value, String key, ItemStack stack) {
+    public <T> ItemStack writeNBT(Class<T> clazzType, T value, String key, ItemStack stack) {
         try {
 
             net.minecraft.world.item.ItemStack nmsCopy = (net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy.invoke(null, stack);
-            CompoundTag tag = nmsCopy.getTag();
+            CompoundTag tag = nmsCopy.getOrCreateTag();
 
             while (key.contains(".")) {
                 String thisKey = key.split(".")[0];
@@ -168,10 +173,13 @@ public class NMS_117_1 implements INMSHandler {
             } else if (List.class.equals(clazzType)) {
                 throw new UnsupportedOperationException("Lists not supported yet");
             }
+            nmsCopy.setTag(tag);
+            return (stack = CraftItemStack.asBukkitCopy(nmsCopy));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return stack;
     }
 
     @Override
@@ -179,7 +187,7 @@ public class NMS_117_1 implements INMSHandler {
         try {
 
             net.minecraft.world.item.ItemStack nmsCopy = (net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy.invoke(null, stack);
-            CompoundTag tag = nmsCopy.getTag();
+            CompoundTag tag = nmsCopy.getOrCreateTag();
 
             while (key.contains(".")) {
                 String thisKey = key.split(".")[0];
