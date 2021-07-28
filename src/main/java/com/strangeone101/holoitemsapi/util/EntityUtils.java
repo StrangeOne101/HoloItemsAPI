@@ -135,8 +135,8 @@ public class EntityUtils {
         }
 
         if (entity instanceof Cat && !test(flags, SKIP_VARIANT)) {
-            properties.put("collar", ((Cat) entity).getCollarColor().ordinal());
-            properties.put("variant", ((Cat) entity).getCatType().ordinal());
+            properties.put("collar", ((Cat) entity).getCollarColor().ordinal()); //Convert Color to number
+            properties.put("variant", ((Cat) entity).getCatType().ordinal());    //Convert type to number
         } else if (entity instanceof Wolf) {
             properties.put("collar", ((Wolf) entity).getCollarColor().ordinal());
         } else if (entity instanceof Horse && !test(flags, SKIP_VARIANT)) {

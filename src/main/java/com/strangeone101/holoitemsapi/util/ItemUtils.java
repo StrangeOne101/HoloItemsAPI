@@ -30,7 +30,6 @@ public class ItemUtils {
      * Sets the skin of a Skull to the skin provided. Can be a UUID, name, texture ID or URL
      * @param meta The skull meta
      * @param skin The skin
-     * @return The corrected ItemMeta
      */
     public static void setSkin(SkullMeta meta, String skin) {
 

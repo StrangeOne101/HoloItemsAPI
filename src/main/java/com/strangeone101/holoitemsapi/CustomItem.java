@@ -16,7 +16,9 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -34,6 +36,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -55,6 +59,9 @@ public class CustomItem {
     private Set<Property> properties = new HashSet<>();
     private String extraData;
     private Random random;
+    private boolean ench;
+    private BiConsumer<ItemStack, ItemMeta> onBuild;
+    private BiConsumer<ItemStack, ItemMeta> onUpdate;
 
     private Map<Attribute, Pair<AttributeModifier.Operation, Double>> attributes = new HashMap<>();
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
@@ -135,6 +142,11 @@ public class CustomItem {
          //If the item shouldn't be stackable, add a random INTEGER to the NBT
         Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
+        if (ench) {
+            stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
         stack.setItemMeta(meta);
 
         //Add all attributes to the item
@@ -143,8 +155,16 @@ public class CustomItem {
             ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
         }
 
+
+
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
+        }
+
+        if (onBuild != null) {
+            meta = stack.getItemMeta();
+            onBuild.accept(stack, meta);
+            stack.setItemMeta(meta);
         }
 
         return stack;
@@ -210,6 +230,11 @@ public class CustomItem {
             }
         }
 
+        if (ench) {
+            stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
         stack.setItemMeta(meta);
 
         //Add all attributes to the item
@@ -220,6 +245,12 @@ public class CustomItem {
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
+        }
+
+        if (onUpdate != null) {
+            meta = stack.getItemMeta();
+            onUpdate.accept(stack, meta);
+            stack.setItemMeta(meta);
         }
 
         return stack;
@@ -418,6 +449,24 @@ public class CustomItem {
     public CustomItem setMaterial(Material material) {
         this.material = material;
         return this;
+    }
+
+    /**
+     * Make the item have an enchanted glow
+     * @param glow True to glow
+     * @return Itself
+     */
+    public CustomItem setEnchantedGlow(boolean glow) {
+        this.ench = true;
+        return this;
+    }
+
+    /**
+     * Whether the item has an enchanted glow
+     * @return The glow state
+     */
+    public boolean hasEnchantedGlow() {
+        return this.ench;
     }
 
     /**
@@ -676,6 +725,32 @@ public class CustomItem {
 
     public CustomItem setVisibleMaterial(Material material) {
         this.fakeMaterial = material;
+        return this;
+    }
+
+    /**
+     * Run some code when this item is built. Used in case you don't want to create
+     * a new class just to change something about the item.
+     *
+     * {code}item.onBuild((itemstack, meta) -> itemstack.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10)){code}
+     * @param consumer The code to run
+     * @return Itself
+     */
+    public CustomItem onBuild(BiConsumer<ItemStack, ItemMeta> consumer) {
+        this.onBuild = consumer;
+        return this;
+    }
+
+    /**
+     * Run some code when this item is updated (picked up or regenerated). Used in case you don't want to create
+     * a new class just to change something about the item.
+     *
+     * {code}item.onUpdate((itemstack, meta) -> itemstack.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10)){code}
+     * @param consumer The code to run
+     * @return Itself
+     */
+    public CustomItem onUpdate(BiConsumer<ItemStack, ItemMeta> consumer) {
+        this.onUpdate = consumer;
         return this;
     }
 }

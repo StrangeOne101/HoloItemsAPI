@@ -1,6 +1,7 @@
 package com.strangeone101.holoitemsapi.util;
 
 import net.md_5.bungee.api.chat.TranslatableComponent;
+import net.minecraft.world.effect.MobEffect;
 import org.bukkit.entity.EntityType;
 import org.bukkit.potion.PotionEffectType;
 
@@ -18,14 +19,9 @@ public class TranslationUtils {
 
     private static void setup() {
         try {
-            Class mobEffectListClass = Class.forName(ReflectionUtils.nms + ".MobEffectList");
-            Method fromIdMethod = mobEffectListClass.getDeclaredMethod("fromId", Integer.TYPE);
-            Method bMethod = mobEffectListClass.getDeclaredMethod("b");
-            if (!bMethod.isAccessible()) bMethod.setAccessible(true);
 
             for (PotionEffectType type : PotionEffectType.values()) {
-                Object mobEffectList = fromIdMethod.invoke(null, type.getId());
-                String translationString = (String) bMethod.invoke(mobEffectList);
+                String translationString = MobEffect.byId(type.getId()).getDescriptionId();
                 TranslatableComponent component = new TranslatableComponent(translationString);
                 POTION_EFFECTS.put(type, component);
             }
@@ -35,15 +31,9 @@ public class TranslationUtils {
             }
 
             setup = true;
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
     public static TranslatableComponent getPotionEffect(PotionEffectType type) {
