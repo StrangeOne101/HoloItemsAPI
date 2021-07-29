@@ -10,6 +10,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -22,6 +23,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -60,11 +62,14 @@ public class CustomItem {
     private String extraData;
     private Random random;
     private boolean ench;
+    private int hex;
+    private ItemFlag[] flags;
     private BiConsumer<ItemStack, ItemMeta> onBuild;
     private BiConsumer<ItemStack, ItemMeta> onUpdate;
 
     private Map<Attribute, Pair<AttributeModifier.Operation, Double>> attributes = new HashMap<>();
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
+    private Map<String, Object> nbt = new HashMap<>();
 
     private CustomItem(String name) {
         this.name = name.toLowerCase();
@@ -107,6 +112,10 @@ public class CustomItem {
         //It's important to use the functions `getDisplayName()` and `getLore()` bellow
         //instead of the field names in case an object overrides them
         meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
+
+        if (meta instanceof LeatherArmorMeta) {
+            ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        }
         List<String> lore = new ArrayList<>();
 
         for (String line : getLore()) {
@@ -147,6 +156,8 @@ public class CustomItem {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
+        if (flags != null && flags.length > 0) meta.addItemFlags(flags);
+
         stack.setItemMeta(meta);
 
         //Add all attributes to the item
@@ -164,6 +175,10 @@ public class CustomItem {
         if (onBuild != null) {
             meta = stack.getItemMeta();
             onBuild.accept(stack, meta);
+        }
+
+        for (String key : nbt.keySet()) {
+            stack = HoloItemsAPI.getNMS().writeNBT(nbt.get(key), key, stack);
         }
 
         return stack;
@@ -222,6 +237,9 @@ public class CustomItem {
         if (!this.jsonLore) {
             meta.setLore(lore);
         }
+        if (meta instanceof LeatherArmorMeta) {
+            ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        }
         if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
@@ -233,6 +251,8 @@ public class CustomItem {
             stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
+
+        if (flags != null && flags.length > 0) meta.addItemFlags(flags);
 
         stack.setItemMeta(meta);
 
@@ -249,6 +269,10 @@ public class CustomItem {
         if (onUpdate != null) {
             meta = stack.getItemMeta();
             onUpdate.accept(stack, meta);
+        }
+
+        for (String key : nbt.keySet()) {
+            stack = HoloItemsAPI.getNMS().writeNBT(nbt.get(key), key, stack);
         }
 
         return stack;
@@ -749,6 +773,61 @@ public class CustomItem {
      */
     public CustomItem onUpdate(BiConsumer<ItemStack, ItemMeta> consumer) {
         this.onUpdate = consumer;
+        return this;
+    }
+
+    /**
+     * Set the leather armor color of this item
+     * @param hex The color
+     * @return Itself
+     */
+    public CustomItem setLeatherColor(int hex) {
+        this.hex = hex;
+        return this;
+    }
+
+    /**
+     * Get the leather armor color of this item
+     * @return The color (0 for none)
+     */
+    public int getLeatherColor() {
+        return this.hex;
+    }
+
+    /**
+     * Adds NBT to this item
+     * @param key The key
+     * @param value The value. Must be a primitive type, String, UUID or array (array of either byte, int, short or long)
+     * @return Itself
+     */
+    public CustomItem addNBT(String key, Object value) {
+        this.nbt.put(key, value);
+        return this;
+    }
+
+    /**
+     * Get the NBT that should be set on this item
+     * @return The NBT
+     */
+    public Map<String, Object> getNbt() {
+        return nbt;
+    }
+
+    /**
+     * Get the flags applied to this item
+     * @return The flags
+     */
+    public ItemFlag[] getFlags() {
+        return flags;
+    }
+
+    /**
+     * Set the flags of this item
+     * @param flags
+     * @return itself
+     */
+    public CustomItem setFlags(ItemFlag... flags) {
+        this.flags = flags;
         return this;
     }
 }

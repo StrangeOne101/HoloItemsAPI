@@ -183,6 +183,41 @@ public class NMS_117_1 implements INMSHandler {
     }
 
     @Override
+    public ItemStack writeNBT(Object value, String key, ItemStack stack) {
+        if (value instanceof Boolean) {
+            return writeNBT(boolean.class, (boolean)value, key, stack);
+        } else if (value instanceof Integer) {
+            return writeNBT(int.class, (int)value, key, stack);
+        } else if (value instanceof Long) {
+            return writeNBT(long.class, (long)value, key, stack);
+        } else if (value instanceof Byte) {
+            return writeNBT(byte.class, (byte)value, key, stack);
+        } else if (value instanceof Short) {
+            return writeNBT(short.class, (short)value, key, stack);
+        } else if (value instanceof String) {
+            return writeNBT(String.class, (String)value, key, stack);
+        } else if (value instanceof UUID) {
+            return writeNBT(UUID.class, (UUID)value, key, stack);
+        } else if (value instanceof Double) {
+            return writeNBT(double.class, (double)value, key, stack);
+        } else if (value instanceof Float) {
+            return writeNBT(float.class, (float)value, key, stack);
+        } else if (value instanceof int[]) {
+            return writeNBT(int[].class, (int[])value, key, stack);
+        } else if (value instanceof byte[]) {
+            return writeNBT(byte[].class, (byte[])value, key, stack);
+        } else if (value instanceof long[]) {
+            return writeNBT(long[].class, (long[])value, key, stack);
+        } else if (value instanceof short[]) {
+            return writeNBT(short[].class, (short[])value, key, stack);
+        } else if (value instanceof List) {
+            throw new UnsupportedOperationException("Lists not supported yet");
+        } else {
+            throw new UnsupportedOperationException(value.getClass() + " type supported yet");
+        }
+    }
+
+    @Override
     public boolean containsNBT(String key, ItemStack stack) {
         try {
 

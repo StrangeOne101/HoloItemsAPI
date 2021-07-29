@@ -174,7 +174,7 @@ public class ItemListener implements Listener {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
 
-        boolean isInteractable = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
+        boolean openInterface = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
                 && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
 
         //HoloItemsPlugin.INSTANCE.getLogger().info("Test----");
@@ -190,7 +190,7 @@ public class ItemListener implements Listener {
                 return;
             }
 
-            if (isInteractable) {
+            if (openInterface) {
                 return; //Don't cancel the event because they opened some form of GUI
             }
 
@@ -214,6 +214,13 @@ public class ItemListener implements Listener {
                             event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot());
                     return;
                 }
+
+                EquipmentSlot equipmentSlot = ItemUtils.getSlotForItem(customItem.getMaterial());
+                if (equipmentSlot == EquipmentSlot.HEAD || equipmentSlot == EquipmentSlot.CHEST ||
+                        equipmentSlot == EquipmentSlot.LEGS || equipmentSlot == EquipmentSlot.FEET) {
+                    return; //Don't cancel since they are just trying to equip the armor
+                }
+
 
             } else if (customItem instanceof Swingable && (event.getAction() == Action.LEFT_CLICK_AIR
                     || event.getAction() == Action.LEFT_CLICK_BLOCK)) {

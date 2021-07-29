@@ -212,4 +212,21 @@ public class ItemUtils {
                 return false;
         }
     }
+
+    /**
+     * Is this material leather armor?
+     * @param material The material
+     * @return True if it's leather
+     */
+    public static boolean isLeatherArmor(Material material) {
+        switch (material) {
+            case LEATHER_BOOTS:
+            case LEATHER_CHESTPLATE:
+            case LEATHER_LEGGINGS:
+            case LEATHER_HELMET:
+                return true;
+            default:
+                return false;
+        }
+    }
 }
