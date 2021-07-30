@@ -3,6 +3,7 @@ package com.strangeone101.holoitemsapi.recipe;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Recipe;
 
 public class RecipeContext {
@@ -10,8 +11,7 @@ public class RecipeContext {
     private Player player;
     private Location location;
     private World world;
-    private boolean isRightClick;
-    private boolean isShiftClick;
+    private ClickType clickType;
     private Recipe recipe;
 
     public Player getPlayer() {
@@ -39,19 +39,11 @@ public class RecipeContext {
     }
 
     public boolean isRightClick() {
-        return isRightClick;
-    }
-
-    public void setRightClick(boolean rightClick) {
-        isRightClick = rightClick;
+        return getClickType().isRightClick();
     }
 
     public boolean isShiftClick() {
-        return isShiftClick;
-    }
-
-    public void setShiftClick(boolean shiftClick) {
-        isShiftClick = shiftClick;
+        return getClickType().isShiftClick();
     }
 
     public Recipe getRecipe() {
@@ -60,5 +52,13 @@ public class RecipeContext {
 
     public void setRecipe(Recipe recipe) {
         this.recipe = recipe;
+    }
+
+    public ClickType getClickType() {
+        return clickType;
+    }
+
+    public void setClickType(ClickType clickType) {
+        this.clickType = clickType;
     }
 }

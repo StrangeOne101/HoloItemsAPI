@@ -22,6 +22,7 @@ import java.util.Set;
 public class RecipeManager {
 
     private static Map<NamespacedKey, Recipe> recipes = new HashMap<>();
+    private static Map<NamespacedKey, RecipeBuilder.AdvancedRecipe> advanced = new HashMap<>();
     private static Set<Recipe> nonConsumableRecipes = new HashSet<>();
 
     /**
@@ -89,6 +90,23 @@ public class RecipeManager {
 
 
         }
+    }
+
+    public static void registerAdvancedRecipe(Recipe recipe, RecipeBuilder.AdvancedRecipe advancedShape) {
+        registerRecipe(recipe);
+        advanced.put(((Keyed) recipe).getKey(), advancedShape);
+    }
+
+    public static boolean isAdvancedRecipe(Recipe recipe) {
+        if (recipe instanceof Keyed)
+            return advanced.containsKey(((Keyed) recipe).getKey());
+        return false;
+    }
+
+    public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(Recipe recipe) {
+        if (recipe instanceof Keyed)
+            return advanced.get(((Keyed) recipe).getKey());
+        return null;
     }
 
     /**

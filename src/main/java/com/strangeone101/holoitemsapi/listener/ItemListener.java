@@ -14,6 +14,7 @@ import com.strangeone101.holoitemsapi.interfaces.Repairable;
 import com.strangeone101.holoitemsapi.interfaces.Swingable;
 import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.recipe.NonConsumableChoice;
+import com.strangeone101.holoitemsapi.recipe.RecipeBuilder;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
 import org.bukkit.ChatColor;
@@ -313,6 +314,14 @@ public class ItemListener implements Listener {
                     event.setCancelled(true);
                 }
             }
+        } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
+
+            ItemStack updated = advRecipe.getCraftModifier().create(event.getInventory().getResult(),
+                    advRecipe.getInputItems(event.getInventory()), advRecipe.buildContext(event.getInventory(), event.getClick()));
+
+            event.getInventory().setResult(updated);
+            event.setCurrentItem(updated);
         }
 
         if (RecipeManager.hasNonConsumable(event.getRecipe())) {
@@ -365,6 +374,13 @@ public class ItemListener implements Listener {
                     event.getInventory().setResult(null); //Stops recipes using our custom items
                 }
             }
+        } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
+
+            ItemStack updated = advRecipe.getPreviewModifier().create(event.getInventory().getResult(),
+                    advRecipe.getInputItems(event.getInventory()), advRecipe.buildContext(event.getInventory(), null));
+
+            event.getInventory().setResult(updated);
         }
     }
 

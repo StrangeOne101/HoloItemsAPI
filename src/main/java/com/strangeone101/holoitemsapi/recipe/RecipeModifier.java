@@ -4,7 +4,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 
-public interface RecipeOutput {
+public interface RecipeModifier {
 
     ItemStack create(ItemStack baseOutput, Map<RecipeGroup, ItemStack> filters, RecipeContext context);
 }
