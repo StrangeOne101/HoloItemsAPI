@@ -60,6 +60,8 @@ public class RecipeBuilder {
                 throw new NoSuchElementException("No ingredients provided!");
             }
 
+            recipe.shape(shape);
+
             for (Character c : ingredients.keySet()) {
                 recipe.setIngredient(c, new RecipeChoice.ExactChoice(ingredients.get(c)));
             }
@@ -67,8 +69,6 @@ public class RecipeBuilder {
             for (Character c : riingredients.keySet()) {
                 recipe.setIngredient(c, riingredients.get(c));
             }
-
-            recipe.shape(shape);
 
             return recipe;
         }
@@ -188,7 +188,10 @@ public class RecipeBuilder {
         }
 
         public AdvancedShape setGroupItems(RecipeGroup group, Material... materials) {
-            ItemStack[] stacks = (ItemStack[]) Arrays.stream(materials).map(ItemStack::new).toArray();
+            ItemStack[] stacks = new ItemStack[materials.length];
+            for (int i = 0; i < materials.length; i++) {
+                stacks[i] = new ItemStack(materials[i]);
+            }
             this.filters.put(group, new CIRecipeChoice(stacks));
             return this;
         }
@@ -246,6 +249,8 @@ public class RecipeBuilder {
             } else {
                 ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(HoloItemsAPI.getPlugin(), key), output);
 
+                recipe.shape(shape);
+
                 for (Character c : ingredients.keySet()) {
                     recipe.setIngredient(c, new RecipeChoice.ExactChoice(ingredients.get(c)));
                 }
@@ -269,8 +274,6 @@ public class RecipeBuilder {
                     }
 
                 }
-
-                recipe.shape(shape);
 
                 outter:
                 for (int row = 0; row < 3 && row < shape.length; row++) {
@@ -312,7 +315,7 @@ public class RecipeBuilder {
                 for (int col = 0; col < size; col++) {
                     int currIndex = row * 3 + col;
                     if (craftingInventory.getMatrix()[currIndex] != null) {
-                        offset = firstNotEmpty - currIndex;
+                        offset = currIndex - firstNotEmpty;
                         break outter;
                     }
                 }
@@ -323,7 +326,7 @@ public class RecipeBuilder {
             for (byte index : indexedGroups.keySet()) {
                 int newIndex = offset + index;
 
-                stacks.put(indexedGroups.get(index), craftingInventory.getItem(newIndex));
+                stacks.put(indexedGroups.get(index), craftingInventory.getMatrix()[newIndex]);
             }
 
             return stacks;
@@ -339,7 +342,7 @@ public class RecipeBuilder {
         protected RecipeModifier preview, craft = (item, map, context) -> item;
         protected Map<RecipeGroup, CIRecipeChoice> filters = new HashMap<>();
 
-        public AdvancedRecipe(String key, ItemStack output) {
+        protected AdvancedRecipe(String key, ItemStack output) {
             this.key = key;
             this.output = output;
         }
