@@ -14,6 +14,7 @@ import com.strangeone101.holoitemsapi.interfaces.Repairable;
 import com.strangeone101.holoitemsapi.interfaces.Swingable;
 import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.recipe.NonConsumableChoice;
+import com.strangeone101.holoitemsapi.recipe.RecipeBuilder;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
 import org.bukkit.ChatColor;
@@ -174,7 +175,7 @@ public class ItemListener implements Listener {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getItem());
         int slot = event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot();
 
-        boolean isInteractable = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
+        boolean openInterface = event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null
                 && INTERACTABLES.contains(event.getClickedBlock().getType()) && !event.getPlayer().isSneaking();
 
         //HoloItemsPlugin.INSTANCE.getLogger().info("Test----");
@@ -190,7 +191,7 @@ public class ItemListener implements Listener {
                 return;
             }
 
-            if (isInteractable) {
+            if (openInterface) {
                 return; //Don't cancel the event because they opened some form of GUI
             }
 
@@ -214,6 +215,13 @@ public class ItemListener implements Listener {
                             event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot());
                     return;
                 }
+
+                EquipmentSlot equipmentSlot = ItemUtils.getSlotForItem(customItem.getMaterial());
+                if (equipmentSlot == EquipmentSlot.HEAD || equipmentSlot == EquipmentSlot.CHEST ||
+                        equipmentSlot == EquipmentSlot.LEGS || equipmentSlot == EquipmentSlot.FEET) {
+                    return; //Don't cancel since they are just trying to equip the armor
+                }
+
 
             } else if (customItem instanceof Swingable && (event.getAction() == Action.LEFT_CLICK_AIR
                     || event.getAction() == Action.LEFT_CLICK_BLOCK)) {
@@ -306,6 +314,14 @@ public class ItemListener implements Listener {
                     event.setCancelled(true);
                 }
             }
+        } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
+
+            ItemStack updated = advRecipe.getCraftModifier().create(event.getInventory().getResult(),
+                    advRecipe.getInputItems(event.getInventory()), advRecipe.buildContext(event.getInventory(), event.getClick()));
+
+            event.getInventory().setResult(updated);
+            event.setCurrentItem(updated);
         }
 
         if (RecipeManager.hasNonConsumable(event.getRecipe())) {
@@ -358,6 +374,13 @@ public class ItemListener implements Listener {
                     event.getInventory().setResult(null); //Stops recipes using our custom items
                 }
             }
+        } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
+
+            ItemStack updated = advRecipe.getPreviewModifier().create(event.getInventory().getResult(),
+                    advRecipe.getInputItems(event.getInventory()), advRecipe.buildContext(event.getInventory(), null));
+
+            event.getInventory().setResult(updated);
         }
     }
 

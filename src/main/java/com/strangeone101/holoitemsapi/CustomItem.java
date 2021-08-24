@@ -6,16 +6,24 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -30,6 +38,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -42,6 +52,7 @@ public class CustomItem {
     private int internalIntID;
 
     private Material material;
+    private Material fakeMaterial;
     private String displayName;
     private List<String> lore = new ArrayList<>();
     private boolean jsonLore = false;
@@ -50,8 +61,15 @@ public class CustomItem {
     private Set<Property> properties = new HashSet<>();
     private String extraData;
     private Random random;
+    private boolean ench;
+    private int hex;
+    private ItemFlag[] flags;
+    private BiConsumer<ItemStack, ItemMeta> onBuild;
+    private BiConsumer<ItemStack, ItemMeta> onUpdate;
 
+    private Map<Attribute, Pair<AttributeModifier.Operation, Double>> attributes = new HashMap<>();
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
+    private Map<String, Object> nbt = new HashMap<>();
 
     private CustomItem(String name) {
         this.name = name.toLowerCase();
@@ -94,6 +112,10 @@ public class CustomItem {
         //It's important to use the functions `getDisplayName()` and `getLore()` bellow
         //instead of the field names in case an object overrides them
         meta.setDisplayName(replaceVariables(getDisplayName(), meta.getPersistentDataContainer()));
+
+        if (meta instanceof LeatherArmorMeta) {
+            ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        }
         List<String> lore = new ArrayList<>();
 
         for (String line : getLore()) {
@@ -102,7 +124,7 @@ public class CustomItem {
         if (!this.jsonLore) {
             meta.setLore(lore);
         }
-        meta.setCustomModelData(internalIntID); //Used for resource packs
+        if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
 
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
@@ -129,10 +151,34 @@ public class CustomItem {
          //If the item shouldn't be stackable, add a random INTEGER to the NBT
         Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
+        if (ench) {
+            stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        if (flags != null && flags.length > 0) meta.addItemFlags(flags);
+
         stack.setItemMeta(meta);
+
+        //Add all attributes to the item
+        for (Attribute attr : getAttributes().keySet()) {
+            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
+            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+        }
+
+
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
+        }
+
+        if (onBuild != null) {
+            meta = stack.getItemMeta();
+            onBuild.accept(stack, meta);
+        }
+
+        for (String key : nbt.keySet()) {
+            stack = HoloItemsAPI.getNMS().writeNBT(nbt.get(key), key, stack);
         }
 
         return stack;
@@ -191,17 +237,42 @@ public class CustomItem {
         if (!this.jsonLore) {
             meta.setLore(lore);
         }
-        meta.setCustomModelData(internalIntID); //Used for resource packs
+        if (meta instanceof LeatherArmorMeta) {
+            ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        }
+        if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
         if (meta instanceof SkullMeta) {
             if (extraData != null) {
                 ItemUtils.setSkin((SkullMeta) meta, extraData);
             }
         }
 
+        if (ench) {
+            stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        if (flags != null && flags.length > 0) meta.addItemFlags(flags);
+
         stack.setItemMeta(meta);
+
+        //Add all attributes to the item
+        for (Attribute attr : getAttributes().keySet()) {
+            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
+            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+        }
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
+        }
+
+        if (onUpdate != null) {
+            meta = stack.getItemMeta();
+            onUpdate.accept(stack, meta);
+        }
+
+        for (String key : nbt.keySet()) {
+            stack = HoloItemsAPI.getNMS().writeNBT(nbt.get(key), key, stack);
         }
 
         return stack;
@@ -403,6 +474,24 @@ public class CustomItem {
     }
 
     /**
+     * Make the item have an enchanted glow
+     * @param glow True to glow
+     * @return Itself
+     */
+    public CustomItem setEnchantedGlow(boolean glow) {
+        this.ench = true;
+        return this;
+    }
+
+    /**
+     * Whether the item has an enchanted glow
+     * @return The glow state
+     */
+    public boolean hasEnchantedGlow() {
+        return this.ench;
+    }
+
+    /**
      * Get the lore
      * @return The lore
      */
@@ -573,5 +662,172 @@ public class CustomItem {
     @Override
     public int hashCode() {
         return name.hashCode();
+    }
+
+    public CustomItem setDamage(double damage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, damage));
+
+        return this;
+    }
+
+    public CustomItem setDamagePercentage(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setArmor(int armor) {
+        getAttributes().put(Attribute.GENERIC_ARMOR,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
+
+        return this;
+    }
+
+    public CustomItem setArmorToughness(int armor) {
+        getAttributes().put(Attribute.GENERIC_ARMOR_TOUGHNESS,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
+
+        return this;
+    }
+
+    public CustomItem setHealth(int health) {
+        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)health));
+
+        return this;
+    }
+
+    public CustomItem setHealthPercentage(double percentage) {
+        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, (double)percentage));
+
+        return this;
+    }
+
+    public CustomItem setSpeed(double percentage) {
+        getAttributes().put(Attribute.GENERIC_MOVEMENT_SPEED,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setKnockbackResistance(double percentage) {
+        getAttributes().put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setAttackSpeed(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_SPEED,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setAttackKnockback(double percentage) {
+        getAttributes().put(Attribute.GENERIC_ATTACK_KNOCKBACK,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public CustomItem setLuck(double percentage) {
+        getAttributes().put(Attribute.GENERIC_LUCK,
+                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
+
+        return this;
+    }
+
+    public Map<Attribute, Pair<AttributeModifier.Operation, Double>> getAttributes() {
+        return attributes;
+    }
+
+    public CustomItem setVisibleMaterial(Material material) {
+        this.fakeMaterial = material;
+        return this;
+    }
+
+    /**
+     * Run some code when this item is built. Used in case you don't want to create
+     * a new class just to change something about the item.
+     *
+     * {code}item.onBuild((itemstack, meta) -> itemstack.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10)){code}
+     * @param consumer The code to run
+     * @return Itself
+     */
+    public CustomItem onBuild(BiConsumer<ItemStack, ItemMeta> consumer) {
+        this.onBuild = consumer;
+        return this;
+    }
+
+    /**
+     * Run some code when this item is updated (picked up or regenerated). Used in case you don't want to create
+     * a new class just to change something about the item.
+     *
+     * {code}item.onUpdate((itemstack, meta) -> itemstack.addUnsafeEnchantment(Enchantment.KNOCKBACK, 10)){code}
+     * @param consumer The code to run
+     * @return Itself
+     */
+    public CustomItem onUpdate(BiConsumer<ItemStack, ItemMeta> consumer) {
+        this.onUpdate = consumer;
+        return this;
+    }
+
+    /**
+     * Set the leather armor color of this item
+     * @param hex The color
+     * @return Itself
+     */
+    public CustomItem setLeatherColor(int hex) {
+        this.hex = hex;
+        return this;
+    }
+
+    /**
+     * Get the leather armor color of this item
+     * @return The color (0 for none)
+     */
+    public int getLeatherColor() {
+        return this.hex;
+    }
+
+    /**
+     * Adds NBT to this item
+     * @param key The key
+     * @param value The value. Must be a primitive type, String, UUID or array (array of either byte, int, short or long)
+     * @return Itself
+     */
+    public CustomItem addNBT(String key, Object value) {
+        this.nbt.put(key, value);
+        return this;
+    }
+
+    /**
+     * Get the NBT that should be set on this item
+     * @return The NBT
+     */
+    public Map<String, Object> getNbt() {
+        return nbt;
+    }
+
+    /**
+     * Get the flags applied to this item
+     * @return The flags
+     */
+    public ItemFlag[] getFlags() {
+        return flags;
+    }
+
+    /**
+     * Set the flags of this item
+     * @param flags
+     * @return itself
+     */
+    public CustomItem setFlags(ItemFlag... flags) {
+        this.flags = flags;
+        return this;
     }
 }

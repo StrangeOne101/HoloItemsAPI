@@ -4,7 +4,6 @@ import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
-import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
@@ -23,6 +22,7 @@ import java.util.Set;
 public class RecipeManager {
 
     private static Map<NamespacedKey, Recipe> recipes = new HashMap<>();
+    private static Map<NamespacedKey, RecipeBuilder.AdvancedRecipe> advanced = new HashMap<>();
     private static Set<Recipe> nonConsumableRecipes = new HashSet<>();
 
     /**
@@ -66,7 +66,6 @@ public class RecipeManager {
      */
     public static void registerRecipe(Recipe recipe, NamespacedKey key) {
         recipes.put(key, recipe);
-        if (Bukkit.getRecipe(((Keyed)recipe).getKey()) != null) {
         if (Bukkit.getRecipe(key) != null) {
             Bukkit.removeRecipe(key);
         }
@@ -91,6 +90,23 @@ public class RecipeManager {
 
 
         }
+    }
+
+    public static void registerAdvancedRecipe(Recipe recipe, RecipeBuilder.AdvancedRecipe advancedShape) {
+        registerRecipe(recipe);
+        advanced.put(((Keyed) recipe).getKey(), advancedShape);
+    }
+
+    public static boolean isAdvancedRecipe(Recipe recipe) {
+        if (recipe instanceof Keyed)
+            return advanced.containsKey(((Keyed) recipe).getKey());
+        return false;
+    }
+
+    public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(Recipe recipe) {
+        if (recipe instanceof Keyed)
+            return advanced.get(((Keyed) recipe).getKey());
+        return null;
     }
 
     /**

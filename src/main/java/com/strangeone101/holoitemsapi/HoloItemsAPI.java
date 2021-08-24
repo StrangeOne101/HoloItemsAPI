@@ -5,6 +5,8 @@ import com.strangeone101.holoitemsapi.listener.GenericListener;
 import com.strangeone101.holoitemsapi.listener.ItemListener;
 import com.strangeone101.holoitemsapi.listener.LootListener;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
+import com.strangeone101.holoitemsapi.util.INMSHandler;
+import com.strangeone101.holoitemsapi.util.NMS_117_1;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -16,6 +18,7 @@ public class HoloItemsAPI {
 
     private static JavaPlugin plugin;
     private static Keys keys;
+    private static INMSHandler handler;
 
     /**
      * Setup the HoloItemsAPI for the provided plugin to be used as a base. This should be called within `onEnable()`
@@ -33,6 +36,8 @@ public class HoloItemsAPI {
 
         keys = new Keys();
 
+        handler = setupHandler();
+
         Bukkit.getPluginManager().registerEvents(new ItemListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new LootListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new GenericListener(), plugin);
@@ -49,6 +54,16 @@ public class HoloItemsAPI {
         }, 1L);
 
         return true;
+    }
+
+    private static INMSHandler setupHandler() {
+        String version = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+
+        switch (version) {
+            case "1_17_R1":
+            default:
+                return new NMS_117_1();
+        }
     }
 
     /**
@@ -95,5 +110,9 @@ public class HoloItemsAPI {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
         Config.deathMessageConfig = config;
         Config.deathMessageConfigFile = file;
+    }
+
+    public static INMSHandler getNMS() {
+        return handler;
     }
 }
