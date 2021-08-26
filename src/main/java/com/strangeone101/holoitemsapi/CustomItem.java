@@ -297,11 +297,8 @@ public class CustomItem {
                 return;
             }
 
-            meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
-            if (meta instanceof Damageable) {
-                ((Damageable) meta).setDamage((damage / getMaxDurability()) * stack.getType().getMaxDurability());
-            }
-            stack.setItemMeta(meta);
+            setDurability(stack, damage);
+            updateStack(stack, player);
         }
     }
 
@@ -311,7 +308,7 @@ public class CustomItem {
      * @param maxDurability The max durability
      * @return The string
      */
-    public static String getDurabilityString(int durability, int maxDurability) {
+    public static String getDurabilityString(double durability, double maxDurability) {
         if (maxDurability == 0) return ""; //No durability
         double percentage = durability / maxDurability;
         double bigPercentage = percentage * 100;
