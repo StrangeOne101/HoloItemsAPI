@@ -297,11 +297,8 @@ public class CustomItem {
                 return;
             }
 
-            meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, damage);
-            if (meta instanceof Damageable) {
-                ((Damageable) meta).setDamage((damage / getMaxDurability()) * stack.getType().getMaxDurability());
-            }
-            stack.setItemMeta(meta);
+            setDurability(stack, damage);
+            updateStack(stack, player);
         }
     }
 
@@ -313,7 +310,7 @@ public class CustomItem {
      */
     public static String getDurabilityString(int durability, int maxDurability) {
         if (maxDurability == 0) return ""; //No durability
-        double percentage = durability / maxDurability;
+        double percentage = ((double) durability) / ((double) maxDurability);
         double bigPercentage = percentage * 100;
         ChatColor color = ChatColor.DARK_RED;
         if (bigPercentage >= 90) color = ChatColor.DARK_GREEN;
