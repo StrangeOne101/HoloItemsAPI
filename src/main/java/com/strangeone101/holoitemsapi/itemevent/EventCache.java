@@ -398,7 +398,21 @@ public class EventCache {
                                         e.printStackTrace();
                                     }
                                 }
-
+                            }
+                        }
+                    } else if (event instanceof EntityEvent && ((EntityEvent) event).getEntity() instanceof Player) {
+                        Player player = ((Player) ((EntityEvent) event).getEntity());
+                        if (POSITIONS_BY_ITEM.get(item).containsKey(player)) {
+                            for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
+                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
+                                if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                                    EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
+                                    try {
+                                        m.invoke(item, context, event);
+                                    } catch (IllegalAccessException | InvocationTargetException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
                         }
                     }

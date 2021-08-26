@@ -81,7 +81,7 @@ public class ItemUtils {
      * @param operation The operation
      * @param stack The itemstack
      */
-    public static void setAttriute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack) {
+    public static void setAttribute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack) {
         if (ATTRIBUTE_MAP.isEmpty()) {
             Random random = new Random("unique_seed".hashCode());
 

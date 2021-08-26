@@ -19,6 +19,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -39,7 +40,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -67,7 +67,7 @@ public class CustomItem {
     private BiConsumer<ItemStack, ItemMeta> onBuild;
     private BiConsumer<ItemStack, ItemMeta> onUpdate;
 
-    private Map<Attribute, Pair<AttributeModifier.Operation, Double>> attributes = new HashMap<>();
+    private Map<Attribute, Map<AttributeModifier.Operation, Pair<Double, EquipmentSlot>>> attributes = new HashMap<>();
     private Map<String, Function<PersistentDataContainer, String>> variables = new HashMap<>();
     private Map<String, Object> nbt = new HashMap<>();
 
@@ -158,15 +158,19 @@ public class CustomItem {
 
         if (flags != null && flags.length > 0) meta.addItemFlags(flags);
 
-        stack.setItemMeta(meta);
-
         //Add all attributes to the item
         for (Attribute attr : getAttributes().keySet()) {
-            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
-            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+            Map<AttributeModifier.Operation, Pair<Double, EquipmentSlot>> map = getAttributes().get(attr);
+            for (AttributeModifier.Operation operation: map.keySet()) {
+                if (map.get(operation).getRight() == null) {
+                    meta.addAttributeModifier(attr, new AttributeModifier(UUID.randomUUID(), (attr.name() + operation.toString()), map.get(operation).getLeft(), operation));
+                } else {
+                    meta.addAttributeModifier(attr, new AttributeModifier(UUID.randomUUID(), (attr.name() + operation.toString()), map.get(operation).getLeft(), operation, map.get(operation).getRight()));
+                }
+            }
         }
 
-
+        stack.setItemMeta(meta);
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
@@ -254,13 +258,26 @@ public class CustomItem {
 
         if (flags != null && flags.length > 0) meta.addItemFlags(flags);
 
-        stack.setItemMeta(meta);
+        //Remove all current attribute
+        if (meta.getAttributeModifiers() != null) {
+            for (Attribute attribute : meta.getAttributeModifiers().keySet()) {
+                meta.removeAttributeModifier(attribute);
+            }
+        }
 
         //Add all attributes to the item
         for (Attribute attr : getAttributes().keySet()) {
-            Pair<AttributeModifier.Operation, Double> pair = getAttributes().get(attr);
-            ItemUtils.setAttriute(pair.getRight(), attr, pair.getLeft(), stack);
+            Map<AttributeModifier.Operation, Pair<Double, EquipmentSlot>> map = getAttributes().get(attr);
+            for (AttributeModifier.Operation operation: map.keySet()) {
+                if (map.get(operation).getRight() == null) {
+                    meta.addAttributeModifier(attr, new AttributeModifier(UUID.randomUUID(), (attr.name() + operation.toString()), map.get(operation).getLeft(), operation));
+                } else {
+                    meta.addAttributeModifier(attr, new AttributeModifier(UUID.randomUUID(), (attr.name() + operation.toString()), map.get(operation).getLeft(), operation, map.get(operation).getRight()));
+                }
+            }
         }
+
+        stack.setItemMeta(meta);
 
         if (this.jsonLore) {
             ReflectionUtils.setTrueLore(stack, lore);
@@ -375,7 +392,7 @@ public class CustomItem {
             meta.getPersistentDataContainer().set(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, durability);
 
             if (meta instanceof Damageable) {
-                ((Damageable) meta).setDamage((durability / getMaxDurability()) * stack.getType().getMaxDurability());
+                ((Damageable) meta).setDamage((int)((((double) durability) / ((double)getMaxDurability())) * stack.getType().getMaxDurability()));
             }
 
             stack.setItemMeta(meta); //Update item
@@ -661,84 +678,236 @@ public class CustomItem {
         return name.hashCode();
     }
 
-    public CustomItem setDamage(double damage) {
-        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, damage));
+    public CustomItem setAttribute(Attribute attribute, double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        Pair<Double, EquipmentSlot> pair = new ImmutablePair<>(amount, equipmentSlot);
+        Map<AttributeModifier.Operation, Pair<Double, EquipmentSlot>> map = new HashMap<>();
+        if (percentage) {
+            map.put(AttributeModifier.Operation.ADD_SCALAR, pair);
+        } else {
+            map.put(AttributeModifier.Operation.ADD_NUMBER, pair);
+        }
+        getAttributes().put(attribute, map);
 
         return this;
     }
 
-    public CustomItem setDamagePercentage(double percentage) {
-        getAttributes().put(Attribute.GENERIC_ATTACK_DAMAGE,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmor(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_ARMOR, amount, percentage, equipmentSlot);
     }
 
-    public CustomItem setArmor(int armor) {
-        getAttributes().put(Attribute.GENERIC_ARMOR,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
-
-        return this;
+    public CustomItem setArmor(double amount, boolean percentage) {
+        return setArmor(amount, percentage, null);
     }
 
-    public CustomItem setArmorToughness(int armor) {
-        getAttributes().put(Attribute.GENERIC_ARMOR_TOUGHNESS,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)armor));
-
-        return this;
+    public CustomItem setArmor(double amount, EquipmentSlot equipmentSlot) {
+        return setArmor(amount, false, equipmentSlot);
     }
 
-    public CustomItem setHealth(int health) {
-        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_NUMBER, (double)health));
-
-        return this;
+    public CustomItem setArmor(double amount) {
+        return setArmor(amount, false);
     }
 
-    public CustomItem setHealthPercentage(double percentage) {
-        getAttributes().put(Attribute.GENERIC_MAX_HEALTH,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, (double)percentage));
-
-        return this;
+    public CustomItem setArmorPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setArmor(amount, true, equipmentSlot);
     }
 
-    public CustomItem setSpeed(double percentage) {
-        getAttributes().put(Attribute.GENERIC_MOVEMENT_SPEED,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmorPercentage(double amount) {
+        return setArmor(amount, true);
     }
 
-    public CustomItem setKnockbackResistance(double percentage) {
-        getAttributes().put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmorToughness(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS, amount, percentage, equipmentSlot);
     }
 
-    public CustomItem setAttackSpeed(double percentage) {
-        getAttributes().put(Attribute.GENERIC_ATTACK_SPEED,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmorToughness(double amount, boolean percentage) {
+        return setArmorToughness(amount, percentage, null);
     }
 
-    public CustomItem setAttackKnockback(double percentage) {
-        getAttributes().put(Attribute.GENERIC_ATTACK_KNOCKBACK,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmorToughness(double amount, EquipmentSlot equipmentSlot) {
+        return setArmorToughness(amount, false, equipmentSlot);
     }
 
-    public CustomItem setLuck(double percentage) {
-        getAttributes().put(Attribute.GENERIC_LUCK,
-                new ImmutablePair<>(AttributeModifier.Operation.ADD_SCALAR, percentage));
-
-        return this;
+    public CustomItem setArmorToughness(double amount) {
+        return setArmorToughness(amount, false);
     }
 
-    public Map<Attribute, Pair<AttributeModifier.Operation, Double>> getAttributes() {
+    public CustomItem setArmorToughnessPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setArmorToughness(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setArmorToughnessPercentage(double amount) {
+        return setArmorToughness(amount, true);
+    }
+
+    public CustomItem setDamage(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_ATTACK_DAMAGE, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setDamage(double amount, boolean percentage) {
+        return setDamage(amount, percentage, null);
+    }
+
+    public CustomItem setDamage(double amount, EquipmentSlot equipmentSlot) {
+        return setDamage(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setDamage(double amount) {
+        return setDamage(amount, false);
+    }
+
+    public CustomItem setDamagePercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setDamage(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setDamagePercentage(double amount) {
+        return setDamage(amount, true);
+    }
+
+    public CustomItem setKnockback(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setKnockback(double amount, boolean percentage) {
+        return setKnockback(amount, percentage, null);
+    }
+
+    public CustomItem setKnockback(double amount, EquipmentSlot equipmentSlot) {
+        return setKnockback(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setKnockback(double amount) {
+        return setKnockback(amount, false);
+    }
+
+    public CustomItem setKnockbackPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setKnockback(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setKnockbackPercentage(double amount) {
+        return setKnockback(amount, true);
+    }
+
+    public CustomItem setAttackSpeed(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_ATTACK_SPEED, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setAttackSpeed(double amount, boolean percentage) {
+        return setAttackSpeed(amount, percentage, null);
+    }
+
+    public CustomItem setAttackSpeed(double amount, EquipmentSlot equipmentSlot) {
+        return setAttackSpeed(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setAttackSpeed(double amount) {
+        return setAttackSpeed(amount, false);
+    }
+
+    public CustomItem setAttackSpeedPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setAttackSpeed(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setAttackSpeedPercentage(double amount) {
+        return setAttackSpeed(amount, true);
+    }
+
+    public CustomItem setKnockbackResistance(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setKnockbackResistance(double amount, boolean percentage) {
+        return setKnockbackResistance(amount, percentage, null);
+    }
+
+    public CustomItem setKnockbackResistance(double amount, EquipmentSlot equipmentSlot) {
+        return setKnockbackResistance(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setKnockbackResistance(double amount) {
+        return setKnockbackResistance(amount, false);
+    }
+
+    public CustomItem setKnockbackResistancePercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setKnockbackResistance(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setKnockbackResistancePercentage(double amount) {
+        return setKnockbackResistance(amount, true);
+    }
+
+    public CustomItem setLuck(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_LUCK, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setLuck(double amount, boolean percentage) {
+        return setLuck(amount, percentage, null);
+    }
+
+    public CustomItem setLuck(double amount, EquipmentSlot equipmentSlot) {
+        return setLuck(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setLuck(double amount) {
+        return setLuck(amount, false);
+    }
+
+    public CustomItem setLuckPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setLuck(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setLuckPercentage(double amount) {
+        return setLuck(amount, true);
+    }
+
+    public CustomItem setHealth(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_MAX_HEALTH, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setHealth(double amount, boolean percentage) {
+        return setHealth(amount, percentage, null);
+    }
+
+    public CustomItem setHealth(double amount, EquipmentSlot equipmentSlot) {
+        return setHealth(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setHealth(double amount) {
+        return setHealth(amount, false);
+    }
+
+    public CustomItem setHealthPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setHealth(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setHealthPercentage(double amount) {
+        return setHealth(amount, true);
+    }
+
+    public CustomItem setMovementSpeed(double amount, boolean percentage, EquipmentSlot equipmentSlot) {
+        return setAttribute(Attribute.GENERIC_MOVEMENT_SPEED, amount, percentage, equipmentSlot);
+    }
+
+    public CustomItem setMovementSpeed(double amount, boolean percentage) {
+        return setMovementSpeed(amount, percentage, null);
+    }
+
+    public CustomItem setMovementSpeed(double amount, EquipmentSlot equipmentSlot) {
+        return setMovementSpeed(amount, false, equipmentSlot);
+    }
+
+    public CustomItem setMovementSpeed(double amount) {
+        return setMovementSpeed(amount, false);
+    }
+
+    public CustomItem setMovementSpeedPercentage(double amount, EquipmentSlot equipmentSlot) {
+        return setMovementSpeed(amount, true, equipmentSlot);
+    }
+
+    public CustomItem setMovementSpeedPercentage(double amount) {
+        return setMovementSpeed(amount, true);
+    }
+
+    public Map<Attribute, Map<AttributeModifier.Operation, Pair<Double, EquipmentSlot>>> getAttributes() {
         return attributes;
     }
 
