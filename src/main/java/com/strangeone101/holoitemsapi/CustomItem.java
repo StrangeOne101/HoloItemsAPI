@@ -308,9 +308,9 @@ public class CustomItem {
      * @param maxDurability The max durability
      * @return The string
      */
-    public static String getDurabilityString(double durability, double maxDurability) {
+    public static String getDurabilityString(int durability, int maxDurability) {
         if (maxDurability == 0) return ""; //No durability
-        double percentage = durability / maxDurability;
+        double percentage = ((double) durability) / ((double) maxDurability);
         double bigPercentage = percentage * 100;
         ChatColor color = ChatColor.DARK_RED;
         if (bigPercentage >= 90) color = ChatColor.DARK_GREEN;
