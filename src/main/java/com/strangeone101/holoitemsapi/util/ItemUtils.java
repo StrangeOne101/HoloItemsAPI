@@ -25,8 +25,6 @@ import java.util.UUID;
 
 public class ItemUtils {
 
-    public static final Map<CustomItem, Map<Attribute, UUID>> ATTRIBUTE_MAP = new HashMap<>();
-
     /**
      * Sets the skin of a Skull to the skin provided. Can be a UUID, name, texture ID or URL
      * @param meta The skull meta
@@ -81,37 +79,13 @@ public class ItemUtils {
      * @param attribute The attribute
      * @param operation The operation
      * @param stack The itemstack
+     * @param ci The custom item
      */
     public static void setAttribute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack, CustomItem ci) {
-        if (!(ATTRIBUTE_MAP.containsKey(ci))) {
-            ATTRIBUTE_MAP.put(ci, new HashMap<>());
-        }
-        Map<Attribute, UUID> ciMap = ATTRIBUTE_MAP.get(ci);
-        if (ATTRIBUTE_MAP.get(ci).isEmpty()) {
-            Random random = new Random(ci.getInternalName().hashCode());
-
-            //Due to the set random seed above, the UUIDs bellow should always be the same.
-            ciMap.put(Attribute.GENERIC_ATTACK_DAMAGE, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_ATTACK_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_ATTACK_KNOCKBACK, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_MAX_HEALTH, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_ARMOR, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_ARMOR_TOUGHNESS, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_MOVEMENT_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_FLYING_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_FOLLOW_RANGE, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.GENERIC_LUCK, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.HORSE_JUMP_STRENGTH, new UUID(random.nextLong(), random.nextLong()));
-            ciMap.put(Attribute.ZOMBIE_SPAWN_REINFORCEMENTS, new UUID(random.nextLong(), random.nextLong()));
-
-            if (!ciMap.containsKey(attribute)) { //Bodge for attributes added in future
-                ciMap.put(attribute, new UUID(random.nextLong(), random.nextLong()));
-            }
-        }
+        Random random = new Random(cantorFunction(ci.getInternalID(), cantorFunction(attribute.ordinal(), operation.ordinal())));
 
         try {
-            AttributeModifier mod = new AttributeModifier(ciMap.get(attribute), attribute.name(), number, operation, getSlotForItem(stack.getType()));
+            AttributeModifier mod = new AttributeModifier(new UUID(random.nextLong(), random.nextLong()), attribute.name(), number, operation, getSlotForItem(stack.getType()));
             ItemMeta meta = stack.getItemMeta();
             meta.addAttributeModifier(attribute, mod);
             stack.setItemMeta(meta);
@@ -237,5 +211,16 @@ public class ItemUtils {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Create one unique number from two different number
+     * Note that cantorFunction(1,0) is different from cantorFunction(0,1)
+     * @param x The first number
+     * @param y The second number
+     * @return A unique number
+     */
+    public static int cantorFunction(int x, int y) {
+        return (((x * x) + (3 * x) + (2 * x * y) + y + (y * y)) / 2);
     }
 }
