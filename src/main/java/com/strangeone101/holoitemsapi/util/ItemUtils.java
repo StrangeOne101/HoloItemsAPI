@@ -2,6 +2,7 @@ package com.strangeone101.holoitemsapi.util;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.strangeone101.holoitemsapi.CustomItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -23,8 +24,6 @@ import java.util.Random;
 import java.util.UUID;
 
 public class ItemUtils {
-
-    public static final Map<Attribute, UUID> ATTRIBUTE_MAP = new HashMap<>();
 
     /**
      * Sets the skin of a Skull to the skin provided. Can be a UUID, name, texture ID or URL
@@ -80,35 +79,19 @@ public class ItemUtils {
      * @param attribute The attribute
      * @param operation The operation
      * @param stack The itemstack
+     * @param ci The custom item
      */
-    public static void setAttriute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack) {
-        if (ATTRIBUTE_MAP.isEmpty()) {
-            Random random = new Random("unique_seed".hashCode());
+    public static void setAttribute(double number, Attribute attribute, AttributeModifier.Operation operation, ItemStack stack, CustomItem ci) {
+        Random random = new Random(cantorFunction(ci.getInternalID(), cantorFunction(attribute.ordinal(), operation.ordinal())));
 
-            //Due to the set random seed above, the UUIDs bellow should always be the same.
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_DAMAGE, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_ATTACK_KNOCKBACK, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_MAX_HEALTH, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_ARMOR, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_ARMOR_TOUGHNESS, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_MOVEMENT_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_FLYING_SPEED, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_FOLLOW_RANGE, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.GENERIC_LUCK, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.HORSE_JUMP_STRENGTH, new UUID(random.nextLong(), random.nextLong()));
-            ATTRIBUTE_MAP.put(Attribute.ZOMBIE_SPAWN_REINFORCEMENTS, new UUID(random.nextLong(), random.nextLong()));
+        try {
+            AttributeModifier mod = new AttributeModifier(new UUID(random.nextLong(), random.nextLong()), attribute.name(), number, operation, getSlotForItem(stack.getType()));
+            ItemMeta meta = stack.getItemMeta();
+            meta.addAttributeModifier(attribute, mod);
+            stack.setItemMeta(meta);
+        } catch (IllegalArgumentException e) {
 
-            if (!ATTRIBUTE_MAP.containsKey(attribute)) { //Bodge for attributes added in future
-                ATTRIBUTE_MAP.put(attribute, new UUID(random.nextLong(), random.nextLong()));
-            }
         }
-
-        AttributeModifier mod = new AttributeModifier(ATTRIBUTE_MAP.get(attribute), attribute.name(), number, operation, getSlotForItem(stack.getType()));
-        ItemMeta meta = stack.getItemMeta();
-        meta.addAttributeModifier(attribute, mod);
-        stack.setItemMeta(meta);
     }
 
     /**
@@ -228,5 +211,16 @@ public class ItemUtils {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Create one unique number from two different number
+     * Note that cantorFunction(1,0) is different from cantorFunction(0,1)
+     * @param x The first number
+     * @param y The second number
+     * @return A unique number
+     */
+    public static int cantorFunction(int x, int y) {
+        return (((x * x) + (3 * x) + (2 * x * y) + y + (y * y)) / 2);
     }
 }
