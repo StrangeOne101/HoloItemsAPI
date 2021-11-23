@@ -25,6 +25,8 @@ public class RecipeManager {
     private static Map<NamespacedKey, RecipeBuilder.AdvancedRecipe> advanced = new HashMap<>();
     private static Set<Recipe> nonConsumableRecipes = new HashSet<>();
 
+    private static Map<NamespacedKey, NamespacedKey> dummyToAdvancedMap = new HashMap<>(); //Map of all dummy recipes to the advanced recipe
+
     /**
      * Get a recipe
      * @param key The namespace key
@@ -92,9 +94,11 @@ public class RecipeManager {
         }
     }
 
-    public static void registerAdvancedRecipe(Recipe recipe, RecipeBuilder.AdvancedRecipe advancedShape) {
+    public static void registerAdvancedRecipe(Recipe recipe, Recipe dummyRecipe, RecipeBuilder.AdvancedRecipe advancedShape) {
         registerRecipe(recipe);
+        registerRecipe(dummyRecipe);
         advanced.put(((Keyed) recipe).getKey(), advancedShape);
+        dummyToAdvancedMap.put(((Keyed) dummyRecipe).getKey(), ((Keyed) recipe).getKey());
     }
 
     public static boolean isAdvancedRecipe(Recipe recipe) {
@@ -103,10 +107,18 @@ public class RecipeManager {
         return false;
     }
 
+    public static boolean isHiddenRecipe(NamespacedKey key) {
+        return dummyToAdvancedMap.containsKey(key);
+    }
+
     public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(Recipe recipe) {
         if (recipe instanceof Keyed)
             return advanced.get(((Keyed) recipe).getKey());
         return null;
+    }
+
+    public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(NamespacedKey recipe) {
+        return advanced.get(recipe);
     }
 
     /**

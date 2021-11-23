@@ -292,7 +292,7 @@ public class CustomItem {
 
             if (damage > getMaxDurability()) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
-                player.getWorld().spawnParticle(Particle.ITEM_CRACK, player.getLocation(), 16, stack.getData());
+                player.getWorld().spawnParticle(Particle.ITEM_CRACK, player.getLocation(), 16, stack);
                 stack.setType(Material.AIR);
                 return;
             }

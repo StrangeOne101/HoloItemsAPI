@@ -10,8 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -80,7 +80,7 @@ public class RecipeBuilder {
         }
     }
 
-    public static class Shapeless {
+    public class Shapeless {
 
         private ShapelessRecipe recipe;
         private Map<ItemStack, Integer> ingredients = new HashMap<>();
@@ -162,7 +162,7 @@ public class RecipeBuilder {
         //TODO
     }
 
-    public static class AdvancedShape extends AdvancedRecipe {
+    public class AdvancedShape extends AdvancedRecipe {
 
         private ShapedRecipe recipe;
         private Map<Character, ItemStack> ingredients = new HashMap<>();
@@ -249,25 +249,35 @@ public class RecipeBuilder {
             } else {
                 ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(HoloItemsAPI.getPlugin(), key), output);
 
+                ItemStack dummyItem = new ItemStack(Material.KNOWLEDGE_BOOK);
+                ItemMeta dummyMeta = dummyItem.getItemMeta();
+                dummyMeta.setDisplayName(recipe.getKey().getKey());
+                dummyItem.setItemMeta(dummyMeta);
+                ShapedRecipe dummyRecipe = new ShapedRecipe(new NamespacedKey(HoloItemsAPI.getPlugin(), "__" + key), dummyItem);
+
                 recipe.shape(shape);
+                dummyRecipe.shape(shape);
 
                 for (Character c : ingredients.keySet()) {
                     recipe.setIngredient(c, new RecipeChoice.ExactChoice(ingredients.get(c)));
+                    dummyRecipe.setIngredient(c, new RecipeChoice.ExactChoice(ingredients.get(c)));
                 }
 
                 for (Character c : riingredients.keySet()) {
                     recipe.setIngredient(c, riingredients.get(c));
+                    dummyRecipe.setIngredient(c, riingredients.get(c));
                 }
 
                 for (Character c : groups.keySet()) {
                     RecipeGroup g = groups.get(c);
-                    recipe.setIngredient(c, filters.get(g));
+                    recipe.setIngredient(c, filters.get(g)); //The proper item it accepts
+                    dummyRecipe.setIngredient(c, filters.get(g).getItemStack().getType()); //The dummy item without any NBT
 
                     outter:
                     for (int row = 0; row < 3 && row < shape.length; row++) {
                         for (int col = 0; col < 3 && col < shape[row].length(); col++) {
                             if (shape[row].charAt(col) == c) {
-                                indexedGroups.put((byte) (row * 3 + col), g);
+                                indexedGroups.put((byte) (row * shape.length + col), g);
                                 break outter;
                             }
                         }
@@ -279,13 +289,13 @@ public class RecipeBuilder {
                 for (int row = 0; row < 3 && row < shape.length; row++) {
                     for (int col = 0; col < 3 && col < shape[row].length(); col++) {
                         if (shape[row].charAt(col) != ' ') {
-                            firstNotEmpty = row * 3 + col;
+                            firstNotEmpty = row * shape.length + col;
                             break outter;
                         }
                     }
                 }
 
-                RecipeManager.registerAdvancedRecipe(recipe, this);
+                RecipeManager.registerAdvancedRecipe(recipe, dummyRecipe, this);
 
                 return new ShapedRecipe[] {recipe};
             }
@@ -313,7 +323,7 @@ public class RecipeBuilder {
             outter:
             for (int row = 0; row < size; row++) {
                 for (int col = 0; col < size; col++) {
-                    int currIndex = row * 3 + col;
+                    int currIndex = row * size + col;
                     if (craftingInventory.getMatrix()[currIndex] != null) {
                         offset = currIndex - firstNotEmpty;
                         break outter;
@@ -335,7 +345,7 @@ public class RecipeBuilder {
         //TODO
     }
 
-    public abstract static class AdvancedRecipe {
+    public abstract class AdvancedRecipe {
         protected boolean previewInRecipeBook;
         protected String key;
         protected ItemStack output;
@@ -375,5 +385,4 @@ public class RecipeBuilder {
 
         public abstract Map<RecipeGroup, ItemStack> getInputItems(CraftingInventory craftingInventory);
     }
-
 }

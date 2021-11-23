@@ -525,7 +525,7 @@ public class EventCache {
 
                 //Make sure bukkit will trigger our event methods
                 if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
-                    boolean superclass_available = false;
+                    /*boolean superclass_available = false;
                     for (Class<? extends Event> registered_class: REGISTERED_EVENT_HANDLERS) {
                         if (clazz.isAssignableFrom(registered_class)) {
                             try {
@@ -543,8 +543,8 @@ public class EventCache {
                     if (!superclass_available) {
                         registerItemEventListener(clazz);
                         //System.out.println("Registered " + clazz);
-                    }
-                    REGISTERED_EVENT_HANDLERS.add(clazz);
+                    }*/
+                    registerItemEventListener(clazz);
                 }
             }
         }
@@ -561,5 +561,6 @@ public class EventCache {
         EventExecutor executor = (listener, event) -> triggerItemEvents(event);
 
         Bukkit.getPluginManager().registerEvent(clazz, DUMMY_LISTENER, EventPriority.NORMAL, executor, HoloItemsAPI.getPlugin(), false);
+        REGISTERED_EVENT_HANDLERS.add(clazz);
     }
 }
