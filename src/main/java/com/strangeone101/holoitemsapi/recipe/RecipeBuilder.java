@@ -345,7 +345,7 @@ public class RecipeBuilder {
         //TODO
     }
 
-    public abstract class AdvancedRecipe {
+    public static abstract class AdvancedRecipe {
         protected boolean previewInRecipeBook;
         protected String key;
         protected ItemStack output;

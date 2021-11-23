@@ -375,6 +375,19 @@ public class EventCache {
         if (!METHODS_BY_EVENT.containsKey(event.getClass())) return;
 
         for (Method m : METHODS_BY_EVENT.get(event.getClass()).keySet()) {
+
+            /*
+            This stops methods that listen for events being fired for the wrong event. Or fired twice.
+            This happens because some events do not contain HandlerLists. Instead, all listeners are
+            registered to the PARENT event class. All events under that parent are then fired together,
+            so you MUST check if you should fire it here or bad things happen. Thanks for this amazing
+            system, bukkit.
+
+            == References ==:
+            > SimplePluginManager#getRegistrationClass - shows that it can register it to a parent
+            > JavaPluginLoader#300 - In the EventExecutor object creation, it checks to see if the event is applicable before firing */
+            if (!m.getParameterTypes()[1].isAssignableFrom(event.getClass())) continue;
+
             Triple<Set<CustomItem>, Target, ActiveConditions> t = METHODS_BY_EVENT.get(event.getClass()).get(m);
 
             for (CustomItem item : t.getLeft()) {
