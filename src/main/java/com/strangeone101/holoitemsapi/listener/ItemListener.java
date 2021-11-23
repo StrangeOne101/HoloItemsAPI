@@ -40,6 +40,7 @@ import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRecipeDiscoverEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.GrindstoneInventory;
@@ -627,6 +628,13 @@ public class ItemListener implements Listener {
             if (item.getMaxDurability() > 0) {
                 item.damageItem(event.getItem(), event.getDamage(), event.getPlayer());
             }
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onRecipeSend(PlayerRecipeDiscoverEvent event) {
+        if (RecipeManager.isHiddenRecipe(event.getRecipe())) {
             event.setCancelled(true);
         }
     }
