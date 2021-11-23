@@ -80,7 +80,7 @@ public class RecipeBuilder {
         }
     }
 
-    public class Shapeless {
+    public static class Shapeless {
 
         private ShapelessRecipe recipe;
         private Map<ItemStack, Integer> ingredients = new HashMap<>();
@@ -162,7 +162,7 @@ public class RecipeBuilder {
         //TODO
     }
 
-    public class AdvancedShape extends AdvancedRecipe {
+    public static class AdvancedShape extends AdvancedRecipe {
 
         private ShapedRecipe recipe;
         private Map<Character, ItemStack> ingredients = new HashMap<>();
