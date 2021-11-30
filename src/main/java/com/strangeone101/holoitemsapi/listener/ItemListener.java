@@ -31,6 +31,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.*;
@@ -636,6 +637,20 @@ public class ItemListener implements Listener {
     public void onRecipeSend(PlayerRecipeDiscoverEvent event) {
         if (RecipeManager.isHiddenRecipe(event.getRecipe())) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player) {
+            Player player = ((Player) event.getDamager());
+            CustomItem ci = CustomItemRegistry.getCustomItem(player.getInventory().getItemInMainHand());
+
+            if (ci != null) {
+                if (ci instanceof Swingable) {
+                    event.setDamage(((Swingable) ci).hit(event.getEntity(), player, ci, player.getInventory().getItemInMainHand(), event.getDamage()));
+                }
+            }
         }
     }
 }

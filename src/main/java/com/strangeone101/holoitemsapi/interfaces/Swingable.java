@@ -24,7 +24,8 @@ public interface Swingable {
      * @param player The player
      * @param item The custom item
      * @param stack The itemstack
-     * @return If the entity should be damaged
+     * @param damage The original damage
+     * @return The damage
      */
-    boolean hit(Entity entityHit, Player player, CustomItem item, ItemStack stack);
+    double hit(Entity entityHit, Player player, CustomItem item, ItemStack stack, double damage);
 }
