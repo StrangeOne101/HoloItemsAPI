@@ -28,4 +28,17 @@ public interface Swingable {
      * @return The damage
      */
     double hit(Entity entityHit, Player player, CustomItem item, ItemStack stack, double damage);
+
+    /**
+     * Fired when the player attacked an entity using sweep attack
+     * @param entityHit The entity hit
+     * @param player The player
+     * @param item The custom item
+     * @param stack The itemstack
+     * @param damage The original damage
+     * @return The damage
+     */
+    default double sweep(Entity entityHit, Player player, CustomItem item, ItemStack stack, double damage) {
+        return damage;
+    }
 }

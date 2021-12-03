@@ -1,5 +1,6 @@
 package com.strangeone101.holoitemsapi.recipe;
 
+import com.strangeone101.holoitemsapi.CustomItemRegistry;
 import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -219,6 +220,29 @@ public class RecipeBuilder {
         public AdvancedShape setShape(String... shape) {
             this.shape = shape;
             return this;
+        }
+
+        public String[] getShape() {
+            return this.shape;
+        }
+
+        public int getFirstNotEmpty() {
+            return firstNotEmpty;
+        }
+
+        public boolean checkStack(char ingredientChar, ItemStack stack) {
+            if (ingredients.containsKey(ingredientChar)) {
+                if (CustomItemRegistry.isCustomItem(ingredients.get(ingredientChar)) && CustomItemRegistry.isCustomItem(stack)) {
+                    return CustomItemRegistry.getCustomItem(ingredients.get(ingredientChar)).getInternalID() == CustomItemRegistry.getCustomItem(stack).getInternalID();
+                } else {
+                    return ingredients.get(ingredientChar).isSimilar(stack);
+                }
+            } else if (riingredients.containsKey(ingredientChar)) {
+                return riingredients.get(ingredientChar).test(stack);
+            } else if (groups.containsKey(ingredientChar)) {
+                return this.filters.get(groups.get(ingredientChar)).test(stack);
+            }
+            return false;
         }
 
         public AdvancedShape previewModifier(RecipeModifier modifier) {

@@ -32,6 +32,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.*;
@@ -42,15 +43,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRecipeDiscoverEvent;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.GrindstoneInventory;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.MerchantInventory;
-import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -316,6 +309,56 @@ public class ItemListener implements Listener {
                     event.setCancelled(true);
                 }
             }
+        } else if (RecipeManager.isHiddenRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe recipe = RecipeManager.getAdvancedFromDummy(event.getRecipe());
+            boolean notMatch = false;
+
+            if (recipe instanceof RecipeBuilder.AdvancedShape) {
+                RecipeBuilder.AdvancedShape advancedShape = (RecipeBuilder.AdvancedShape) recipe;
+                CraftingInventory craftingInventory = event.getInventory();
+                int size = craftingInventory.getSize() == 9 ? 3 : 2;
+                int offset = 0;
+                outter:
+                for (int row = 0; row < size; row++) {
+                    for (int col = 0; col < size; col++) {
+                        int currIndex = row * size + col;
+                        if (craftingInventory.getMatrix()[currIndex] != null) {
+                            offset = currIndex - advancedShape.getFirstNotEmpty();
+                            break outter;
+                        }
+                    }
+                }
+
+                String[] shape = advancedShape.getShape();
+                ItemStack[] matrix = craftingInventory.getMatrix();
+                outter:
+                for (int row = 0; row < shape.length; row++) {
+                    for (int col = 0; col < shape[row].length(); col++) {
+                        int matrixNum = offset + (row * 3) + col;
+                        if (shape[row].charAt(col) == ' ') {
+                            if (matrix[matrixNum] != null) {
+                                notMatch = true;
+                                break outter;
+                            }
+                        } else {
+                            ItemStack craftingStack = matrix[matrixNum];
+                            if (!advancedShape.checkStack(shape[row].charAt(col), craftingStack)) {
+                                notMatch = true;
+                                break outter;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!notMatch) {
+                ItemStack updated = recipe.getCraftModifier().create(event.getInventory().getResult(),
+                        recipe.getInputItems(event.getInventory()), recipe.buildContext(event.getInventory(), event.getClick()));
+
+                event.getInventory().setResult(updated);
+            } else {
+                event.setCancelled(true);
+            }
         } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
             RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
 
@@ -375,6 +418,56 @@ public class ItemListener implements Listener {
                 if (CustomItemRegistry.isCustomItem(ingredient)) {
                     event.getInventory().setResult(null); //Stops recipes using our custom items
                 }
+            }
+        } else if (RecipeManager.isHiddenRecipe(event.getRecipe())) {
+            RecipeBuilder.AdvancedRecipe recipe = RecipeManager.getAdvancedFromDummy(event.getRecipe());
+            boolean notMatch = false;
+
+            if (recipe instanceof RecipeBuilder.AdvancedShape) {
+                RecipeBuilder.AdvancedShape advancedShape = (RecipeBuilder.AdvancedShape) recipe;
+                CraftingInventory craftingInventory = event.getInventory();
+                int size = craftingInventory.getSize() == 9 ? 3 : 2;
+                int offset = 0;
+                outter:
+                for (int row = 0; row < size; row++) {
+                    for (int col = 0; col < size; col++) {
+                        int currIndex = row * size + col;
+                        if (craftingInventory.getMatrix()[currIndex] != null) {
+                            offset = currIndex - advancedShape.getFirstNotEmpty();
+                            break outter;
+                        }
+                    }
+                }
+
+                String[] shape = advancedShape.getShape();
+                ItemStack[] matrix = craftingInventory.getMatrix();
+                outter:
+                for (int row = 0; row < shape.length; row++) {
+                    for (int col = 0; col < shape[row].length(); col++) {
+                        int matrixNum = offset + (row * 3) + col;
+                        if (shape[row].charAt(col) == ' ') {
+                            if (matrix[matrixNum] != null) {
+                                notMatch = true;
+                                break outter;
+                            }
+                        } else {
+                            ItemStack craftingStack = matrix[matrixNum];
+                            if (!advancedShape.checkStack(shape[row].charAt(col), craftingStack)) {
+                                notMatch = true;
+                                break outter;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!notMatch) {
+                ItemStack updated = recipe.getPreviewModifier().create(event.getInventory().getResult(),
+                        recipe.getInputItems(event.getInventory()), recipe.buildContext(event.getInventory(), null));
+
+                event.getInventory().setResult(updated);
+            } else {
+                event.getInventory().setResult(null);
             }
         } else if (RecipeManager.isAdvancedRecipe(event.getRecipe())) {
             RecipeBuilder.AdvancedRecipe advRecipe = RecipeManager.getAdvancedRecipe(event.getRecipe());
@@ -643,12 +736,27 @@ public class ItemListener implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
-            Player player = ((Player) event.getDamager());
-            CustomItem ci = CustomItemRegistry.getCustomItem(player.getInventory().getItemInMainHand());
+            if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
+                Player player = ((Player) event.getDamager());
+                CustomItem ci = CustomItemRegistry.getCustomItem(player.getInventory().getItemInMainHand());
 
-            if (ci != null) {
-                if (ci instanceof Swingable) {
-                    event.setDamage(((Swingable) ci).hit(event.getEntity(), player, ci, player.getInventory().getItemInMainHand(), event.getDamage()));
+                if (ci != null) {
+                    if (ci instanceof Swingable) {
+                        double damage = ((Swingable) ci).hit(event.getEntity(), player, ci, player.getInventory().getItemInMainHand(), event.getDamage());
+                        if (damage > 0) event.setDamage(damage);
+                        else event.setCancelled(true);
+                    }
+                }
+            } else if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+                Player player = ((Player) event.getDamager());
+                CustomItem ci = CustomItemRegistry.getCustomItem(player.getInventory().getItemInMainHand());
+
+                if (ci != null) {
+                    if (ci instanceof Swingable) {
+                        double damage = ((Swingable) ci).sweep(event.getEntity(), player, ci, player.getInventory().getItemInMainHand(), event.getDamage());
+                        if (damage > 0) event.setDamage(damage);
+                        else event.setCancelled(true);
+                    }
                 }
             }
         }
