@@ -111,6 +111,12 @@ public class RecipeManager {
         return dummyToAdvancedMap.containsKey(key);
     }
 
+    public static boolean isHiddenRecipe(Recipe recipe) {
+        if (recipe instanceof Keyed)
+            return dummyToAdvancedMap.containsKey(((Keyed) recipe).getKey());
+        return false;
+    }
+
     public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(Recipe recipe) {
         if (recipe instanceof Keyed)
             return advanced.get(((Keyed) recipe).getKey());
@@ -119,6 +125,10 @@ public class RecipeManager {
 
     public static RecipeBuilder.AdvancedRecipe getAdvancedRecipe(NamespacedKey recipe) {
         return advanced.get(recipe);
+    }
+
+    public static RecipeBuilder.AdvancedRecipe getAdvancedFromDummy(Recipe recipe) {
+        return advanced.get(dummyToAdvancedMap.get(((Keyed) recipe).getKey()));
     }
 
     /**
