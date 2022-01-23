@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,15 +21,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class NMS_117_1 implements INMSHandler {
+public class NMS_118_1 implements INMSHandler {
 
-    public NMS_117_1() {
+    public NMS_118_1() {
         ReflectionUtils.setup();
     }
 
     @Override
     public String getVersion() {
-        return "1.17";
+        return "1.18";
     }
 
     public byte[] writeNBTBytes(ItemStack stack) {

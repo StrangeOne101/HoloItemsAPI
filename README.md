@@ -15,7 +15,7 @@ Include this in your pom.xml
     <dependency>
         <groupId>com.strangeone101</groupId>
         <artifactId>HoloItemsAPI</artifactId>
-        <version>0.6.3</version>
+        <version>0.7.4</version>
         <type>jar</type>
     </dependency>
 </dependencies>

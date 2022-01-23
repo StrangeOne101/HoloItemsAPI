@@ -6,7 +6,7 @@ import com.strangeone101.holoitemsapi.listener.ItemListener;
 import com.strangeone101.holoitemsapi.listener.LootListener;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.INMSHandler;
-import com.strangeone101.holoitemsapi.util.NMS_117_1;
+import com.strangeone101.holoitemsapi.util.NMS_118_1;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -60,9 +60,9 @@ public class HoloItemsAPI {
         String version = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 
         switch (version) {
-            case "1_17_R1":
+            case "1_18_R1":
             default:
-                return new NMS_117_1();
+                return new NMS_118_1();
         }
     }
 
