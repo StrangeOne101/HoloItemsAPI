@@ -64,6 +64,8 @@ RecipeManager.registerRecipe(netheriteRecipe); //Register to the API AND bukkit
 ```
 ## ItemEvents
 Like how bukkit has events, instead of registering listeners to listen for when something happens and manually checking if your custom item is active, you can use this.
+
+If your method has an EntityContext AND bukkit event parameter, and has the ItemEvent annotation, it will automatically be registered when the item is registered (the `.register()` method used when you initialize the item)
 ### Example 1: Holy armor
 ```java
 @ItemEvent(active = ActiveConditions.EQUIPED, target = Target.SELF)
