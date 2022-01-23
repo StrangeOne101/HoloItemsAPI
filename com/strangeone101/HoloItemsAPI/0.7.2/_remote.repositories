@@ -1,0 +1,6 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sat Jul 31 00:43:22 NZST 2021
+HoloItemsAPI-0.7.2.jar>=
+HoloItemsAPI-0.7.2-remapped-obf.jar>=
+HoloItemsAPI-0.7.2-javadoc.jar>=
+HoloItemsAPI-0.7.2.pom>=
