@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -410,6 +411,12 @@ public class EventCache {
                                     } catch (IllegalAccessException | InvocationTargetException e) {
                                         e.printStackTrace();
                                     }
+
+                                    //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
+                                    if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
+                                        context.getPlayer().getInventory().setItem(slot, null);
+                                        uncacheSlot(context.getPlayer(), slot);
+                                    }
                                 }
                             }
                         }
@@ -425,12 +432,19 @@ public class EventCache {
                                     } catch (IllegalAccessException | InvocationTargetException e) {
                                         e.printStackTrace();
                                     }
+
+                                    //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
+                                    if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
+                                        context.getPlayer().getInventory().setItem(slot, null);
+                                        uncacheSlot(context.getPlayer(), slot);
+                                    }
                                 }
                             }
                         }
                     }
                 } else if (t.getMiddle() == Target.WORLD) { //Execute all events in the same world
                     World world = null;
+                    //Get all the common abstract events that have access to a world. And get the world from them
                     if (event instanceof PlayerEvent) world = ((PlayerEvent)event).getPlayer().getWorld();
                     else if (event instanceof BlockEvent) world = ((BlockEvent)event).getBlock().getWorld();
                     else if (event instanceof EntityEvent) world = ((EntityEvent)event).getEntity().getWorld();
@@ -446,6 +460,12 @@ public class EventCache {
                                             m.invoke(item, context, event);
                                         } catch (IllegalAccessException | InvocationTargetException e) {
                                             e.printStackTrace();
+                                        }
+
+                                        //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
+                                        if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
+                                            context.getPlayer().getInventory().setItem(slot, null);
+                                            uncacheSlot(context.getPlayer(), slot);
                                         }
                                     }
                                 }
@@ -463,27 +483,17 @@ public class EventCache {
                                 } catch (IllegalAccessException | InvocationTargetException e) {
                                     e.printStackTrace();
                                 }
+
+                                //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
+                                if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
+                                    context.getPlayer().getInventory().setItem(slot, null);
+                                    uncacheSlot(context.getPlayer(), slot);
+                                }
                             }
                         }
                     }
                 }
             }
-        /*if (CACHED_POSITIONS_BY_EVENT.containsKey(event.getClass())) {
-            for (Player player : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).keySet()) {
-                for (Triple<CustomItem, ItemStack, Position> triple : CACHED_POSITIONS_BY_EVENT.get(event.getClass()).get(player)) {
-                    EventContext context = new EventContext(player, triple.getLeft(), triple.getMiddle(), triple.getRight());
-
-                    for (Method method : ITEMEVENT_EXECUTORS.get(context.getItem()).get(event.getClass())) {
-                        try {
-                            method.invoke(context.getItem(), context, event);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-            }
-        }*/
         }
     }
 
@@ -538,25 +548,6 @@ public class EventCache {
 
                 //Make sure bukkit will trigger our event methods
                 if (!REGISTERED_EVENT_HANDLERS.contains(clazz)) {
-                    /*boolean superclass_available = false;
-                    for (Class<? extends Event> registered_class: REGISTERED_EVENT_HANDLERS) {
-                        if (clazz.isAssignableFrom(registered_class)) {
-                            try {
-                                registered_class.newInstance().getHandlers().unregister(DUMMY_LISTENER);
-                            } catch (IllegalAccessException | InstantiationException e) {
-                                e.printStackTrace();
-                            }
-                            //System.out.println("Unregistered " + registered_class);
-                        } else if (registered_class.isAssignableFrom(clazz)) {
-                            //System.out.println("Skipped " + clazz);
-                            superclass_available = true;
-                            break;
-                        }
-                    }
-                    if (!superclass_available) {
-                        registerItemEventListener(clazz);
-                        //System.out.println("Registered " + clazz);
-                    }*/
                     registerItemEventListener(clazz);
                 }
             }
