@@ -19,6 +19,7 @@ import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -176,13 +177,19 @@ public class ItemListener implements Listener {
         //HoloItemsPlugin.INSTANCE.getLogger().info("Test----");
         if (customItem != null) {
 
+            Player player = event.getPlayer();
+            Block block = event.getClickedBlock();
+            ItemStack item = event.getItem();
+
             //Run BlockInteractables before GUI checks
-            if (customItem instanceof BlockInteractable && event.getClickedBlock() != null) {
-                if (((BlockInteractable)customItem).onInteract(event.getPlayer(), event.getClickedBlock(), customItem,
-                        event.getItem(), event.getAction() == Action.LEFT_CLICK_BLOCK)) {
+            if (customItem instanceof BlockInteractable && block != null) {
+                if (((BlockInteractable)customItem).onInteract(player, block, customItem,
+                        item, event.getAction() == Action.LEFT_CLICK_BLOCK)) {
                     event.setUseInteractedBlock(Event.Result.DENY);
                     //event.setCancelled(true);
                 }
+                if (item == null || item.getType() == Material.AIR)
+                    player.getInventory().setItem(event.getHand(), null);
                 return;
             }
 
@@ -196,18 +203,19 @@ public class ItemListener implements Listener {
 
             if ((event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR)) {
                 if (customItem instanceof Interactable) {
-                    if (((Interactable)customItem).onInteract(event.getPlayer(), customItem, event.getItem())) {
+                    if (((Interactable)customItem).onInteract(player, customItem, item)) {
                         event.setUseItemInHand(Event.Result.DENY);
                         //event.setCancelled(true);
-
                     }
+                    if (item == null || item.getType() == Material.AIR)
+                        player.getInventory().setItem(event.getHand(), null);
                     return;
                 }
 
                 if (customItem instanceof Edible) {
                     event.setUseItemInHand(Event.Result.DENY);
-                    new FoodAbility(event.getPlayer(), event.getItem(), event.getPlayer().getInventory(),
-                            event.getHand() == EquipmentSlot.OFF_HAND ? 40 : event.getPlayer().getInventory().getHeldItemSlot());
+                    new FoodAbility(player, item, player.getInventory(),
+                            event.getHand() == EquipmentSlot.OFF_HAND ? 40 : player.getInventory().getHeldItemSlot());
                     return;
                 }
 
@@ -220,8 +228,10 @@ public class ItemListener implements Listener {
 
             } else if (customItem instanceof Swingable && (event.getAction() == Action.LEFT_CLICK_AIR
                     || event.getAction() == Action.LEFT_CLICK_BLOCK)) {
-                 ((Swingable)customItem).swing(event.getPlayer(), customItem, event.getItem());
-                 return;
+                ((Swingable)customItem).swing(player, customItem, item);
+                if (item == null || item.getType() == Material.AIR)
+                    player.getInventory().setItem(event.getHand(), null);
+                return;
             }
 
             event.setUseItemInHand(Event.Result.DENY);
@@ -233,11 +243,16 @@ public class ItemListener implements Listener {
         CustomItem customItem = CustomItemRegistry.getCustomItem(event.getPlayer().getInventory().getItem(event.getHand()));
 
         if (customItem != null) {
+
+            Player player = event.getPlayer();
+            ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
+
             if (customItem instanceof EntityInteractable) {
-                if (((EntityInteractable)customItem).onInteract(event.getRightClicked(), event.getPlayer(), customItem,
-                        event.getPlayer().getInventory().getItem(event.getHand()))) {
+                if (((EntityInteractable)customItem).onInteract(event.getRightClicked(), event.getPlayer(), customItem, item)) {
                     event.setCancelled(true);
                 }
+                if (item == null || item.getType() == Material.AIR)
+                    player.getInventory().setItem(event.getHand(), null);
                 return;
             }
 
@@ -249,6 +264,8 @@ public class ItemListener implements Listener {
                     (ENTITY_INTERACTABLES.containsKey(type) && ENTITY_INTERACTABLES.get(type).apply(event.getRightClicked(), mat)))) {
                 event.setCancelled(true);
             }
+            if (item == null || item.getType() == Material.AIR)
+                player.getInventory().setItem(event.getHand(), null);
         }
     }
 

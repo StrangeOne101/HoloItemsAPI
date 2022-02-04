@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -290,9 +291,10 @@ public class CustomItem {
             int damage = meta.getPersistentDataContainer().getOrDefault(HoloItemsAPI.getKeys().CUSTOM_ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
             damage += amount;
 
-            if (damage > getMaxDurability()) {
+            if (damage >= getMaxDurability()) {
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
-                player.getWorld().spawnParticle(Particle.ITEM_CRACK, player.getLocation(), 16, stack);
+                Location inFront = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().clone().multiply(0.3));
+                player.getWorld().spawnParticle(Particle.ITEM_CRACK, inFront, 16, 0.25F, 0.25F, 0.25F, 0.05F, stack);
                 stack.setType(Material.AIR);
                 return;
             }
@@ -316,32 +318,23 @@ public class CustomItem {
         if (bigPercentage >= 90) color = ChatColor.DARK_GREEN;
         else if (bigPercentage >= 60) color = ChatColor.GREEN;
         else if (bigPercentage >= 40) color = ChatColor.YELLOW;
-        else if (bigPercentage >= 25) color = ChatColor.GOLD;
-        else if (bigPercentage >= 5) color = ChatColor.RED;
-        int percentInt = (int) (15 * percentage) + 1;
-        //String template = "||||||xxxx||||||";
-        String template = "||||||x||||||";
-        String coloredPart, greyPart;
+        else if (bigPercentage > 25) color = ChatColor.GOLD;
+        else if (bigPercentage > 5) color = ChatColor.RED; //5% or lower will be dark red since that is the default
 
-        boolean greyAfterPercent;
-        if (percentInt <= 6) {
-            coloredPart = color + template.substring(0, percentInt);
-            greyPart = ChatColor.GRAY + template.substring(percentInt);
-            greyAfterPercent = true;
-        } else {
-            coloredPart = color + template.substring(0, percentInt - 3);
-            greyPart = ChatColor.GRAY + template.substring(percentInt - 3);
-            greyAfterPercent = false;
-        }
+        String template = "■■■■■■■■■■■■"; //The bar that shows the item health
+        int percentInt = (int) (template.length() * percentage);
+
+        String coloredPart = color + template.substring(0, percentInt);
+        String greyPart = ChatColor.GRAY + template.substring(percentInt);
 
         String complete = coloredPart + greyPart;
         DecimalFormat dc = new DecimalFormat();
         dc.setMaximumFractionDigits(2);
         dc.setMaximumIntegerDigits(3);
         dc.setMinimumFractionDigits(0);
-        dc.setMinimumIntegerDigits(2);
+        dc.setMinimumIntegerDigits(1);
 
-        complete = complete.replace("x", color + dc.format(bigPercentage) + "%" + (greyAfterPercent ? ChatColor.GRAY : color));
+        complete = color + dc.format(bigPercentage) + "% " + complete; //Format of '100% BARBARBARBAR'
 
         return complete;
 
