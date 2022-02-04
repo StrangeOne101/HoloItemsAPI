@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,10 +41,8 @@ public class EventCache {
     private static final Listener DUMMY_LISTENER = new Listener() {};
 
     //Cache
-    @Deprecated
-    public static Map<Class<? extends Event>, Map<Player, Set<MutableTriple<CustomItem, ItemStack, Position>>>> CACHED_POSITIONS_BY_EVENT = new HashMap<>();
-    @Deprecated
-    public static Map<Player, Map<Integer, MutableTriple<CustomItem, ItemStack, Position>>> CACHED_POSITIONS_BY_SLOT = new HashMap<>();
+    static Map<Class<? extends Event>, Map<Player, Set<MutableTriple<CustomItem, ItemStack, Position>>>> CACHED_POSITIONS_BY_EVENT = new HashMap<>();
+    static Map<Player, Map<Integer, MutableTriple<CustomItem, ItemStack, Position>>> CACHED_POSITIONS_BY_SLOT = new HashMap<>();
 
     public static Map<CustomItem, Map<Player, Map<Integer, Pair<ItemStack, Position>>>> POSITIONS_BY_ITEM = new HashMap<>();
 
@@ -389,75 +388,81 @@ public class EventCache {
             > JavaPluginLoader#300 - In the EventExecutor object creation, it checks to see if the event is applicable before firing */
             if (!m.getParameterTypes()[1].isAssignableFrom(event.getClass())) continue;
 
-            Triple<Set<CustomItem>, Target, ActiveConditions> t = METHODS_BY_EVENT.get(event.getClass()).get(m);
+            Triple<Set<CustomItem>, Target, ActiveConditions> triple = METHODS_BY_EVENT.get(event.getClass()).get(m);
 
-            for (CustomItem item : t.getLeft()) {
-                if (t.getRight() == ActiveConditions.NONE) { //We don't execute it based on whether the item is active
+            for (CustomItem item : triple.getLeft()) {
+                if (triple.getRight() == ActiveConditions.NONE) { //We don't execute it based on whether the item is active
                     EventContext context = new EventContext(null, item, null, null);
                     try {
                         m.invoke(item, context, event);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
-                } else if (t.getMiddle() == Target.SELF) { //Execute only if the player is the one doing it
+                } else if (triple.getMiddle() == Target.SELF) { //Execute only if the player is the one doing it
+                    Player player;
+
                     if (event instanceof PlayerEvent) {
-                        if (POSITIONS_BY_ITEM.get(item).containsKey(((PlayerEvent)event).getPlayer())) {
-                            for (int slot : POSITIONS_BY_ITEM.get(item).get(((PlayerEvent)event).getPlayer()).keySet()) {
-                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(((PlayerEvent)event).getPlayer()).get(slot);
-                                if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
-                                    EventContext context = new EventContext(((PlayerEvent) event).getPlayer(), item, pair.getLeft(), pair.getRight());
-                                    try {
-                                        m.invoke(item, context, event);
-                                    } catch (IllegalAccessException | InvocationTargetException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
-                                    if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
-                                        context.getPlayer().getInventory().setItem(slot, null);
-                                        uncacheSlot(context.getPlayer(), slot);
-                                    }
-                                }
-                            }
-                        }
+                        player = ((PlayerEvent) event).getPlayer();
                     } else if (event instanceof EntityEvent && ((EntityEvent) event).getEntity() instanceof Player) {
-                        Player player = ((Player) ((EntityEvent) event).getEntity());
-                        if (POSITIONS_BY_ITEM.get(item).containsKey(player)) {
-                            for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
-                                Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
-                                if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
-                                    EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
-                                    try {
-                                        m.invoke(item, context, event);
-                                    } catch (IllegalAccessException | InvocationTargetException e) {
-                                        e.printStackTrace();
-                                    }
+                        player = ((Player) ((EntityEvent) event).getEntity());
+                    } else {
+                        continue; //Can't target self when there is no player
+                    }
 
-                                    //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
-                                    if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
-                                        context.getPlayer().getInventory().setItem(slot, null);
-                                        uncacheSlot(context.getPlayer(), slot);
-                                    }
-                                }
+                    //Using var because the variable type is long as hell
+                    var iterator = POSITIONS_BY_ITEM.get(item).get(player).entrySet().iterator();
+
+                    //Loop through all slots cached for this player
+                    while (iterator.hasNext()) {
+                        var entry = iterator.next();
+
+                        int slot = entry.getKey();
+                        Pair<ItemStack, Position> pair = entry.getValue();
+
+                        //If activeConditions match Position
+                        if (triple.getRight().matches(pair.getRight())) {
+                            EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
+                            try {
+                                m.invoke(item, context, event); //Call the event
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+
+                            //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
+                            if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
+                                context.getPlayer().getInventory().setItem(slot, null);
+                                iterator.remove();
+                                uncacheSlot(context.getPlayer(), slot);
                             }
                         }
                     }
-                } else if (t.getMiddle() == Target.WORLD) { //Execute all events in the same world
+                } else if (triple.getMiddle() == Target.WORLD) { //Execute all events in the same world
                     World world = null;
                     //Get all the common abstract events that have access to a world. And get the world from them
                     if (event instanceof PlayerEvent) world = ((PlayerEvent)event).getPlayer().getWorld();
                     else if (event instanceof BlockEvent) world = ((BlockEvent)event).getBlock().getWorld();
                     else if (event instanceof EntityEvent) world = ((EntityEvent)event).getEntity().getWorld();
                     else if (event instanceof InventoryEvent) world = ((InventoryEvent)event).getView().getPlayer().getWorld();
+
                     if (world != null) {
                         for (Player player : POSITIONS_BY_ITEM.get(item).keySet()) {
                             if (player.getWorld() == world) { //If the world is the same
-                                for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
-                                    Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
-                                    if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+
+                                //Using var because the variable type is long as hell
+                                var iterator = POSITIONS_BY_ITEM.get(item).get(player).entrySet().iterator();
+
+                                //Loop through all slots cached for this player
+                                while (iterator.hasNext()) {
+                                    var entry = iterator.next();
+
+                                    int slot = entry.getKey();
+                                    Pair<ItemStack, Position> pair = entry.getValue();
+
+                                    //If activeConditions match Position
+                                    if (triple.getRight().matches(pair.getRight())) {
                                         EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
                                         try {
-                                            m.invoke(item, context, event);
+                                            m.invoke(item, context, event); //Call the event
                                         } catch (IllegalAccessException | InvocationTargetException e) {
                                             e.printStackTrace();
                                         }
@@ -465,6 +470,7 @@ public class EventCache {
                                         //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
                                         if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
                                             context.getPlayer().getInventory().setItem(slot, null);
+                                            iterator.remove();
                                             uncacheSlot(context.getPlayer(), slot);
                                         }
                                     }
@@ -474,12 +480,21 @@ public class EventCache {
                     }
                 } else { //Events for all worlds and all players
                     for (Player player : POSITIONS_BY_ITEM.get(item).keySet()) {
-                        for (int slot : POSITIONS_BY_ITEM.get(item).get(player).keySet()) {
-                            Pair<ItemStack, Position> pair = POSITIONS_BY_ITEM.get(item).get(player).get(slot);
-                            if (t.getRight().matches(pair.getRight())) { //If activeConditions match Position
+                        //Using var because the variable type is long as hell
+                        var iterator = POSITIONS_BY_ITEM.get(item).get(player).entrySet().iterator();
+
+                        //Loop through all slots cached for this player
+                        while (iterator.hasNext()) {
+                            var entry = iterator.next();
+
+                            int slot = entry.getKey();
+                            Pair<ItemStack, Position> pair = entry.getValue();
+
+                            //If activeConditions match Position
+                            if (triple.getRight().matches(pair.getRight())) {
                                 EventContext context = new EventContext(player, item, pair.getLeft(), pair.getRight());
                                 try {
-                                    m.invoke(item, context, event);
+                                    m.invoke(item, context, event); //Call the event
                                 } catch (IllegalAccessException | InvocationTargetException e) {
                                     e.printStackTrace();
                                 }
@@ -487,6 +502,7 @@ public class EventCache {
                                 //If an item was destroyed due to the ItemEvent, make sure to update the player's inventory
                                 if (context.getStack() == null || context.getStack().getType() == Material.AIR) {
                                     context.getPlayer().getInventory().setItem(slot, null);
+                                    iterator.remove();
                                     uncacheSlot(context.getPlayer(), slot);
                                 }
                             }

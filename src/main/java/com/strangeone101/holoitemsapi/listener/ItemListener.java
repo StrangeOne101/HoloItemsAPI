@@ -184,12 +184,12 @@ public class ItemListener implements Listener {
 
             //Run BlockInteractables before GUI checks
             if (customItem instanceof BlockInteractable && block != null) {
+                //Use the item on the block
                 if (((BlockInteractable)customItem).onInteract(player, block, customItem,
                         item, event.getAction() == Action.LEFT_CLICK_BLOCK)) {
                     event.setUseInteractedBlock(Event.Result.DENY);
-                    //event.setCancelled(true);
                 }
-                if (item == null || item.getType() == Material.AIR)
+                if (item == null || item.getType() == Material.AIR) //Delete the item forcefully if it's set to air
                     player.getInventory().setItem(event.getHand(), null);
                 return;
             }
@@ -206,7 +206,6 @@ public class ItemListener implements Listener {
                 if (customItem instanceof Interactable) {
                     if (((Interactable)customItem).onInteract(player, customItem, item)) {
                         event.setUseItemInHand(Event.Result.DENY);
-                        //event.setCancelled(true);
                     }
                     if (item == null || item.getType() == Material.AIR)
                         player.getInventory().setItem(event.getHand(), null);
