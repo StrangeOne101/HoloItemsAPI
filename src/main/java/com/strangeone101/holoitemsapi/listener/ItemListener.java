@@ -44,6 +44,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRecipeDiscoverEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -299,6 +300,12 @@ public class ItemListener implements Listener {
     public void onSlotSwitch(PlayerItemHeldEvent event) {
         //Update the cached held item
         EventCache.updateHeldSlot(event.getPlayer(), event.getPreviousSlot(), event.getNewSlot());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onOffhandHotkey(PlayerSwapHandItemsEvent event) {
+        // Swap cache slots between offhand and mainhand
+        EventCache.swapCacheSlots(event.getPlayer(), 40, event.getPlayer().getInventory().getHeldItemSlot());
     }
 
     @EventHandler(ignoreCancelled = true)
