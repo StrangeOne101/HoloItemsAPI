@@ -6,7 +6,9 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;
 import org.bukkit.loot.LootTable;
@@ -27,6 +29,7 @@ public class CustomLootRegistry {
 
     private static Map<EntityType, Set<LootTable>> ENTITY_TABLES = new HashMap<>();
     private static Map<Material, Set<BlockLootTable>> BLOCK_TABLES = new HashMap<>();
+    private static Map<LootTable, Set<LootTableExtension>> EXTENSION_TABLES = new HashMap<>();
 
     /**
      * Register a loot table that triggers when an entity is killed
@@ -52,6 +55,19 @@ public class CustomLootRegistry {
         }
 
         BLOCK_TABLES.get(material).add(table);
+    }
+
+    /**
+     * Register a custom loot table that triggers when a block is broken
+     * @param table The loot table to edit
+     * @param extension The custom extension for this table
+     */
+    public static void registerLootExtension(LootTable table, LootTableExtension extension) {
+        if (!EXTENSION_TABLES.containsKey(table)) {
+            EXTENSION_TABLES.put(table, new HashSet<>());
+        }
+
+        EXTENSION_TABLES.get(table).add(extension);
     }
 
     /**
@@ -123,6 +139,16 @@ public class CustomLootRegistry {
                 for (ItemStack stack : drops) {
                     event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation().subtract(0.5, 0.5, 0.5), stack);
                 }
+            }
+        }
+    }
+
+    public static void handleLootGenerating(LootGenerateEvent event) {
+        if (EXTENSION_TABLES.containsKey(event.getLootTable()) && event.getEntity() instanceof Player) {
+            List<ItemStack> stacks = event.getLoot();
+
+            for (LootTableExtension extension : EXTENSION_TABLES.get(event.getLootTable())) {
+                extension.populateLoot(event.getLootTable(), stacks, new Random(), (Player) event.getEntity());
             }
         }
     }

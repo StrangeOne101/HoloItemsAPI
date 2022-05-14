@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.world.LootGenerateEvent;
 
 public class LootListener implements Listener {
 
@@ -24,5 +25,10 @@ public class LootListener implements Listener {
                 && event.getPlayer().getGameMode() != GameMode.CREATIVE) {
             CustomLootRegistry.handleBlockBreak(event);
         }
+    }
+
+    @EventHandler
+    public void onLootCreate(LootGenerateEvent event) {
+
     }
 }

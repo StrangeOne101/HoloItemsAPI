@@ -31,7 +31,7 @@ public class CustomItemRegistry {
         CUSTOM_ITEMS.put(item.getInternalName(), item);
 
         if (item.getInternalID() == 0) {
-            item.setInternalID(NEXT_ID);
+            item.setCustomModel(NEXT_ID);
 
             NEXT_ID++;
             if (NEXT_ID == INVALID_ID) NEXT_ID++;

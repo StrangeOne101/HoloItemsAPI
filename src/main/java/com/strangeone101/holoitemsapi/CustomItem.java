@@ -6,8 +6,6 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
@@ -25,10 +23,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.w3c.dom.Attr;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -61,8 +59,9 @@ public class CustomItem {
     private boolean stackable = true;
     private Set<Property> properties = new HashSet<>();
     private String extraData;
+    private Map<Enchantment, Integer> enchantments = new HashMap<>();
     private Random random;
-    private boolean ench;
+    private boolean glow;
     private int hex;
     private ItemFlag[] flags;
     private BiConsumer<ItemStack, ItemMeta> onBuild;
@@ -116,6 +115,8 @@ public class CustomItem {
 
         if (meta instanceof LeatherArmorMeta) {
             ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        } else if (meta instanceof PotionMeta) {
+            ((PotionMeta) meta).setColor(Color.fromRGB(hex));
         }
         List<String> lore = new ArrayList<>();
 
@@ -152,9 +153,13 @@ public class CustomItem {
          //If the item shouldn't be stackable, add a random INTEGER to the NBT
         Properties.UNSTACKABLE.set(meta.getPersistentDataContainer(), !isStackable());
 
-        if (ench) {
+        if (glow && enchantments.isEmpty()) {
             stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        for (Enchantment ench : enchantments.keySet()) {
+            meta.addEnchant(ench, enchantments.get(ench), true);
         }
 
         if (flags != null && flags.length > 0) meta.addItemFlags(flags);
@@ -239,6 +244,8 @@ public class CustomItem {
         }
         if (meta instanceof LeatherArmorMeta) {
             ((LeatherArmorMeta) meta).setColor(Color.fromRGB(hex));
+        } else if (meta instanceof PotionMeta) {
+            ((PotionMeta) meta).setColor(Color.fromRGB(hex));
         }
         if (internalIntID != 0) meta.setCustomModelData(internalIntID); //Used for resource packs
         if (meta instanceof SkullMeta) {
@@ -247,9 +254,13 @@ public class CustomItem {
             }
         }
 
-        if (ench) {
+        if (glow && enchantments.isEmpty()) {
             stack.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+
+        for (Enchantment ench : enchantments.keySet()) {
+            meta.addEnchant(ench, enchantments.get(ench), true);
         }
 
         if (flags != null && flags.length > 0) meta.addItemFlags(flags);
@@ -469,7 +480,7 @@ public class CustomItem {
      * @return Itself
      */
     public CustomItem setEnchantedGlow(boolean glow) {
-        this.ench = true;
+        this.glow = true;
         return this;
     }
 
@@ -478,7 +489,7 @@ public class CustomItem {
      * @return The glow state
      */
     public boolean hasEnchantedGlow() {
-        return this.ench;
+        return this.glow;
     }
 
     /**
@@ -571,7 +582,7 @@ public class CustomItem {
         return this;
     }
 
-    public CustomItem setInternalID(int id) {
+    public CustomItem setCustomModel(int id) {
         this.internalIntID = id;
         return this;
     }
@@ -623,6 +634,25 @@ public class CustomItem {
     public CustomItem addProperty(Property property) {
         this.properties.add(property);
         return this;
+    }
+
+    /**
+     * Adds an enchantment to the custom item
+     * @param enchantment The enchantment
+     * @param level The level
+     * @return Itself
+     */
+    public CustomItem addEnchantment(Enchantment enchantment, int level) {
+        this.enchantments.put(enchantment, level);
+        return this;
+    }
+
+    /**
+     * Get the enchantments on this custom item
+     * @return The enchantments
+     */
+    public Map<Enchantment, Integer> getEnchantments() {
+        return enchantments;
     }
 
     @Override
@@ -815,6 +845,24 @@ public class CustomItem {
      * @return Itself
      */
     public CustomItem setLeatherColor(int hex) {
+        this.hex = hex;
+        return this;
+    }
+
+    /**
+     * Get the potion color of this item
+     * @return The color (0 for none)
+     */
+    public int getPotionColor() {
+        return this.hex;
+    }
+
+    /**
+     * Set the potion color of this item
+     * @param hex The color
+     * @return Itself
+     */
+    public CustomItem setPotionColor(int hex) {
         this.hex = hex;
         return this;
     }
