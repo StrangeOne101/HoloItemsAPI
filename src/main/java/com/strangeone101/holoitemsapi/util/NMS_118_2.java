@@ -10,13 +10,12 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
-import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Ref;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
