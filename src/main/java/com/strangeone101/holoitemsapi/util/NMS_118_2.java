@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class NMS_118_1 implements INMSHandler {
+public class NMS_118_2 implements INMSHandler {
 
-    public NMS_118_1() {
+    public NMS_118_2() {
         ReflectionUtils.setup();
     }
 
