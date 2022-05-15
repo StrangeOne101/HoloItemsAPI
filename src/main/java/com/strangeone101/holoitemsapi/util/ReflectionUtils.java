@@ -17,6 +17,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class ReflectionUtils {
     static Field profileField;
 
     static Method asNMSCopy;
+    static Method asCraftCopy;
     static Method getHandle;
 
     static void setup() {
@@ -55,10 +57,17 @@ public class ReflectionUtils {
             Class craftPlayerClass = Class.forName(craft + ".entity.CraftPlayer");
 
             asNMSCopy = craftStackClass.getDeclaredMethod("asNMSCopy", ItemStack.class);
+
+            Object nmsItemStack = asNMSCopy.invoke(null, new ItemStack(Material.STICK));
+            asCraftCopy = craftStackClass.getDeclaredMethod("asCraftMirror", nmsItemStack.getClass());
             getHandle = craftPlayerClass.getDeclaredMethod("getHandle");
 
             setup = true;
         } catch (ClassNotFoundException | NoSuchFieldException | NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
     }
@@ -170,5 +179,16 @@ public class ReflectionUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static ItemStack asCraftCopy(Object nmsStack) {
+        try {
+            return (ItemStack) asCraftCopy.invoke(null, nmsStack);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

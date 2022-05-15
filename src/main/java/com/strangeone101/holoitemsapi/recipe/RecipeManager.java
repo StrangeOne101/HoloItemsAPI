@@ -4,6 +4,9 @@ import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.FurnaceRecipe;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
@@ -26,6 +29,8 @@ public class RecipeManager {
     private static Set<Recipe> nonConsumableRecipes = new HashSet<>();
 
     private static Map<NamespacedKey, NamespacedKey> dummyToAdvancedMap = new HashMap<>(); //Map of all dummy recipes to the advanced recipe
+
+    private static Map<RecipeChoice, Set<Recipe>> SEND_RECIPES = new HashMap<>();
 
     /**
      * Get a recipe
@@ -59,6 +64,44 @@ public class RecipeManager {
             }
         }
         registerRecipe(recipe, ((Keyed)recipe).getKey());
+    }
+
+    /**
+     * Registers a recipe to be given to players when they obtain any of the items needed in the recipe
+     * @param recipe The recipe to give
+     */
+    public static void addToRecipeBookAuto(Recipe recipe) {
+        if (recipe instanceof ShapedRecipe) {
+            ((ShapedRecipe) recipe).getChoiceMap().values().forEach(item -> addToRecipeBookWithItem(item, recipe));
+            ((ShapedRecipe) recipe).getIngredientMap().values().forEach(item -> addToRecipeBookWithItem(new RecipeChoice.ExactChoice(item), recipe));
+        } else if (recipe instanceof ShapelessRecipe) {
+            ((ShapelessRecipe) recipe).getChoiceList().forEach(item -> addToRecipeBookWithItem(item, recipe));
+            ((ShapelessRecipe) recipe).getIngredientList().forEach(item -> addToRecipeBookWithItem(new RecipeChoice.ExactChoice(item), recipe));
+        } else if (recipe instanceof FurnaceRecipe) {
+            addToRecipeBookWithItem(((FurnaceRecipe) recipe).getInputChoice(), recipe);
+        } else if (recipe instanceof SmithingRecipe) {
+            addToRecipeBookWithItem(((SmithingRecipe) recipe).getBase(), recipe);
+            addToRecipeBookWithItem(((SmithingRecipe) recipe).getAddition(), recipe);
+        }
+    }
+
+    /**
+     * Registers a recipe to be given to players when they obtain the provided item
+     * @param item The item they need to obtain
+     * @param recipe The recipe
+     */
+    public static void addToRecipeBookWithItem(RecipeChoice item, Recipe recipe) {
+        if (!SEND_RECIPES.containsKey(item)) SEND_RECIPES.put(item, new HashSet<>());
+
+        SEND_RECIPES.get(item).add(recipe);
+    }
+
+    public static void sendRecipes(Player player, ItemStack stack) {
+        for (RecipeChoice recipeItem : SEND_RECIPES.keySet()) {
+            if (recipeItem.test(stack)) {
+                SEND_RECIPES.get(recipeItem).forEach(recipe -> player.discoverRecipe(((Keyed)recipe).getKey()));
+            }
+        }
     }
 
     /**

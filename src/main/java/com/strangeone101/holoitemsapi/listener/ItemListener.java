@@ -17,6 +17,7 @@ import com.strangeone101.holoitemsapi.recipe.NonConsumableChoice;
 import com.strangeone101.holoitemsapi.recipe.RecipeBuilder;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.ItemUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -280,6 +281,15 @@ public class ItemListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerPickup(InventoryPickupItemEvent event) {
+        if (event.getInventory().getHolder() instanceof Player) {
+            Bukkit.getScheduler().runTaskLater(HoloItemsAPI.getPlugin(), () -> {
+                RecipeManager.sendRecipes((Player) event.getInventory().getHolder(), event.getItem().getItemStack());
+            }, 1L);
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPlayerPickup(EntityPickupItemEvent event) {
         ItemStack stack = event.getItem().getItemStack();
@@ -500,6 +510,15 @@ public class ItemListener implements Listener {
 
             event.getInventory().setResult(updated);
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onCraftPost(CraftItemEvent event) {
+        Bukkit.getScheduler().runTaskLater(HoloItemsAPI.getPlugin(), () -> {
+            if (event.getCurrentItem() != null && event.getWhoClicked() instanceof Player) {
+                RecipeManager.sendRecipes((Player) event.getWhoClicked(), event.getCurrentItem());
+            }
+        }, 1L);
     }
 
     @EventHandler(ignoreCancelled = true)

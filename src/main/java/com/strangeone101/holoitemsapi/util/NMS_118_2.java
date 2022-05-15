@@ -10,7 +10,6 @@ import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
-import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -52,7 +51,7 @@ public class NMS_118_2 implements INMSHandler {
         try {
             CompoundTag tag = NbtIo.read(byteInput);
             net.minecraft.world.item.ItemStack itemstack = net.minecraft.world.item.ItemStack.of(tag);
-            return CraftItemStack.asCraftMirror(itemstack);
+            return ReflectionUtils.asCraftCopy(itemstack);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -173,7 +172,7 @@ public class NMS_118_2 implements INMSHandler {
                 throw new UnsupportedOperationException("Lists not supported yet");
             }
             nmsCopy.setTag(tag);
-            return (stack = CraftItemStack.asBukkitCopy(nmsCopy));
+            return (stack = ReflectionUtils.asCraftCopy(nmsCopy));
 
         } catch (Exception e) {
             e.printStackTrace();
