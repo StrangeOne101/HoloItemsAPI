@@ -1,5 +1,7 @@
 package com.strangeone101.holoitemsapi.loot;
 
+import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -7,7 +9,11 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.loot.LootContext;
@@ -25,7 +31,7 @@ import java.util.Set;
 /**
  * A registry class to register custom loot within the plugin
  */
-public class CustomLootRegistry {
+public class CustomLootRegistry implements Listener {
 
     private static Map<EntityType, Set<LootTable>> ENTITY_TABLES = new HashMap<>();
     private static Map<Material, Set<BlockLootTable>> BLOCK_TABLES = new HashMap<>();
@@ -71,14 +77,35 @@ public class CustomLootRegistry {
     }
 
     /**
-     * Called when an entity is killed. <strong>Already handled by HoloItemsAPI - Do not call</strong>
-     * @param entity The entity killed
-     * @param drops The list of drops they dropped
+     * Clear all death tables out
      */
-    public static void handleDeath(LivingEntity entity, List<ItemStack> drops) {
-        if (ENTITY_TABLES.containsKey(entity.getType())) {
+    public static void clearDeathTables() {
+        ENTITY_TABLES.clear();
+    }
 
-            //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 444");
+    /**
+     * Clear all block break loot tables out
+     */
+    public static void clearBlockBreakTables() {
+        BLOCK_TABLES.clear();
+    }
+
+    /**
+     * Clear all loot table extensions out
+     */
+    public static void clearLootExtensions() {
+        EXTENSION_TABLES.clear();
+    }
+
+    /**
+     * Called when an entity is killed.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void handleDeath(EntityDeathEvent event) {
+        LivingEntity entity = event.getEntity();
+        List<ItemStack> drops = event.getDrops();
+
+        if (entity.getWorld().getGameRuleValue(GameRule.DO_MOB_LOOT) && ENTITY_TABLES.containsKey(entity.getType())) {
 
             if (entity.getKiller() == null) return;
 
@@ -93,13 +120,10 @@ public class CustomLootRegistry {
             builder.killer(entity.getKiller());
             LootContext lootContext = builder.build();
 
-            //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 555");
-
             for (LootTable table : ENTITY_TABLES.get(entity.getType())) {
                 Collection<ItemStack> items = table.populateLoot(new Random(), lootContext);
                 if (!items.isEmpty()) {
                     drops.addAll(items);
-                    //HoloItemsPlugin.INSTANCE.getLogger().info("Debug here 666");
                 }
             }
         }
@@ -109,8 +133,10 @@ public class CustomLootRegistry {
      * Called when a block is broken. <strong>Already handled by HoloItemsAPI - Do not call</strong>
      * @param event The block break event
      */
-    public static void handleBlockBreak(BlockBreakEvent event) {
-        if (BLOCK_TABLES.containsKey(event.getBlock().getType())) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void handleBlockBreak(BlockBreakEvent event) {
+        if (event.getPlayer() != null && event.getBlock().getWorld().getGameRuleValue(GameRule.DO_TILE_DROPS)
+                && event.getPlayer().getGameMode() != GameMode.CREATIVE && BLOCK_TABLES.containsKey(event.getBlock().getType())) {
             int fortune_mod = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
             double luck_mod = event.getPlayer().getAttribute(Attribute.GENERIC_LUCK).getValue();
             boolean silk_mod = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 0;
@@ -143,7 +169,8 @@ public class CustomLootRegistry {
         }
     }
 
-    public static void handleLootGenerating(LootGenerateEvent event) {
+    @EventHandler
+    public void handleLootGenerating(LootGenerateEvent event) {
         if (EXTENSION_TABLES.containsKey(event.getLootTable()) && event.getEntity() instanceof Player) {
             List<ItemStack> stacks = event.getLoot();
 

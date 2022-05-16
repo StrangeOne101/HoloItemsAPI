@@ -3,7 +3,7 @@ package com.strangeone101.holoitemsapi;
 import com.strangeone101.holoitemsapi.itemevent.EventCache;
 import com.strangeone101.holoitemsapi.listener.GenericListener;
 import com.strangeone101.holoitemsapi.listener.ItemListener;
-import com.strangeone101.holoitemsapi.listener.LootListener;
+import com.strangeone101.holoitemsapi.loot.CustomLootRegistry;
 import com.strangeone101.holoitemsapi.recipe.RecipeManager;
 import com.strangeone101.holoitemsapi.util.INMSHandler;
 import com.strangeone101.holoitemsapi.util.NMS_118_2;
@@ -39,7 +39,7 @@ public class HoloItemsAPI {
         handler = setupHandler();
 
         Bukkit.getPluginManager().registerEvents(new ItemListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new LootListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new CustomLootRegistry(), plugin);
         Bukkit.getPluginManager().registerEvents(new GenericListener(), plugin);
 
         //Make all item abilities tick

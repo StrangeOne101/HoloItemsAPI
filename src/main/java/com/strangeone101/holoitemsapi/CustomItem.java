@@ -63,7 +63,7 @@ public class CustomItem {
     private Random random;
     private boolean glow;
     private int hex;
-    private ItemFlag[] flags;
+    private ItemFlag[] flags = new ItemFlag[0];
     private BiConsumer<ItemStack, ItemMeta> onBuild;
     private BiConsumer<ItemStack, ItemMeta> onUpdate;
 
