@@ -26,6 +26,8 @@ import java.util.UUID;
 
 public class ItemUtils {
 
+    private static Method setProfile;
+
     /**
      * Sets the skin of a Skull to the skin provided. Can be a UUID, name, texture ID or URL
      * @param meta The skull meta
@@ -38,12 +40,12 @@ public class ItemUtils {
             return;
         } catch (IllegalArgumentException ignored) { }
 
-        if (skin.startsWith("https://")) {
-            setSkinFromURL(meta, skin);
-        } else if (skin.matches("[\\w\\d_]{3,16}")) {
+        if (skin.startsWith("https://") || skin.startsWith("http://")) {
+            meta = setSkinFromURL(meta, skin);
+        } else if (skin.matches("[\\w\\d_]{3,16}")) { //The username format
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(skin));
-        } else if (skin.matches("[A-Fa-f\\d]{64}")) {
-            setSkinFromURL(meta, "http://textures.minecraft.net/texture/" + skin);
+        } else if (skin.matches("[A-Fa-f\\d]{52,64}")) { //The skin format
+            meta = setSkinFromURL(meta, "http://textures.minecraft.net/texture/" + skin);
         } else {
             HoloItemsAPI.getPlugin().getLogger().warning("Invalid skin format: " + skin);
         }
@@ -56,23 +58,24 @@ public class ItemUtils {
      * @return The corrected ItemMeta
      */
     public static SkullMeta setSkinFromURL(SkullMeta meta, String skin) {
-        ItemStack stack = new ItemStack(Material.PLAYER_HEAD, 1);
-        SkullMeta im = (SkullMeta) stack.getItemMeta();
-        UUID uuid;
         Random random = new Random(skin.hashCode());
 
+        //The UUID must be using a random seeded from the hashcode, so the item can stack
         GameProfile profile = new GameProfile(new UUID(random.nextLong(), random.nextLong()), null);
         byte[] encodedData = Base64.getEncoder()
                 .encode(String.format("{textures:{SKIN:{url:\"%s\"}}}", skin).getBytes());
         profile.getProperties().put("textures", new Property("textures", new String(encodedData)));
         try {
-            Field profileField = im.getClass().getDeclaredField("profile");
-            profileField.setAccessible(true);
-            profileField.set(im, profile);
-        } catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e1) {
+            if (setProfile == null) {
+                setProfile = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
+                setProfile.setAccessible(true);
+            }
+
+            setProfile.invoke(meta, profile);
+        } catch (IllegalArgumentException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e1) {
             e1.printStackTrace();
         }
-        return im;
+        return meta;
     }
 
     /**
