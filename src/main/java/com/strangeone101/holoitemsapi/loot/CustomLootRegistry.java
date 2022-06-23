@@ -35,7 +35,7 @@ public class CustomLootRegistry implements Listener {
 
     private static Map<EntityType, Set<LootTable>> ENTITY_TABLES = new HashMap<>();
     private static Map<Material, Set<BlockLootTable>> BLOCK_TABLES = new HashMap<>();
-    private static Map<LootTable, Set<LootTableExtension>> EXTENSION_TABLES = new HashMap<>();
+    private static Map<String, Set<LootTableExtension>> EXTENSION_TABLES = new HashMap<>();
 
     /**
      * Register a loot table that triggers when an entity is killed
@@ -69,11 +69,11 @@ public class CustomLootRegistry implements Listener {
      * @param extension The custom extension for this table
      */
     public static void registerLootExtension(LootTable table, LootTableExtension extension) {
-        if (!EXTENSION_TABLES.containsKey(table)) {
-            EXTENSION_TABLES.put(table, new HashSet<>());
+        if (!EXTENSION_TABLES.containsKey(table.getKey().toString())) {
+            EXTENSION_TABLES.put(table.getKey().toString(), new HashSet<>());
         }
 
-        EXTENSION_TABLES.get(table).add(extension);
+        EXTENSION_TABLES.get(table.getKey().toString()).add(extension);
     }
 
     /**
@@ -171,10 +171,10 @@ public class CustomLootRegistry implements Listener {
 
     @EventHandler
     public void handleLootGenerating(LootGenerateEvent event) {
-        if (EXTENSION_TABLES.containsKey(event.getLootTable()) && event.getEntity() instanceof Player) {
+        if (EXTENSION_TABLES.containsKey(event.getLootTable().getKey().toString()) && event.getEntity() instanceof Player) {
             List<ItemStack> stacks = event.getLoot();
 
-            for (LootTableExtension extension : EXTENSION_TABLES.get(event.getLootTable())) {
+            for (LootTableExtension extension : EXTENSION_TABLES.get(event.getLootTable().getKey().toString())) {
                 extension.populateLoot(event.getLootTable(), stacks, new Random(), (Player) event.getEntity());
             }
         }

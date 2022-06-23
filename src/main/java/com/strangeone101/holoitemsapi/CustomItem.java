@@ -393,7 +393,7 @@ public class CustomItem {
      * @return Itself
      */
     public CustomItem setHeadSkin(String skin) {
-        if (material != Material.PLAYER_HEAD && material != Material.PLAYER_WALL_HEAD) {
+        if (material == Material.PLAYER_HEAD || material == Material.PLAYER_WALL_HEAD) {
             this.extraData = skin;
         }
 

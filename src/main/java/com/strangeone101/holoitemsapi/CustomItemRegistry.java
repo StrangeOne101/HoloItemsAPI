@@ -10,7 +10,9 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -21,7 +23,7 @@ public class CustomItemRegistry {
     private static int NEXT_ID = 2300;
     private static final int INVALID_ID = 404;
 
-    private static Map<String, CustomItem> CUSTOM_ITEMS = new HashMap<>();
+    private static Map<String, CustomItem> CUSTOM_ITEMS = new LinkedHashMap<>();
 
     /**
      * Register a custom item
@@ -46,7 +48,7 @@ public class CustomItemRegistry {
      * @return The custom item
      */
     public static CustomItem getCustomItem(String id) {
-        return CUSTOM_ITEMS.get(id);
+        return CUSTOM_ITEMS.get(id.toLowerCase(Locale.ROOT));
     }
 
     /**

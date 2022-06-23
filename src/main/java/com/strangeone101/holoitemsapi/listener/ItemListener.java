@@ -282,10 +282,10 @@ public class ItemListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerPickup(InventoryPickupItemEvent event) {
-        if (event.getInventory().getHolder() instanceof Player) {
+    public void onPlayerPickupPost(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player) {
             Bukkit.getScheduler().runTaskLater(HoloItemsAPI.getPlugin(), () -> {
-                RecipeManager.sendRecipes((Player) event.getInventory().getHolder(), event.getItem().getItemStack());
+                RecipeManager.sendRecipes((Player) event.getEntity(), event.getItem().getItemStack());
             }, 1L);
         }
     }
@@ -514,11 +514,25 @@ public class ItemListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onCraftPost(CraftItemEvent event) {
-        Bukkit.getScheduler().runTaskLater(HoloItemsAPI.getPlugin(), () -> {
-            if (event.getCurrentItem() != null && event.getWhoClicked() instanceof Player) {
-                RecipeManager.sendRecipes((Player) event.getWhoClicked(), event.getCurrentItem());
+        RecipeManager.sendRecipes((Player) event.getWhoClicked(), event.getCurrentItem());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onTakeItem(InventoryClickEvent event) {
+        if (event.getInventory().getType() != InventoryType.CRAFTING && event.getInventory().getType() != InventoryType.WORKBENCH) {
+            boolean isBottom = event.getRawSlot() >= event.getInventory().getSize();
+            boolean isTop = event.getRawSlot() < event.getInventory().getSize();
+
+            //If they are clicking on the bottom inventory OR if they shift click the top one
+            if (isBottom || (isTop && event.isShiftClick())) {
+                //If there is a stack on the cursor OR it is shift clicked
+                if (!(event.getCursor() == null || event.getCursor().getType() == Material.AIR) || event.isShiftClick()) {
+                    ItemStack stack = isBottom ? event.getCursor() : event.getCurrentItem();
+
+                    RecipeManager.sendRecipes((Player) event.getWhoClicked(), stack);
+                }
             }
-        }, 1L);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

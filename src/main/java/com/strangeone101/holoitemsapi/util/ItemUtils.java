@@ -3,6 +3,7 @@ package com.strangeone101.holoitemsapi.util;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.strangeone101.holoitemsapi.CustomItem;
+import com.strangeone101.holoitemsapi.HoloItemsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -31,7 +32,6 @@ public class ItemUtils {
      * @param skin The skin
      */
     public static void setSkin(SkullMeta meta, String skin) {
-
         try {
             UUID uuid = UUID.fromString(skin);
             meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
@@ -40,10 +40,12 @@ public class ItemUtils {
 
         if (skin.startsWith("https://")) {
             setSkinFromURL(meta, skin);
-        } else if (skin.matches("[a-f\\d]{64}")) {
+        } else if (skin.matches("[\\w\\d_]{3,16}")) {
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(skin));
+        } else if (skin.matches("[A-Fa-f\\d]{64}")) {
             setSkinFromURL(meta, "http://textures.minecraft.net/texture/" + skin);
         } else {
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(skin));
+            HoloItemsAPI.getPlugin().getLogger().warning("Invalid skin format: " + skin);
         }
     }
 

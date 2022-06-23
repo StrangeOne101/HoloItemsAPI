@@ -6,14 +6,14 @@
 
     <groupId>com.strangeone101</groupId>
     <artifactId>HoloItemsAPI</artifactId>
-    <version>0.7.9</version>
+    <version>0.7.11</version>
     <packaging>jar</packaging>
 
     <name>HoloItemsAPI</name>
 
     <description>Adds custom items to your server</description>
     <properties>
-        <java.version>16</java.version>
+        <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
