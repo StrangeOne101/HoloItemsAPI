@@ -303,15 +303,21 @@ public class CustomItem {
             damage += amount;
 
             if (damage >= getMaxDurability()) {
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
-                Location inFront = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().clone().multiply(0.3));
-                player.getWorld().spawnParticle(Particle.ITEM_CRACK, inFront, 16, 0.25F, 0.25F, 0.25F, 0.05F, stack);
+                playBreakAnimation(stack, player);
                 stack.setType(Material.AIR);
                 return;
             }
 
             setDurability(stack, damage);
             updateStack(stack, player);
+        }
+    }
+
+    public void playBreakAnimation(ItemStack stack, Player player) {
+        if (getMaxDurability() > 1) {
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
+            Location inFront = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().clone().multiply(0.3));
+            player.getWorld().spawnParticle(Particle.ITEM_CRACK, inFront, 16, 0.25F, 0.25F, 0.25F, 0.05F, stack);
         }
     }
 
