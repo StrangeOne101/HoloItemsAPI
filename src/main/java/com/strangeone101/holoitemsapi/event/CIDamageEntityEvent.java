@@ -2,11 +2,10 @@ package com.strangeone101.holoitemsapi.event;
 
 import com.strangeone101.holoitemsapi.util.CustomDamageSource;
 import org.bukkit.entity.Entity;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-public class CIDamageEntityEvent extends EntityDamageEvent implements Cancellable {
+public class CIDamageEntityEvent extends EntityDamageEvent {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
