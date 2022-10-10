@@ -2,7 +2,6 @@ package com.strangeone101.holoitemsapi.loot;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.loot.LootContext;
 import org.bukkit.loot.LootTable;
 
 import java.util.List;
